@@ -288,6 +288,7 @@ export const e235TrainConsist: TrainModelConsist = {
   id: 'e235-consist',
   name: 'JR E235系 (山手线)',
   category: 'commuter',
+  defaultThemeId: 'yamanote-green',
   description: '经典日本都市电车，包含先头驾驶车、带受电弓中间客车与尾部驾驶车。',
   difficulty: 'easy',
   recommendedAge: '5-9 岁',

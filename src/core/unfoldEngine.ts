@@ -196,14 +196,14 @@ export function packConsistToA4Pages(cars: ConsistCarItem[]): ConsistPageLayout[
     const mainPart = mainParts[0] || allParts[0]
 
     if (mainPart) {
-      // 水平居中
+      // 水平居中并预留页眉图例纵向间距 (确保从 Y=36mm 以下开始)
       const targetX = Math.max(A4_MARGIN_MM, (A4_WIDTH_MM - mainPart.bounds.width) / 2)
-      const targetY = A4_MARGIN_MM + 8
+      const targetY = Math.max(A4_MARGIN_MM + 26, (A4_HEIGHT_MM - mainPart.bounds.height) / 2)
 
       pages.push({
         pageIndex: pages.length,
-        pageTitle: `${car.carNumberText} - ${car.modelData.name} 【车身主体展开图】`,
-        subTitle: `全编组第 ${carIdx + 1}/${cars.length} 节 | 制作耗时: ~${car.modelData.estimatedTime}`,
+        pageTitle: `${car.carNumberText} · ${car.modelData.name}`,
+        subTitle: `第 ${carIdx + 1}/${cars.length} 节`,
         carIndex: carIdx,
         car,
         isAccessoryPage: false,
@@ -235,56 +235,60 @@ export function packConsistToA4Pages(cars: ConsistCarItem[]): ConsistPageLayout[
   if (allAccessories.length > 0) {
     let accPageIndex = pages.length
     let accCurX = A4_MARGIN_MM + 8
-    let accCurY = A4_MARGIN_MM + 24 // 顶部留出标题与图例
+    let accCurY = A4_MARGIN_MM + 42 // 顶部留出 52mm 充裕纵向空间
     let accRowH = 0
     let curPagePlacements: ConsistPartPlacement[] = []
 
     for (const item of allAccessories) {
       const w = item.part.bounds.width
       const h = item.part.bounds.height
+      const colW = Math.max(w, 50)
 
-      // 检查当前行是否放得下，放不下自动换行 (列间距 18mm)
-      if (accCurX + w > A4_WIDTH_MM - A4_MARGIN_MM - 8 && curPagePlacements.length > 0) {
+      // 检查当前行是否放得下，放不下自动换行 (列间距 14mm，行间距 24mm)
+      if (accCurX + colW > A4_WIDTH_MM - A4_MARGIN_MM - 8 && curPagePlacements.length > 0) {
         accCurX = A4_MARGIN_MM + 8
-        accCurY += accRowH + 18
+        accCurY += accRowH + 24
         accRowH = 0
       }
 
-      // 检查当前页是否放得下，放不下自动开辟下一页配件专页 (行间距 18mm)
-      if (accCurY + h > A4_HEIGHT_MM - A4_MARGIN_MM - 12 && curPagePlacements.length > 0) {
+      // 检查当前页是否放得下，放不下自动开辟下一页配件专页
+      if (accCurY + h > A4_HEIGHT_MM - A4_MARGIN_MM - 14 && curPagePlacements.length > 0) {
         pages.push({
           pageIndex: accPageIndex,
-          pageTitle: `全列车车顶与立体配件专页 (第 ${accPageIndex - cars.length + 1} 页)`,
-          subTitle: `集中包含全编组 ${cars.length} 节车厢的所有外贴立体配件与车顶设备`,
+          pageTitle: `车顶与立体配件 (P.${accPageIndex - cars.length + 1})`,
+          subTitle: `配件`,
           isAccessoryPage: true,
           placements: curPagePlacements
         })
         accPageIndex++
         curPagePlacements = []
         accCurX = A4_MARGIN_MM + 8
-        accCurY = A4_MARGIN_MM + 24
+        accCurY = A4_MARGIN_MM + 42
         accRowH = 0
       }
+
+      const carShort = item.car.carNumberText.split(' ')[0]
+      const partShort = item.part.name.replace(/车顶|立体|气动|流线/g, '')
 
       curPagePlacements.push({
         part: item.part,
         car: item.car,
         carIndex: item.carIdx,
-        displayName: `【${item.car.carNumberText}】${item.part.name}`,
-        x: accCurX - item.part.bounds.minX,
+        displayName: `${carShort} ${partShort}`,
+        x: (accCurX + (colW - w) / 2) - item.part.bounds.minX,
         y: accCurY - item.part.bounds.minY,
         rotation: 0
       })
 
       accRowH = Math.max(accRowH, h)
-      accCurX += w + 18
+      accCurX += colW + 14
     }
 
     if (curPagePlacements.length > 0) {
       pages.push({
         pageIndex: accPageIndex,
-        pageTitle: pages.length === cars.length ? '全列车车顶与立体配件专页' : `全列车车顶与立体配件专页 (第 ${accPageIndex - cars.length + 1} 页)`,
-        subTitle: `集中包含全编组 ${cars.length} 节车厢的所有外贴立体配件与车顶设备`,
+        pageTitle: pages.length === cars.length ? '车顶与立体配件' : `车顶与立体配件 (P.${accPageIndex - cars.length + 1})`,
+        subTitle: `配件`,
         isAccessoryPage: true,
         placements: curPagePlacements
       })

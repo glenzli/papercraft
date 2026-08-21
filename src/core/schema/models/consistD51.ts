@@ -402,6 +402,7 @@ export const d51TrainConsist: TrainModelConsist = {
   id: 'd51-consist',
   name: 'D51形 蒸汽机车',
   category: 'steam',
+  defaultThemeId: 'vintage-steam',
   description: '经典蒸汽机车，包含蒸汽机车头、后挂煤水补给车 (Tender) 与复古客车厢。',
   difficulty: 'hard',
   recommendedAge: '8-14 岁',

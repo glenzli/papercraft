@@ -308,7 +308,7 @@ export function loadPapercraftFromSchema(schema: PapercraftModelSchema): Papercr
             ]
           })
 
-          // 2.4 左侧面 (West)
+          // 2.4 左侧面 (West - 带四角封闭折翼与车顶粘贴翼)
           faces.push({
             id: `${acc.id}_west`,
             name: `${acc.name} 左侧`,
@@ -321,14 +321,51 @@ export function loadPapercraftFromSchema(schema: PapercraftModelSchema): Papercr
             ],
             uvCoords: [{ x: 0, y: 1 }, { x: 1, y: 1 }, { x: 1, y: 0 }, { x: 0, y: 0 }],
             creases: [
-              { type: 'cut', p1: { x: lx - d, y: ly }, p2: { x: lx - d, y: ly + h } },
-              { type: 'cut', p1: { x: lx - d, y: ly }, p2: { x: lx, y: ly } },
-              { type: 'cut', p1: { x: lx - d, y: ly + h }, p2: { x: lx, y: ly + h } }
+              { type: 'mountain', p1: { x: lx - d, y: ly }, p2: { x: lx, y: ly } },
+              { type: 'mountain', p1: { x: lx, y: ly + h }, p2: { x: lx - d, y: ly + h } },
+              { type: 'mountain', p1: { x: lx, y: ly }, p2: { x: lx, y: ly + h } }
             ],
-            glueTabs: []
+            glueTabs: [
+              // 左上角角部拼缝粘合翼 (粘接后侧 North)
+              {
+                id: `tab_${acc.id}_w_top`,
+                label: '1',
+                edgeIndex: 0,
+                p1: { x: lx - d, y: ly },
+                p2: { x: lx, y: ly },
+                tabWidth: 3,
+                angle: 45,
+                targetPartId: `${acc.id}_north`,
+                targetEdgeIndex: 0
+              },
+              // 左下角角部拼缝粘合翼 (粘接前侧 South)
+              {
+                id: `tab_${acc.id}_w_bot`,
+                label: '2',
+                edgeIndex: 2,
+                p1: { x: lx, y: ly + h },
+                p2: { x: lx - d, y: ly + h },
+                tabWidth: 3,
+                angle: 45,
+                targetPartId: `${acc.id}_south`,
+                targetEdgeIndex: 0
+              },
+              // 左侧车顶粘贴底翼
+              {
+                id: `tab_${acc.id}_w`,
+                label: 'T',
+                edgeIndex: 3,
+                p1: { x: lx - d, y: ly + h },
+                p2: { x: lx - d, y: ly },
+                tabWidth: 3.5,
+                angle: 45,
+                targetPartId: 'roof',
+                targetEdgeIndex: 0
+              }
+            ]
           })
 
-          // 2.5 右侧面 (East)
+          // 2.5 右侧面 (East - 带四角封闭折翼与车顶粘贴翼)
           faces.push({
             id: `${acc.id}_east`,
             name: `${acc.name} 右侧`,
@@ -341,11 +378,48 @@ export function loadPapercraftFromSchema(schema: PapercraftModelSchema): Papercr
             ],
             uvCoords: [{ x: 0, y: 1 }, { x: 1, y: 1 }, { x: 1, y: 0 }, { x: 0, y: 0 }],
             creases: [
-              { type: 'cut', p1: { x: lx + w + d, y: ly }, p2: { x: lx + w + d, y: ly + h } },
-              { type: 'cut', p1: { x: lx + w, y: ly }, p2: { x: lx + w + d, y: ly } },
-              { type: 'cut', p1: { x: lx + w, y: ly + h }, p2: { x: lx + w + d, y: ly + h } }
+              { type: 'mountain', p1: { x: lx + w, y: ly }, p2: { x: lx + w + d, y: ly } },
+              { type: 'mountain', p1: { x: lx + w + d, y: ly + h }, p2: { x: lx + w, y: ly + h } },
+              { type: 'mountain', p1: { x: lx + w, y: ly }, p2: { x: lx + w, y: ly + h } }
             ],
-            glueTabs: []
+            glueTabs: [
+              // 右上角角部拼缝粘合翼 (粘接后侧 North)
+              {
+                id: `tab_${acc.id}_e_top`,
+                label: '1',
+                edgeIndex: 0,
+                p1: { x: lx + w, y: ly },
+                p2: { x: lx + w + d, y: ly },
+                tabWidth: 3,
+                angle: 45,
+                targetPartId: `${acc.id}_north`,
+                targetEdgeIndex: 0
+              },
+              // 右下角角部拼缝粘合翼 (粘接前侧 South)
+              {
+                id: `tab_${acc.id}_e_bot`,
+                label: '2',
+                edgeIndex: 2,
+                p1: { x: lx + w + d, y: ly + h },
+                p2: { x: lx + w, y: ly + h },
+                tabWidth: 3,
+                angle: 45,
+                targetPartId: `${acc.id}_south`,
+                targetEdgeIndex: 0
+              },
+              // 右侧车顶粘贴底翼
+              {
+                id: `tab_${acc.id}_e`,
+                label: 'T',
+                edgeIndex: 1,
+                p1: { x: lx + w + d, y: ly },
+                p2: { x: lx + w + d, y: ly + h },
+                tabWidth: 3.5,
+                angle: 45,
+                targetPartId: 'roof',
+                targetEdgeIndex: 0
+              }
+            ]
           })
 
           unfoldedParts.push({

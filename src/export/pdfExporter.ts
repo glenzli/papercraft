@@ -39,85 +39,59 @@ export function renderConsistPageToCanvas(
   const titleX = 12 * mmToPx
   const titleY = 14 * mmToPx
 
-  const displayTitle = isBlankTemplate
-    ? `${consistName} - ${page.pageTitle} [填色模版]`
-    : `${consistName} - ${page.pageTitle}`
-
-  const displaySubTitle = isBlankTemplate
-    ? `${page.subTitle} | 涂装设计/填色模版 · 支持手工涂鸦与 AI 垫图填色 | 全套共 ${totalPages} 页 · 第 ${page.pageIndex + 1} 页`
-    : `${page.subTitle} | 全套共 ${totalPages} 页 · 第 ${page.pageIndex + 1} 页`
+  const displayTitle = `${consistName} · ${page.pageTitle}`
+  const displaySubTitle = `P. ${page.pageIndex + 1} / ${totalPages}`
 
   ctx.fillStyle = '#0f172a'
-  ctx.font = 'bold 44px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif'
+  ctx.font = 'bold 40px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif'
   ctx.fillText(displayTitle, titleX, titleY)
 
-  ctx.fillStyle = isBlankTemplate ? '#0284c7' : '#64748b'
-  ctx.font = '500 28px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif'
-  ctx.fillText(displaySubTitle, titleX, titleY + 38)
+  ctx.fillStyle = '#64748b'
+  ctx.font = '500 26px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif'
+  ctx.fillText(displaySubTitle, titleX, titleY + 36)
 
-  // 3. 50mm 打印校验标尺 (Calibration Ruler)
-  const rulerMmW = 50
-  const rulerMmH = 6
-  const rulerX = (A4_WIDTH_MM - 64) * mmToPx
-  const rulerY = 9 * mmToPx
-  const rulerW = rulerMmW * mmToPx
-  const rulerH = rulerMmH * mmToPx
-
-  ctx.strokeStyle = '#475569'
-  ctx.lineWidth = 3
-  ctx.strokeRect(rulerX, rulerY, rulerW, rulerH)
-
-  ctx.fillStyle = '#e2e8f0'
-  ctx.fillRect(rulerX, rulerY, rulerW / 2, rulerH)
-
-  ctx.fillStyle = '#475569'
-  ctx.font = 'bold 24px sans-serif'
-  ctx.fillText('0', rulerX, rulerY + rulerH + 26)
-  ctx.fillText('25mm', rulerX + rulerW / 2 - 24, rulerY + rulerH + 26)
-  ctx.fillText('50mm (100% 原始尺寸)', rulerX + rulerW - 140, rulerY + rulerH + 26)
-
-  // 4. 折线与剪切图例说明
-  const legendY = 24 * mmToPx
-  ctx.font = '26px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif'
+  // 3. 折线与剪切图例说明 (精简克制)
+  const legendY = 22 * mmToPx
+  ctx.font = '500 24px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif'
 
   // 实线 (剪切)
   ctx.strokeStyle = '#0f172a'
-  ctx.lineWidth = 4
+  ctx.lineWidth = 3.5
   ctx.setLineDash([])
   ctx.beginPath()
   ctx.moveTo(titleX, legendY)
-  ctx.lineTo(titleX + 26 * mmToPx, legendY)
+  ctx.lineTo(titleX + 22 * mmToPx, legendY)
   ctx.stroke()
-  ctx.fillStyle = '#1e293b'
-  ctx.fillText('剪切实线 (沿线剪下)', titleX + 28 * mmToPx, legendY + 9)
+  ctx.fillStyle = '#334155'
+  ctx.fillText('剪切', titleX + 25 * mmToPx, legendY + 8)
 
   // 红色虚线 (山折)
-  const mountainX = titleX + 85 * mmToPx
+  const mountainX = titleX + 48 * mmToPx
   ctx.strokeStyle = '#dc2626'
-  ctx.lineWidth = 3.5
-  ctx.setLineDash([20, 16])
+  ctx.lineWidth = 3
+  ctx.setLineDash([16, 12])
   ctx.beginPath()
   ctx.moveTo(mountainX, legendY)
-  ctx.lineTo(mountainX + 26 * mmToPx, legendY)
+  ctx.lineTo(mountainX + 22 * mmToPx, legendY)
   ctx.stroke()
   ctx.fillStyle = '#dc2626'
-  ctx.fillText('山折虚线 (图案朝外向后折)', mountainX + 28 * mmToPx, legendY + 9)
+  ctx.fillText('山折', mountainX + 25 * mmToPx, legendY + 8)
 
   // 蓝色点划线 (谷折)
-  const valleyX = mountainX + 98 * mmToPx
+  const valleyX = mountainX + 54 * mmToPx
   ctx.strokeStyle = '#0284c7'
-  ctx.lineWidth = 3.5
-  ctx.setLineDash([30, 12, 10, 12])
+  ctx.lineWidth = 3
+  ctx.setLineDash([24, 10, 8, 10])
   ctx.beginPath()
   ctx.moveTo(valleyX, legendY)
-  ctx.lineTo(valleyX + 26 * mmToPx, legendY)
+  ctx.lineTo(valleyX + 22 * mmToPx, legendY)
   ctx.stroke()
   ctx.fillStyle = '#0284c7'
-  ctx.fillText('谷折点划线 (图案朝内向前折)', valleyX + 28 * mmToPx, legendY + 9)
+  ctx.fillText('谷折', valleyX + 25 * mmToPx, legendY + 8)
 
   ctx.setLineDash([]) // 重置虚线
 
-  // 5. 绘制当前页包含的所有零件
+  // 4. 绘制当前页包含的所有零件
   for (const placement of page.placements) {
     const part = placement.part
     const car = placement.car
@@ -125,10 +99,15 @@ export function renderConsistPageToCanvas(
     const offsetY = placement.y * mmToPx
     const title = placement.displayName || part.name
 
-    // 零件名称
-    ctx.fillStyle = '#334155'
-    ctx.font = 'bold 30px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif'
-    ctx.fillText(`● ${title}`, offsetX, offsetY - 10)
+    // 仅在配件专页居中绘制简短配件名称 (避免在主体车身页上产生多余文字)
+    if (page.isAccessoryPage) {
+      const partCenterX = offsetX + ((part.bounds.minX || 0) + part.bounds.width / 2) * mmToPx
+      const partLabelY = offsetY + ((part.bounds.minY || 0) - 6) * mmToPx
+      ctx.fillStyle = '#475569'
+      ctx.font = 'bold 24px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif'
+      ctx.textAlign = 'center'
+      ctx.fillText(title, partCenterX, partLabelY)
+    }
 
     for (const face of part.faces) {
       const poly = face.polygon2D.map(p => ({
@@ -285,15 +264,12 @@ export function renderConsistPageToCanvas(
     }
   }
 
-  // 6. 页脚提示信息 (中文 100% 原生支持)
+  // 6. 页脚页码
   ctx.setLineDash([])
-  ctx.fillStyle = isBlankTemplate ? '#0284c7' : '#94a3b8'
-  ctx.font = 'italic 24px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif'
+  ctx.fillStyle = '#94a3b8'
+  ctx.font = '500 22px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif'
   ctx.textAlign = 'left'
-  const footerText = isBlankTemplate
-    ? `Papercraft Studio 填色模版 · 实线剪切 / 红虚线山折 / 蓝虚线谷折 · 适合手绘涂色及 AI 填色垫图 · 第 ${page.pageIndex + 1}/${totalPages} 页`
-    : `Papercraft Studio 铁道纸模工坊 · 打印时请选择【100% 原始尺寸/不缩放】 · 全套共 ${totalPages} 页 · 第 ${page.pageIndex + 1} 页`
-  ctx.fillText(footerText, titleX, canvasH - 24 * mmToPx)
+  ctx.fillText(`Papercraft Studio · P. ${page.pageIndex + 1} / ${totalPages}`, titleX, canvasH - 16 * mmToPx)
 
   return canvas
 }

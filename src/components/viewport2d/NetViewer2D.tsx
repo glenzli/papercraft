@@ -250,37 +250,28 @@ export const NetViewer2D: React.FC<NetViewer2DProps> = ({
               </pattern>
             </defs>
 
-            {/* 1. 打印校验标尺 (50mm) */}
-            <g transform={`translate(${A4_WIDTH_MM - 65}, 10)`}>
-              <rect x="0" y="0" width="50" height="6" fill="#f8fafc" stroke="#64748b" strokeWidth="0.4" />
-              <rect x="0" y="0" width="25" height="6" fill="#e2e8f0" />
-              <text x="0" y="11" fontSize="3" fill="#64748b">0</text>
-              <text x="22" y="11" fontSize="3" fill="#64748b">25mm</text>
-              <text x="35" y="11" fontSize="3" fill="#64748b">50mm (100%)</text>
-            </g>
-
-            {/* 2. 图例说明与页码标题 */}
+            {/* 1. 图例说明与页码标题 */}
             <g transform="translate(10, 12)">
-              <text x="0" y="0" fontSize="4.5" fontWeight="bold" fill="#1e293b">
+              <text x="0" y="0" fontSize="4.2" fontWeight="bold" fill="#0f172a">
                 {activePage?.pageTitle || '展开图纸'}
               </text>
-              <text x="0" y="5" fontSize="2.8" fill="#64748b">
-                {activePage?.subTitle || `全编组图纸第 ${currentPageIndex + 1}/${consistPages.length} 页`}
+              <text x="0" y="4.5" fontSize="2.6" fill="#64748b">
+                P. {currentPageIndex + 1} / {consistPages.length}
               </text>
 
-              <g transform="translate(0, 10)">
-                <line x1="0" y1="0" x2="10" y2="0" stroke="#0f172a" strokeWidth="0.4" />
-                <text x="12" y="1.2" fontSize="2.5" fill="#334155">剪切实线</text>
+              <g transform="translate(0, 9)">
+                <line x1="0" y1="0" x2="8" y2="0" stroke="#0f172a" strokeWidth="0.4" />
+                <text x="9.5" y="1" fontSize="2.3" fill="#334155">剪切</text>
 
-                <line x1="38" y1="0" x2="48" y2="0" stroke="#dc2626" strokeWidth="0.35" strokeDasharray="2, 1.5" />
-                <text x="50" y="1.2" fontSize="2.5" fill="#dc2626">山折虚线 (外折)</text>
+                <line x1="22" y1="0" x2="30" y2="0" stroke="#dc2626" strokeWidth="0.35" strokeDasharray="1.5, 1" />
+                <text x="31.5" y="1" fontSize="2.3" fill="#dc2626">山折</text>
 
-                <line x1="88" y1="0" x2="98" y2="0" stroke="#0284c7" strokeWidth="0.35" strokeDasharray="3, 1, 1, 1" />
-                <text x="100" y="1.2" fontSize="2.5" fill="#0284c7">谷折点划线 (内折)</text>
+                <line x1="44" y1="0" x2="52" y2="0" stroke="#0284c7" strokeWidth="0.35" strokeDasharray="2.5, 1, 0.8, 1" />
+                <text x="53.5" y="1" fontSize="2.3" fill="#0284c7">谷折</text>
               </g>
             </g>
 
-            {/* 3. 渲染当前页的所有零件 (车身独立或配件专页) */}
+            {/* 2. 渲染当前页的所有零件 (车身独立或配件专页) */}
             {activePage?.placements.map((placement: ConsistPartPlacement, pIdx: number) => {
               const part = placement.part
               const car = placement.car
@@ -291,8 +282,15 @@ export const NetViewer2D: React.FC<NetViewer2DProps> = ({
               return (
                 <g key={`${part.id}_${pIdx}`} transform={`translate(${offsetX}, ${offsetY})`}>
                   {activePage.isAccessoryPage && (
-                    <text x="0" y="-3" fontSize="3" fontWeight="bold" fill="#475569">
-                      ● {title}
+                    <text
+                      x={(part.bounds.minX || 0) + part.bounds.width / 2}
+                      y={(part.bounds.minY || 0) - 6}
+                      textAnchor="middle"
+                      fontSize="2.6"
+                      fontWeight="bold"
+                      fill="#475569"
+                    >
+                      {title}
                     </text>
                   )}
 

@@ -6,7 +6,6 @@ import { NetViewer2D } from './components/viewport2d/NetViewer2D'
 import { ModelSelector } from './components/editor/ModelSelector'
 import { TextureEditor } from './components/editor/TextureEditor'
 import { AssemblyGuide } from './components/editor/AssemblyGuide'
-import { ApiConfigModal } from './components/editor/ApiConfigModal'
 import { TextureBaker } from './texture/textureBaker'
 import { PRESET_THEMES } from './texture/presetThemes'
 import { TextureTheme, CustomTextConfig } from './texture/types'
@@ -20,6 +19,15 @@ import { TrainModelConsist } from './core/schema/consistSchema'
 import { exportConsistToPdf } from './export/pdfExporter'
 import confetti from 'canvas-confetti'
 import { Layers, Palette } from 'lucide-react'
+
+function getInitialThemeForConsist(consist: TrainModelConsist): TextureTheme {
+  if (consist.defaultThemeId) {
+    const found = PRESET_THEMES.find(t => t.id === consist.defaultThemeId)
+    if (found) return found
+  }
+  const matched = PRESET_THEMES.find(t => t.targetConsistIds?.includes(consist.id))
+  return matched || PRESET_THEMES[0]
+}
 
 export function App() {
   // 1. 动态模型资产清单与当前编组
@@ -36,24 +44,30 @@ export function App() {
 
   // 3. 视口与交互状态
   const [viewMode, setViewMode] = useState<'3d' | '2d' | 'split'>('split')
-  const [explodeRatio, setExplodeRatio] = useState<number>(0)
   const [sidebarTab, setSidebarTab] = useState<'models' | 'texture'>('models')
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
 
-  // 4. 涂装与纹理定制状态
-  const [currentTheme, setCurrentTheme] = useState<TextureTheme>(PRESET_THEMES[0])
-  const [customColors, setCustomColors] = useState({
-    primary: PRESET_THEMES[0].colors.primary,
-    secondary: PRESET_THEMES[0].colors.secondary,
-    accent: PRESET_THEMES[0].colors.accent,
-    roof: PRESET_THEMES[0].colors.roof
+  // 4. 涂装与纹理定制状态 (初始严格匹配当前车型的专属涂装)
+  const [currentTheme, setCurrentTheme] = useState<TextureTheme>(() => getInitialThemeForConsist(CONSIST_REGISTRY[0]))
+  const [customColors, setCustomColors] = useState(() => {
+    const initialTheme = getInitialThemeForConsist(CONSIST_REGISTRY[0])
+    return {
+      primary: initialTheme.colors.primary,
+      secondary: initialTheme.colors.secondary,
+      accent: initialTheme.colors.accent,
+      roof: initialTheme.colors.roof
+    }
   })
   const [useCustomColors, setUseCustomColors] = useState(false)
   const [customText, setCustomText] = useState<CustomTextConfig>({
     enabled: false,
     kidName: "ALEX'S EXPRESS",
     trainNumber: 'EXP-88',
-    destination: '新宿·东京'
+    destination: '新宿·东京',
+    textColor: '#ffffff',
+    bgColor: '#0f172a',
+    offsetX: 0,
+    offsetY: 0
   })
 
   // 5. 纹理烘焙器
@@ -62,13 +76,7 @@ export function App() {
 
   // 6. UI 弹窗与导出状态
   const [isGuideOpen, setIsGuideOpen] = useState(false)
-  const [isApiModalOpen, setIsApiModalOpen] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
-  const [apiConfig, setApiConfig] = useState({
-    apiKey: '',
-    apiBaseUrl: 'https://api.openai.com/v1',
-    modelName: 'gpt-4o'
-  })
 
   // 7. 亮色 / 暗色主题 (默认跟随系统，实时监听系统变化，用户切换时持久化至 localStorage)
   const [themeMode, setThemeMode] = useState<'light' | 'dark'>(() => {
@@ -142,19 +150,16 @@ export function App() {
       setFocusedCarIndex(-1)
       setCurrent2dPageIndex(0)
 
-      // 强校验：优先匹配车型的 defaultThemeId，或匹配兼容涂装
+      // 强校验：优先匹配车型的 defaultThemeId，或匹配该车型的专属涂装
       let targetTheme: TextureTheme | undefined
       if (found.defaultThemeId) {
         targetTheme = PRESET_THEMES.find(th => th.id === found.defaultThemeId)
       }
       if (!targetTheme) {
-        targetTheme = PRESET_THEMES.find(th =>
-          th.targetConsistIds?.includes(found.id) ||
-          th.compatibleCategories.includes(found.category as any)
-        )
+        targetTheme = PRESET_THEMES.find(th => th.targetConsistIds?.includes(found.id))
       }
       if (!targetTheme) {
-        targetTheme = PRESET_THEMES[0]
+        targetTheme = PRESET_THEMES.filter(th => th.targetConsistIds?.includes(found.id))[0] || PRESET_THEMES[0]
       }
 
       setUseCustomColors(false)
@@ -178,12 +183,12 @@ export function App() {
       setCurrent2dPageIndex(0)
 
       confetti({
-        particleCount: 80,
-        spread: 60,
-        origin: { y: 0.5 }
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
       })
     } else {
-      alert(`导入失败: ${res.error || '文件格式错误'}`)
+      alert(`导入失败: ${res.error}`)
     }
   }
 
@@ -192,28 +197,25 @@ export function App() {
     modelRepository.exportToFile(currentConsist)
   }
 
-  const handleSaveApiConfig = (newConfig: { apiKey: string; apiBaseUrl: string; modelName: string }) => {
-    setApiConfig(newConfig)
-    localStorage.setItem('papercraft_api_config', JSON.stringify(newConfig))
-  }
-
   // 导出整套列车编组的完整多页 A4 PDF
   const handleExportPdf = async () => {
+    if (isExporting) return
     setIsExporting(true)
     try {
       await exportConsistToPdf({
         consistName: currentConsist.name,
         cars,
-        baker
+        baker,
+        isBlankTemplate: false
       })
 
       confetti({
-        particleCount: 100,
-        spread: 70,
+        particleCount: 120,
+        spread: 80,
         origin: { y: 0.6 }
       })
-    } catch (err) {
-      console.error('Consist PDF Export Error:', err)
+    } catch (e) {
+      console.error('导出 PDF 失败:', e)
       alert('导出编组 PDF 失败，请重试')
     } finally {
       setIsExporting(false)
@@ -221,7 +223,7 @@ export function App() {
   }
 
   return (
-    <div className={`flex flex-col w-screen h-screen ${isLight ? 'bg-zinc-100 text-zinc-900' : 'bg-zinc-950 text-zinc-100'} overflow-hidden font-sans transition-colors`}>
+    <div className={`w-screen h-screen flex flex-col ${isLight ? 'bg-zinc-100 text-zinc-900' : 'bg-black text-white'} overflow-hidden select-none font-sans`}>
       {/* 顶部单行极简导航栏 */}
       <Header
         currentConsist={currentConsist}
@@ -231,19 +233,12 @@ export function App() {
         onExportPackage={handleExportPackage}
         cars={cars}
         current2dPageIndex={current2dPageIndex}
-        onSelect2dPageIndex={(idx) => {
-          setCurrent2dPageIndex(idx)
-          if (idx < cars.length) {
-            setFocusedCarIndex(idx)
-          }
-        }}
+        onSelect2dPageIndex={setCurrent2dPageIndex}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         onOpenGuide={() => setIsGuideOpen(true)}
-        onOpenApiConfig={() => setIsApiModalOpen(true)}
         onExportPdf={handleExportPdf}
         isExporting={isExporting}
-        hasApiKey={!!apiConfig.apiKey}
         themeMode={themeMode}
         onToggleThemeMode={toggleThemeMode}
         isSidebarOpen={isSidebarOpen}
@@ -261,8 +256,6 @@ export function App() {
                 focusedCarIndex={focusedCarIndex}
                 baker={baker}
                 bakeTick={bakeTick}
-                explodeRatio={explodeRatio}
-                onExplodeChange={setExplodeRatio}
                 themeMode={themeMode}
               />
             </div>
@@ -290,8 +283,6 @@ export function App() {
                   focusedCarIndex={focusedCarIndex}
                   baker={baker}
                   bakeTick={bakeTick}
-                  explodeRatio={explodeRatio}
-                  onExplodeChange={setExplodeRatio}
                   themeMode={themeMode}
                 />
               </div>
@@ -339,7 +330,7 @@ export function App() {
                 }`}
               >
                 <Palette className="w-3.5 h-3.5" />
-                涂装与 AI
+                涂装
               </button>
             </div>
 
@@ -380,8 +371,6 @@ export function App() {
                   onUseCustomColorsChange={setUseCustomColors}
                   customText={customText}
                   onCustomTextChange={setCustomText}
-                  apiKey={apiConfig.apiKey}
-                  apiBaseUrl={apiConfig.apiBaseUrl}
                   themeMode={themeMode}
                   baker={baker}
                   onCustomTextureApplied={() => {
@@ -399,14 +388,8 @@ export function App() {
         )}
       </div>
 
-      {/* 弹窗组件 */}
+      {/* 组装指南弹窗 */}
       <AssemblyGuide isOpen={isGuideOpen} onClose={() => setIsGuideOpen(false)} />
-      <ApiConfigModal
-        isOpen={isApiModalOpen}
-        onClose={() => setIsApiModalOpen(false)}
-        initialConfig={apiConfig}
-        onSave={handleSaveApiConfig}
-      />
     </div>
   )
 }

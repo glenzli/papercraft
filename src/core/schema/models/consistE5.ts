@@ -264,6 +264,7 @@ export const e5TrainConsist: TrainModelConsist = {
   id: 'e5-consist',
   name: '新干线 E5系 (隼号)',
   category: 'shinkansen',
+  defaultThemeId: 'hayabusa-emerald',
   description: '超长气动长鼻与高速流线客车，支持自由组合多节新干线高铁编组。',
   difficulty: 'medium',
   recommendedAge: '7-14 岁',

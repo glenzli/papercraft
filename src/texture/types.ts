@@ -1,9 +1,13 @@
 // 涂装与纹理类型定义
 
 export interface CustomTextConfig {
-  trainNumber: string // 如 "E235-01" 或 "NO. 888"
-  destination: string // 如 "东京·新宿" 或 "HAPPY EXP"
-  kidName: string // 如 "ALEX'S TRAIN" 或 "宝贝号特快"
+  trainNumber: string // 如 "G1234" 或 "EXP-88"
+  destination: string // 如 "北京南·上海虹桥" 或 "新宿·东京"
+  kidName: string // 如 "复兴号" 或 "ALEX'S EXPRESS"
+  textColor?: string // 字体颜色 (如 '#ffffff', '#fef08a', '#0f172a')
+  bgColor?: string // 铭牌底框颜色 (如 '#0f172a', '#1e293b')
+  offsetX?: number // 水平横向偏移百分比 (-50 到 50, 默认 0)
+  offsetY?: number // 垂直纵向偏移百分比 (-50 到 50, 默认 0)
   enabled: boolean
 }
 

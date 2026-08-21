@@ -427,21 +427,37 @@ export class TextureBaker {
         ctx.fillStyle = '#cbd5e1' // 科技银灰底漆
         ctx.fillRect(0, 0, w, h)
 
-        // 动感中国红飘带 (左右侧统一: 从车头 x=0 向后飞扬至车尾 x=w)
-        ctx.fillStyle = '#dc2626'
-        ctx.beginPath()
-        ctx.moveTo(0, h * 0.72)
-        ctx.lineTo(w * 0.25, h * 0.58)
-        ctx.lineTo(w, h * 0.58)
-        ctx.lineTo(w, h * 0.65)
-        ctx.lineTo(w * 0.25, h * 0.65)
-        ctx.lineTo(0, h * 0.82)
-        ctx.closePath()
-        ctx.fill()
+        if (isMiddle) {
+          // 中间客车：贯通全长的平直中国红动感腰带
+          ctx.fillStyle = '#dc2626'
+          ctx.fillRect(0, h * 0.58, w, h * 0.07)
+          ctx.fillStyle = '#991b1b'
+          ctx.fillRect(0, h * 0.65, w, 3)
+        } else {
+          // 先头车 / 尾车：动感中国红飘带向车头流线鼻锥下潜
+          ctx.fillStyle = '#dc2626'
+          ctx.beginPath()
+          ctx.moveTo(0, h * 0.72)
+          ctx.lineTo(w * 0.25, h * 0.58)
+          ctx.lineTo(w, h * 0.58)
+          ctx.lineTo(w, h * 0.65)
+          ctx.lineTo(w * 0.25, h * 0.65)
+          ctx.lineTo(0, h * 0.82)
+          ctx.closePath()
+          ctx.fill()
 
-        // 深红边缘细线
-        ctx.fillStyle = '#991b1b'
-        ctx.fillRect(0, h * 0.65, w, 3)
+          // 深红边缘细线
+          ctx.fillStyle = '#991b1b'
+          ctx.beginPath()
+          ctx.moveTo(0, h * 0.82)
+          ctx.lineTo(w * 0.25, h * 0.65)
+          ctx.lineTo(w, h * 0.65)
+          ctx.lineTo(w, h * 0.65 + 3)
+          ctx.lineTo(w * 0.25, h * 0.65 + 3)
+          ctx.lineTo(0, h * 0.82 + 3)
+          ctx.closePath()
+          ctx.fill()
+        }
 
         // 底部深黑灰导流裙板
         ctx.fillStyle = '#1e293b'
@@ -452,20 +468,36 @@ export class TextureBaker {
         ctx.fillStyle = '#f8fafc' // 象牙白
         ctx.fillRect(0, 0, w, h)
 
-        // 金黄飞翼色带 (左右侧统一: 从车头 x=0 向后飞扬至车尾 x=w)
-        ctx.fillStyle = '#d97706'
-        ctx.beginPath()
-        ctx.moveTo(0, h * 0.74)
-        ctx.lineTo(w * 0.28, h * 0.58)
-        ctx.lineTo(w, h * 0.58)
-        ctx.lineTo(w, h * 0.65)
-        ctx.lineTo(w * 0.28, h * 0.65)
-        ctx.lineTo(0, h * 0.82)
-        ctx.closePath()
-        ctx.fill()
+        if (isMiddle) {
+          // 中间客车：贯通全长的平直金凤凰腰带
+          ctx.fillStyle = '#d97706'
+          ctx.fillRect(0, h * 0.58, w, h * 0.07)
+          ctx.fillStyle = '#b45309'
+          ctx.fillRect(0, h * 0.65, w, 2.5)
+        } else {
+          // 先头车 / 尾车：金黄飞翼色带向车头流线鼻锥下潜
+          ctx.fillStyle = '#d97706'
+          ctx.beginPath()
+          ctx.moveTo(0, h * 0.74)
+          ctx.lineTo(w * 0.28, h * 0.58)
+          ctx.lineTo(w, h * 0.58)
+          ctx.lineTo(w, h * 0.65)
+          ctx.lineTo(w * 0.28, h * 0.65)
+          ctx.lineTo(0, h * 0.82)
+          ctx.closePath()
+          ctx.fill()
 
-        ctx.fillStyle = '#b45309'
-        ctx.fillRect(0, h * 0.65, w, 2.5)
+          ctx.fillStyle = '#b45309'
+          ctx.beginPath()
+          ctx.moveTo(0, h * 0.82)
+          ctx.lineTo(w * 0.28, h * 0.65)
+          ctx.lineTo(w, h * 0.65)
+          ctx.lineTo(w, h * 0.65 + 2.5)
+          ctx.lineTo(w * 0.28, h * 0.65 + 2.5)
+          ctx.lineTo(0, h * 0.82 + 2.5)
+          ctx.closePath()
+          ctx.fill()
+        }
 
         ctx.fillStyle = '#1e293b'
         ctx.fillRect(0, h * 0.84, w, h * 0.16)
@@ -1196,14 +1228,54 @@ export class TextureBaker {
     // 仅在用户显式开启自定义文字时绘制
     if (customText && customText.enabled) {
       ctx.save()
-      ctx.fillStyle = accentColor
-      ctx.font = 'bold 20px "Plus Jakarta Sans", sans-serif'
-      ctx.textAlign = 'center'
-      ctx.fillText(customText.kidName || "KID'S EXPRESS", w * 0.5, h * 0.78)
+      const ox = (customText.offsetX ?? 0) * (w * 0.006)
+      const oy = (customText.offsetY ?? 0) * (h * 0.005)
 
-      ctx.fillStyle = '#ffffff'
-      ctx.font = '12px monospace'
-      ctx.fillText(`${customText.trainNumber}  |  ${customText.destination}`, w * 0.5, h * 0.83)
+      const cx = w * 0.5 + ox
+      const cy1 = h * 0.74 + oy
+      const cy2 = h * 0.83 + oy
+
+      const text1 = customText.kidName || "KID'S EXPRESS"
+      const text2 = [customText.trainNumber, customText.destination].filter(Boolean).join('  |  ')
+
+      // 计算文本宽度以自适应绘制高清晰度防眩光 LED 铭牌底框 (100% 杜绝在浅色/纯白车体上文字不可见)
+      ctx.font = 'bold 15px "Plus Jakarta Sans", sans-serif'
+      const m1 = ctx.measureText(text1).width
+      ctx.font = 'bold 10px monospace'
+      const m2 = text2 ? ctx.measureText(text2).width : 0
+      const boxW = Math.max(m1, m2) + 26
+      const boxH = text2 ? 34 : 22
+      const boxX = cx - boxW / 2
+      const boxY = text2 ? cy1 - 15 : cy1 - 13
+
+      // 1. 高对比度底板 (默认深黑科技底框或用户自定义颜色)
+      ctx.fillStyle = customText.bgColor || '#0f172a'
+      ctx.beginPath()
+      ctx.roundRect(boxX, boxY, boxW, boxH, 5)
+      ctx.fill()
+
+      // 金色/科技细边框
+      ctx.strokeStyle = accentColor || '#f59e0b'
+      ctx.lineWidth = 1.2
+      ctx.beginPath()
+      ctx.roundRect(boxX, boxY, boxW, boxH, 5)
+      ctx.stroke()
+
+      // 2. 文字绘制 (支持自定义颜色，默认鲜亮白与暖黄)
+      const primaryTextColor = customText.textColor || '#ffffff'
+      const secondaryTextColor = customText.textColor || '#fef08a'
+
+      ctx.fillStyle = primaryTextColor
+      ctx.font = 'bold 14px "Plus Jakarta Sans", sans-serif'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText(text1, cx, text2 ? cy1 - 2 : cy1 - 2)
+
+      if (text2) {
+        ctx.fillStyle = secondaryTextColor
+        ctx.font = 'bold 10px monospace'
+        ctx.fillText(text2, cx, cy2 - 2)
+      }
       ctx.restore()
     }
 
