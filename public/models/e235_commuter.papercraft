@@ -1,0 +1,442 @@
+{
+  "format": "papercraft",
+  "specVersion": "20260820.1",
+  "createdAt": "2026-08-20T22:58:00.000Z",
+  "updatedAt": "2026-08-20T22:58:00.000Z",
+  "meta": {
+    "id": "e235-consist",
+    "name": "日本都市通勤电车 (JR E235系编组)",
+    "category": "commuter",
+    "author": "Papercraft Studio",
+    "difficulty": "easy",
+    "recommendedAge": "5-9 岁",
+    "estimatedTimePerCar": "15 分钟/节",
+    "description": "可自由编组 1~6 节车厢的经典日本电车，包含先头驾驶车、带受电弓中间客车与尾部驾驶车。"
+  },
+  "consist": {
+    "defaultMiddleCarCount": 1,
+    "maxMiddleCars": 6,
+    "cars": [
+      {
+        "type": "head",
+        "name": "1号车 (先头驾驶车)",
+        "description": "前凸驾驶室、前风挡玻璃、LED 线路牌与双前大灯。",
+        "schema": {
+          "version": "20260820.1",
+          "id": "e235-commuter-train",
+          "name": "日本都市通勤电车 (JR E235系)",
+          "category": "commuter",
+          "difficulty": "easy",
+          "recommendedAge": "5-9 岁",
+          "estimatedTime": "15-20 分钟",
+          "description": "经典的日本箱式地铁/电车，大车窗与平整车头，易于裁剪折叠，最适合初学者和小朋友。",
+          "dimensions": { "length": 160, "width": 38, "height": 44 },
+          "parts": [
+            {
+              "id": "body-main",
+              "name": "车身主体展开",
+              "faces": [
+                {
+                  "id": "roof",
+                  "name": "车顶",
+                  "slotName": "roof",
+                  "vertices3D": [[-19, 44, 80], [19, 44, 80], [-19, 44, -80], [19, 44, -80]],
+                  "vertices2D": [[86, 216], [124, 216], [86, 56], [124, 56]],
+                  "uvCoords": [[0, 0], [1, 0], [0, 1], [1, 1]],
+                  "indices": [0, 1, 2, 1, 3, 2],
+                  "creases": [
+                    { "type": "mountain", "p1": { "x": 86, "y": 56 }, "p2": { "x": 124, "y": 56 } },
+                    { "type": "mountain", "p1": { "x": 124, "y": 56 }, "p2": { "x": 124, "y": 216 } },
+                    { "type": "mountain", "p1": { "x": 124, "y": 216 }, "p2": { "x": 86, "y": 216 } },
+                    { "type": "mountain", "p1": { "x": 86, "y": 216 }, "p2": { "x": 86, "y": 56 } }
+                  ]
+                },
+                {
+                  "id": "side_left",
+                  "name": "左侧车身",
+                  "slotName": "side_left",
+                  "vertices3D": [[-19, 44, 80], [-19, 44, -80], [-19, 0, 80], [-19, 0, -80]],
+                  "vertices2D": [[86, 216], [86, 56], [42, 216], [42, 56]],
+                  "uvCoords": [[1, 1], [0, 1], [1, 0], [0, 0]],
+                  "indices": [0, 1, 2, 1, 3, 2],
+                  "creases": [
+                    { "type": "mountain", "p1": { "x": 42, "y": 56 }, "p2": { "x": 42, "y": 216 } },
+                    { "type": "cut", "p1": { "x": 42, "y": 56 }, "p2": { "x": 86, "y": 56 } },
+                    { "type": "cut", "p1": { "x": 42, "y": 216 }, "p2": { "x": 86, "y": 216 } }
+                  ],
+                  "tabs": [
+                    { "id": "tab_l_front", "label": "A1", "edgeIndex": 2, "p1": { "x": 42, "y": 216 }, "p2": { "x": 86, "y": 216 }, "tabWidth": 7, "angle": 45, "targetFaceId": "front" },
+                    { "id": "tab_l_back", "label": "B1", "edgeIndex": 1, "p1": { "x": 86, "y": 56 }, "p2": { "x": 42, "y": 56 }, "tabWidth": 7, "angle": 45, "targetFaceId": "back" }
+                  ]
+                },
+                {
+                  "id": "bottom",
+                  "name": "车底",
+                  "slotName": "bottom",
+                  "vertices3D": [[-19, 0, 80], [19, 0, 80], [-19, 0, -80], [19, 0, -80]],
+                  "vertices2D": [[42, 216], [4, 216], [42, 56], [4, 56]],
+                  "uvCoords": [[0, 0], [1, 0], [0, 1], [1, 1]],
+                  "indices": [0, 1, 2, 1, 3, 2],
+                  "creases": [
+                    { "type": "cut", "p1": { "x": 4, "y": 56 }, "p2": { "x": 4, "y": 216 } },
+                    { "type": "cut", "p1": { "x": 4, "y": 56 }, "p2": { "x": 42, "y": 56 } },
+                    { "type": "cut", "p1": { "x": 4, "y": 216 }, "p2": { "x": 42, "y": 216 } }
+                  ],
+                  "tabs": [
+                    { "id": "tab_bottom_seam", "label": "D1", "edgeIndex": 0, "p1": { "x": 4, "y": 56 }, "p2": { "x": 4, "y": 216 }, "tabWidth": 8, "angle": 45, "targetFaceId": "side_right" }
+                  ]
+                },
+                {
+                  "id": "side_right",
+                  "name": "右侧车身",
+                  "slotName": "side_right",
+                  "vertices3D": [[19, 44, -80], [19, 44, 80], [19, 0, -80], [19, 0, 80]],
+                  "vertices2D": [[124, 56], [124, 216], [168, 56], [168, 216]],
+                  "uvCoords": [[0, 1], [1, 1], [0, 0], [1, 0]],
+                  "indices": [0, 1, 2, 1, 3, 2],
+                  "creases": [
+                    { "type": "cut", "p1": { "x": 168, "y": 56 }, "p2": { "x": 168, "y": 216 } },
+                    { "type": "cut", "p1": { "x": 124, "y": 56 }, "p2": { "x": 168, "y": 56 } },
+                    { "type": "cut", "p1": { "x": 124, "y": 216 }, "p2": { "x": 168, "y": 216 } }
+                  ],
+                  "tabs": [
+                    { "id": "tab_r_front", "label": "A2", "edgeIndex": 2, "p1": { "x": 124, "y": 216 }, "p2": { "x": 168, "y": 216 }, "tabWidth": 7, "angle": 45, "targetFaceId": "front" },
+                    { "id": "tab_r_back", "label": "B2", "edgeIndex": 1, "p1": { "x": 168, "y": 56 }, "p2": { "x": 124, "y": 56 }, "tabWidth": 7, "angle": 45, "targetFaceId": "back" }
+                  ]
+                },
+                {
+                  "id": "front",
+                  "name": "车头驾驶室",
+                  "slotName": "front",
+                  "vertices3D": [[-19, 44, 80], [19, 44, 80], [-19, 0, 80], [19, 0, 80]],
+                  "vertices2D": [[86, 216], [124, 216], [86, 260], [124, 260]],
+                  "uvCoords": [[0, 1], [1, 1], [0, 0], [1, 0]],
+                  "indices": [0, 1, 2, 1, 3, 2],
+                  "creases": [
+                    { "type": "cut", "p1": { "x": 86, "y": 260 }, "p2": { "x": 124, "y": 260 } },
+                    { "type": "cut", "p1": { "x": 86, "y": 216 }, "p2": { "x": 86, "y": 260 } },
+                    { "type": "cut", "p1": { "x": 124, "y": 216 }, "p2": { "x": 124, "y": 260 } }
+                  ],
+                  "tabs": [
+                    { "id": "tab_front_bottom", "label": "C1", "edgeIndex": 2, "p1": { "x": 86, "y": 260 }, "p2": { "x": 124, "y": 260 }, "tabWidth": 7, "angle": 45, "targetFaceId": "bottom" }
+                  ]
+                },
+                {
+                  "id": "back",
+                  "name": "车尾",
+                  "slotName": "back",
+                  "vertices3D": [[19, 44, -80], [-19, 44, -80], [19, 0, -80], [-19, 0, -80]],
+                  "vertices2D": [[124, 56], [86, 56], [124, 12], [86, 12]],
+                  "uvCoords": [[0, 1], [1, 1], [0, 0], [1, 0]],
+                  "indices": [0, 1, 2, 1, 3, 2],
+                  "creases": [
+                    { "type": "cut", "p1": { "x": 86, "y": 12 }, "p2": { "x": 124, "y": 12 } },
+                    { "type": "cut", "p1": { "x": 86, "y": 12 }, "p2": { "x": 86, "y": 56 } },
+                    { "type": "cut", "p1": { "x": 124, "y": 12 }, "p2": { "x": 124, "y": 56 } }
+                  ],
+                  "tabs": [
+                    { "id": "tab_back_bottom", "label": "C2", "edgeIndex": 2, "p1": { "x": 124, "y": 12 }, "p2": { "x": 86, "y": 12 }, "tabWidth": 7, "angle": 45, "targetFaceId": "bottom" }
+                  ]
+                }
+              ]
+            }
+          ],
+          "accessories": [
+            {
+              "id": "ac_unit_1",
+              "name": "车顶冷气机组 A",
+              "slotName": "roof",
+              "vertices3D": [[-12, 4, 18], [12, 4, 18], [12, 4, -18], [-12, 4, -18], [-12, -4, 18], [12, -4, 18], [12, -4, -18], [-12, -4, -18]],
+              "indices": [0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7],
+              "uvCoords": [[0, 1], [1, 1], [1, 0], [0, 0], [0, 1], [1, 1], [1, 0], [0, 0]],
+              "position3D": [0, 48, 30],
+              "layout2D": { "x": 172, "y": 30, "width": 24, "height": 36 }
+            },
+            {
+              "id": "ac_unit_2",
+              "name": "车顶冷气机组 B",
+              "slotName": "roof",
+              "vertices3D": [[-12, 4, 18], [12, 4, 18], [12, 4, -18], [-12, 4, -18], [-12, -4, 18], [12, -4, 18], [12, -4, -18], [-12, -4, -18]],
+              "indices": [0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7],
+              "uvCoords": [[0, 1], [1, 1], [1, 0], [0, 0], [0, 1], [1, 1], [1, 0], [0, 0]],
+              "position3D": [0, 48, -35],
+              "layout2D": { "x": 172, "y": 75, "width": 24, "height": 36 }
+            }
+          ]
+        }
+      },
+      {
+        "type": "middle",
+        "name": "中间车厢 (乘客客车)",
+        "description": "双端贯通门、长排观光窗与车顶受电弓。",
+        "schema": {
+          "version": "20260820.1",
+          "id": "e235-middle-car",
+          "name": "E235系 中间客车 (带受电弓)",
+          "category": "commuter",
+          "difficulty": "easy",
+          "recommendedAge": "5-9 岁",
+          "estimatedTime": "15-20 分钟",
+          "description": "双端贯通门连接通道、双侧4组标准客门与车顶高速受电弓。",
+          "dimensions": { "length": 160, "width": 38, "height": 44 },
+          "parts": [
+            {
+              "id": "middle-body",
+              "name": "中间车身展开",
+              "faces": [
+                {
+                  "id": "roof",
+                  "name": "车顶",
+                  "slotName": "roof",
+                  "vertices3D": [[-19, 44, 80], [19, 44, 80], [-19, 44, -80], [19, 44, -80]],
+                  "vertices2D": [[86, 216], [124, 216], [86, 56], [124, 56]],
+                  "uvCoords": [[0, 0], [1, 0], [0, 1], [1, 1]],
+                  "indices": [0, 1, 2, 1, 3, 2],
+                  "creases": [
+                    { "type": "mountain", "p1": { "x": 86, "y": 56 }, "p2": { "x": 124, "y": 56 } },
+                    { "type": "mountain", "p1": { "x": 124, "y": 56 }, "p2": { "x": 124, "y": 216 } },
+                    { "type": "mountain", "p1": { "x": 124, "y": 216 }, "p2": { "x": 86, "y": 216 } },
+                    { "type": "mountain", "p1": { "x": 86, "y": 216 }, "p2": { "x": 86, "y": 56 } }
+                  ]
+                },
+                {
+                  "id": "side_left",
+                  "name": "左侧客车身",
+                  "slotName": "side_left",
+                  "vertices3D": [[-19, 44, 80], [-19, 44, -80], [-19, 0, 80], [-19, 0, -80]],
+                  "vertices2D": [[86, 216], [86, 56], [42, 216], [42, 56]],
+                  "uvCoords": [[1, 1], [0, 1], [1, 0], [0, 0]],
+                  "indices": [0, 1, 2, 1, 3, 2],
+                  "creases": [
+                    { "type": "cut", "p1": { "x": 42, "y": 56 }, "p2": { "x": 86, "y": 56 } },
+                    { "type": "cut", "p1": { "x": 42, "y": 216 }, "p2": { "x": 86, "y": 216 } }
+                  ],
+                  "tabs": [
+                    { "id": "tab_l_front", "label": "A1", "edgeIndex": 2, "p1": { "x": 42, "y": 216 }, "p2": { "x": 86, "y": 216 }, "tabWidth": 7, "angle": 45, "targetFaceId": "front_gangway" },
+                    { "id": "tab_l_back", "label": "B1", "edgeIndex": 1, "p1": { "x": 86, "y": 56 }, "p2": { "x": 42, "y": 56 }, "tabWidth": 7, "angle": 45, "targetFaceId": "back_gangway" }
+                  ]
+                },
+                {
+                  "id": "bottom",
+                  "name": "车底",
+                  "slotName": "bottom",
+                  "vertices3D": [[-19, 0, 80], [19, 0, 80], [-19, 0, -80], [19, 0, -80]],
+                  "vertices2D": [[42, 216], [4, 216], [42, 56], [4, 56]],
+                  "uvCoords": [[0, 0], [1, 0], [0, 1], [1, 1]],
+                  "indices": [0, 1, 2, 1, 3, 2],
+                  "creases": [
+                    { "type": "cut", "p1": { "x": 4, "y": 56 }, "p2": { "x": 4, "y": 216 } },
+                    { "type": "cut", "p1": { "x": 4, "y": 56 }, "p2": { "x": 42, "y": 56 } },
+                    { "type": "cut", "p1": { "x": 4, "y": 216 }, "p2": { "x": 42, "y": 216 } }
+                  ],
+                  "tabs": [
+                    { "id": "tab_bottom_seam", "label": "D1", "edgeIndex": 0, "p1": { "x": 4, "y": 56 }, "p2": { "x": 4, "y": 216 }, "tabWidth": 8, "angle": 45, "targetFaceId": "side_right" }
+                  ]
+                },
+                {
+                  "id": "side_right",
+                  "name": "右侧客车身",
+                  "slotName": "side_right",
+                  "vertices3D": [[19, 44, -80], [19, 44, 80], [19, 0, -80], [19, 0, 80]],
+                  "vertices2D": [[124, 56], [124, 216], [168, 56], [168, 216]],
+                  "uvCoords": [[0, 1], [1, 1], [0, 0], [1, 0]],
+                  "indices": [0, 1, 2, 1, 3, 2],
+                  "creases": [
+                    { "type": "cut", "p1": { "x": 168, "y": 56 }, "p2": { "x": 168, "y": 216 } },
+                    { "type": "cut", "p1": { "x": 124, "y": 56 }, "p2": { "x": 168, "y": 56 } },
+                    { "type": "cut", "p1": { "x": 124, "y": 216 }, "p2": { "x": 168, "y": 216 } }
+                  ],
+                  "tabs": [
+                    { "id": "tab_r_front", "label": "A2", "edgeIndex": 2, "p1": { "x": 124, "y": 216 }, "p2": { "x": 168, "y": 216 }, "tabWidth": 7, "angle": 45, "targetFaceId": "front_gangway" },
+                    { "id": "tab_r_back", "label": "B2", "edgeIndex": 1, "p1": { "x": 168, "y": 56 }, "p2": { "x": 124, "y": 56 }, "tabWidth": 7, "angle": 45, "targetFaceId": "back_gangway" }
+                  ]
+                },
+                {
+                  "id": "front_gangway",
+                  "name": "前连结贯通门",
+                  "slotName": "back",
+                  "vertices3D": [[-19, 44, 80], [19, 44, 80], [-19, 0, 80], [19, 0, 80]],
+                  "vertices2D": [[86, 216], [124, 216], [86, 260], [124, 260]],
+                  "uvCoords": [[0, 1], [1, 1], [0, 0], [1, 0]],
+                  "indices": [0, 1, 2, 1, 3, 2],
+                  "creases": [
+                    { "type": "cut", "p1": { "x": 86, "y": 260 }, "p2": { "x": 124, "y": 260 } },
+                    { "type": "cut", "p1": { "x": 86, "y": 216 }, "p2": { "x": 86, "y": 260 } },
+                    { "type": "cut", "p1": { "x": 124, "y": 216 }, "p2": { "x": 124, "y": 260 } }
+                  ],
+                  "tabs": [
+                    { "id": "tab_front_bottom", "label": "C1", "edgeIndex": 2, "p1": { "x": 86, "y": 260 }, "p2": { "x": 124, "y": 260 }, "tabWidth": 7, "angle": 45, "targetFaceId": "bottom" }
+                  ]
+                },
+                {
+                  "id": "back_gangway",
+                  "name": "后连结贯通门",
+                  "slotName": "back",
+                  "vertices3D": [[19, 44, -80], [-19, 44, -80], [19, 0, -80], [-19, 0, -80]],
+                  "vertices2D": [[124, 56], [86, 56], [124, 12], [86, 12]],
+                  "uvCoords": [[0, 1], [1, 1], [0, 0], [1, 0]],
+                  "indices": [0, 1, 2, 1, 3, 2],
+                  "creases": [
+                    { "type": "cut", "p1": { "x": 86, "y": 12 }, "p2": { "x": 124, "y": 12 } },
+                    { "type": "cut", "p1": { "x": 86, "y": 12 }, "p2": { "x": 86, "y": 56 } },
+                    { "type": "cut", "p1": { "x": 124, "y": 12 }, "p2": { "x": 124, "y": 56 } }
+                  ],
+                  "tabs": [
+                    { "id": "tab_back_bottom", "label": "C2", "edgeIndex": 2, "p1": { "x": 124, "y": 12 }, "p2": { "x": 86, "y": 12 }, "tabWidth": 7, "angle": 45, "targetFaceId": "bottom" }
+                  ]
+                }
+              ]
+            }
+          ],
+          "accessories": [
+            {
+              "id": "pantograph",
+              "name": "车顶受电弓组件",
+              "slotName": "roof",
+              "vertices3D": [[-10, 8, 14], [10, 8, 14], [10, 8, -14], [-10, 8, -14], [-10, -8, 14], [10, -8, 14], [10, -8, -14], [-10, -8, -14]],
+              "indices": [0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7],
+              "uvCoords": [[0, 1], [1, 1], [1, 0], [0, 0], [0, 1], [1, 1], [1, 0], [0, 0]],
+              "position3D": [0, 52, 40],
+              "layout2D": { "x": 172, "y": 35, "width": 24, "height": 36 }
+            },
+            {
+              "id": "ac_unit_mid",
+              "name": "车顶冷气机组",
+              "slotName": "roof",
+              "vertices3D": [[-12, 4, 18], [12, 4, 18], [12, 4, -18], [-12, 4, -18], [-12, -4, 18], [12, -4, 18], [12, -4, -18], [-12, -4, -18]],
+              "indices": [0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7],
+              "uvCoords": [[0, 1], [1, 1], [1, 0], [0, 0], [0, 1], [1, 1], [1, 0], [0, 0]],
+              "position3D": [0, 48, -35],
+              "layout2D": { "x": 172, "y": 80, "width": 24, "height": 36 }
+            }
+          ]
+        }
+      },
+      {
+        "type": "tail",
+        "name": "尾车 (后部驾驶车)",
+        "description": "后向驾驶室与双红宝石尾灯。",
+        "schema": {
+          "version": "20260820.1",
+          "id": "e235-tail-car",
+          "name": "E235系 尾车 (后部驾驶室)",
+          "category": "commuter",
+          "difficulty": "easy",
+          "recommendedAge": "5-9 岁",
+          "estimatedTime": "15-20 分钟",
+          "description": "列车末尾驾驶室，搭载红色尾灯与尾部安全连结器。",
+          "dimensions": { "length": 160, "width": 38, "height": 44 },
+          "parts": [
+            {
+              "id": "body-main",
+              "name": "车身主体展开",
+              "faces": [
+                {
+                  "id": "roof",
+                  "name": "车顶",
+                  "slotName": "roof",
+                  "vertices3D": [[-19, 44, 80], [19, 44, 80], [-19, 44, -80], [19, 44, -80]],
+                  "vertices2D": [[86, 216], [124, 216], [86, 56], [124, 56]],
+                  "uvCoords": [[0, 0], [1, 0], [0, 1], [1, 1]],
+                  "indices": [0, 1, 2, 1, 3, 2],
+                  "creases": [
+                    { "type": "mountain", "p1": { "x": 86, "y": 56 }, "p2": { "x": 124, "y": 56 } },
+                    { "type": "mountain", "p1": { "x": 124, "y": 56 }, "p2": { "x": 124, "y": 216 } },
+                    { "type": "mountain", "p1": { "x": 124, "y": 216 }, "p2": { "x": 86, "y": 216 } },
+                    { "type": "mountain", "p1": { "x": 86, "y": 216 }, "p2": { "x": 86, "y": 56 } }
+                  ]
+                },
+                {
+                  "id": "side_left",
+                  "name": "左侧车身",
+                  "slotName": "side_left",
+                  "vertices3D": [[-19, 44, 80], [-19, 44, -80], [-19, 0, 80], [-19, 0, -80]],
+                  "vertices2D": [[86, 216], [86, 56], [42, 216], [42, 56]],
+                  "uvCoords": [[1, 1], [0, 1], [1, 0], [0, 0]],
+                  "indices": [0, 1, 2, 1, 3, 2],
+                  "creases": [
+                    { "type": "cut", "p1": { "x": 42, "y": 56 }, "p2": { "x": 86, "y": 56 } },
+                    { "type": "cut", "p1": { "x": 42, "y": 216 }, "p2": { "x": 86, "y": 216 } }
+                  ],
+                  "tabs": [
+                    { "id": "tab_l_front", "label": "A1", "edgeIndex": 2, "p1": { "x": 42, "y": 216 }, "p2": { "x": 86, "y": 216 }, "tabWidth": 7, "angle": 45, "targetFaceId": "front" },
+                    { "id": "tab_l_back", "label": "B1", "edgeIndex": 1, "p1": { "x": 86, "y": 56 }, "p2": { "x": 42, "y": 56 }, "tabWidth": 7, "angle": 45, "targetFaceId": "back" }
+                  ]
+                },
+                {
+                  "id": "bottom",
+                  "name": "车底",
+                  "slotName": "bottom",
+                  "vertices3D": [[-19, 0, 80], [19, 0, 80], [-19, 0, -80], [19, 0, -80]],
+                  "vertices2D": [[42, 216], [4, 216], [42, 56], [4, 56]],
+                  "uvCoords": [[0, 0], [1, 0], [0, 1], [1, 1]],
+                  "indices": [0, 1, 2, 1, 3, 2],
+                  "creases": [
+                    { "type": "cut", "p1": { "x": 4, "y": 56 }, "p2": { "x": 4, "y": 216 } },
+                    { "type": "cut", "p1": { "x": 4, "y": 56 }, "p2": { "x": 42, "y": 56 } },
+                    { "type": "cut", "p1": { "x": 4, "y": 216 }, "p2": { "x": 42, "y": 216 } }
+                  ],
+                  "tabs": [
+                    { "id": "tab_bottom_seam", "label": "D1", "edgeIndex": 0, "p1": { "x": 4, "y": 56 }, "p2": { "x": 4, "y": 216 }, "tabWidth": 8, "angle": 45, "targetFaceId": "side_right" }
+                  ]
+                },
+                {
+                  "id": "side_right",
+                  "name": "右侧车身",
+                  "slotName": "side_right",
+                  "vertices3D": [[19, 44, -80], [19, 44, 80], [19, 0, -80], [19, 0, 80]],
+                  "vertices2D": [[124, 56], [124, 216], [168, 56], [168, 216]],
+                  "uvCoords": [[0, 1], [1, 1], [0, 0], [1, 0]],
+                  "indices": [0, 1, 2, 1, 3, 2],
+                  "creases": [
+                    { "type": "cut", "p1": { "x": 168, "y": 56 }, "p2": { "x": 168, "y": 216 } },
+                    { "type": "cut", "p1": { "x": 124, "y": 56 }, "p2": { "x": 168, "y": 56 } },
+                    { "type": "cut", "p1": { "x": 124, "y": 216 }, "p2": { "x": 168, "y": 216 } }
+                  ],
+                  "tabs": [
+                    { "id": "tab_r_front", "label": "A2", "edgeIndex": 2, "p1": { "x": 124, "y": 216 }, "p2": { "x": 168, "y": 216 }, "tabWidth": 7, "angle": 45, "targetFaceId": "front" },
+                    { "id": "tab_r_back", "label": "B2", "edgeIndex": 1, "p1": { "x": 168, "y": 56 }, "p2": { "x": 124, "y": 56 }, "tabWidth": 7, "angle": 45, "targetFaceId": "back" }
+                  ]
+                },
+                {
+                  "id": "front",
+                  "name": "车头驾驶室",
+                  "slotName": "front",
+                  "vertices3D": [[-19, 44, 80], [19, 44, 80], [-19, 0, 80], [19, 0, 80]],
+                  "vertices2D": [[86, 216], [124, 216], [86, 260], [124, 260]],
+                  "uvCoords": [[0, 1], [1, 1], [0, 0], [1, 0]],
+                  "indices": [0, 1, 2, 1, 3, 2],
+                  "creases": [
+                    { "type": "cut", "p1": { "x": 86, "y": 260 }, "p2": { "x": 124, "y": 260 } },
+                    { "type": "cut", "p1": { "x": 86, "y": 216 }, "p2": { "x": 86, "y": 260 } },
+                    { "type": "cut", "p1": { "x": 124, "y": 216 }, "p2": { "x": 124, "y": 260 } }
+                  ],
+                  "tabs": [
+                    { "id": "tab_front_bottom", "label": "C1", "edgeIndex": 2, "p1": { "x": 86, "y": 260 }, "p2": { "x": 124, "y": 260 }, "tabWidth": 7, "angle": 45, "targetFaceId": "bottom" }
+                  ]
+                },
+                {
+                  "id": "back",
+                  "name": "车尾",
+                  "slotName": "back",
+                  "vertices3D": [[19, 44, -80], [-19, 44, -80], [19, 0, -80], [-19, 0, -80]],
+                  "vertices2D": [[124, 56], [86, 56], [124, 12], [86, 12]],
+                  "uvCoords": [[0, 1], [1, 1], [0, 0], [1, 0]],
+                  "indices": [0, 1, 2, 1, 3, 2],
+                  "creases": [
+                    { "type": "cut", "p1": { "x": 86, "y": 12 }, "p2": { "x": 124, "y": 12 } },
+                    { "type": "cut", "p1": { "x": 86, "y": 12 }, "p2": { "x": 86, "y": 56 } },
+                    { "type": "cut", "p1": { "x": 124, "y": 12 }, "p2": { "x": 124, "y": 56 } }
+                  ],
+                  "tabs": [
+                    { "id": "tab_back_bottom", "label": "C2", "edgeIndex": 2, "p1": { "x": 124, "y": 12 }, "p2": { "x": 86, "y": 12 }, "tabWidth": 7, "angle": 45, "targetFaceId": "bottom" }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
