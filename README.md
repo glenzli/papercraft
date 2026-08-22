@@ -1,13 +1,13 @@
 # Papercraft Studio
 
 <p align="center">
-  <a href="#papercraft-studio---交互式-3d-纸模设计与-2d-展开导出系统">🇨🇳 中文</a> &nbsp;|&nbsp; <a href="#papercraft-studio---interactive-3d-papercraft-design--2d-unfold-system">🇬🇧 English</a>
+  <a href="#papercraft-studio---交互式-3d-纸模设计与-2d-展开导出系统">中文</a> &nbsp;|&nbsp; <a href="#papercraft-studio---interactive-3d-papercraft-design--2d-unfold-system">English</a>
 </p>
 
 ---
 
 <a name="papercraft-studio---交互式-3d-纸模设计与-2d-展开导出系统"></a>
-## 🇨🇳 Papercraft Studio - 交互式 3D 纸模设计与 2D 展开导出系统
+## Papercraft Studio (中文)
 
 **Papercraft Studio** 是一款专注于轨道交通、干线铁路重载货运、巨龙铰接客车与经典公路客运车型的专业级交互式 3D 纸模设计、程序化贴图烘焙与 2D 智能展开排版导出系统。
 
@@ -61,7 +61,7 @@ npm run build
 ---
 
 <a name="papercraft-studio---interactive-3d-papercraft-design--2d-unfold-system"></a>
-## 🇬🇧 Papercraft Studio - Interactive 3D Papercraft Design & 2D Unfold System
+## Papercraft Studio (English)
 
 **Papercraft Studio** is a professional-grade interactive 3D papercraft design, procedural livery baking, and 2D net layout export system for railway trains, heavy-haul freight trains, articulated bendy buses, and classic double-decker coaches.
 
