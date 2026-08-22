@@ -1,5 +1,5 @@
 // 展开与装箱排版引擎
-import { Point2D, GlueTab, UnfoldedPart } from './types'
+import { Point2D, GlueTab, UnfoldedPart, UnfoldedFace } from './types'
 
 /**
  * 计算两点间的距离
@@ -182,76 +182,370 @@ export interface ConsistPageLayout {
 }
 
 /**
- * 全列车编组标准 A4 装箱分页引擎:
- * 1. 前 N 页: 各车厢独立主体展开图 (100% 只放车身，绝无任何配件干扰)
- * 2. 第 N+1 页起: 全列车车顶与立体配件专页 (集中统一装箱整列车的所有外加配件)
+ * 检查两条线段 (p1-p2) 与 (p3-p4) 是否相交
+ */
+export function doLineSegmentsIntersect(p1: Point2D, p2: Point2D, p3: Point2D, p4: Point2D): boolean {
+  const ccw = (a: Point2D, b: Point2D, c: Point2D) => {
+    return (c.y - a.y) * (b.x - a.x) > (b.y - a.y) * (c.x - a.x)
+  }
+  return (ccw(p1, p3, p4) !== ccw(p2, p3, p4)) && (ccw(p1, p2, p3) !== ccw(p1, p2, p4))
+}
+
+/**
+ * 检查一个矩形区域 (带 safetyMargin 安全边距) 是否与多边形列表发生相交或包含
+ */
+export function doesBoxOverlapPolygons(
+  box: { minX: number; minY: number; maxX: number; maxY: number },
+  polygons: Point2D[][],
+  safetyMargin: number = 8
+): boolean {
+  const bMinX = box.minX - safetyMargin
+  const bMinY = box.minY - safetyMargin
+  const bMaxX = box.maxX + safetyMargin
+  const bMaxY = box.maxY + safetyMargin
+
+  const boxCorners: Point2D[] = [
+    { x: bMinX, y: bMinY },
+    { x: bMaxX, y: bMinY },
+    { x: bMaxX, y: bMaxY },
+    { x: bMinX, y: bMaxY }
+  ]
+
+  const boxEdges: [Point2D, Point2D][] = [
+    [boxCorners[0], boxCorners[1]],
+    [boxCorners[1], boxCorners[2]],
+    [boxCorners[2], boxCorners[3]],
+    [boxCorners[3], boxCorners[0]]
+  ]
+
+  for (const poly of polygons) {
+    if (!poly || poly.length < 3) continue
+
+    // 1. 检查多边形顶点是否在扩展矩形内
+    for (const pt of poly) {
+      if (pt.x >= bMinX && pt.x <= bMaxX && pt.y >= bMinY && pt.y <= bMaxY) {
+        return true
+      }
+    }
+
+    // 2. 检查矩形顶点是否在多边形内部
+    for (const c of boxCorners) {
+      if (isPointInPolygon(c, poly)) {
+        return true
+      }
+    }
+
+    // 3. 检查边相交
+    for (let i = 0; i < poly.length; i++) {
+      const p1 = poly[i]
+      const p2 = poly[(i + 1) % poly.length]
+      for (const [b1, b2] of boxEdges) {
+        if (doLineSegmentsIntersect(p1, p2, b1, b2)) {
+          return true
+        }
+      }
+    }
+  }
+
+  return false
+}
+
+/**
+ * 旋转 2D 展开零件 (0° 或 90°)
+ */
+export function rotateUnfoldedPart(part: UnfoldedPart, angleDeg: 0 | 90): UnfoldedPart {
+  if (angleDeg === 0) return part
+
+  const rotPt = (p: Point2D): Point2D => ({
+    x: -p.y,
+    y: p.x
+  })
+
+  const newFaces: UnfoldedFace[] = part.faces.map(face => ({
+    ...face,
+    polygon2D: face.polygon2D.map(rotPt),
+    creases: face.creases?.map(c => ({
+      ...c,
+      p1: rotPt(c.p1),
+      p2: rotPt(c.p2)
+    })) || [],
+    glueTabs: face.glueTabs?.map(t => ({
+      ...t,
+      p1: rotPt(t.p1),
+      p2: rotPt(t.p2)
+    })) || []
+  }))
+
+  return {
+    ...part,
+    faces: newFaces,
+    bounds: calculatePartBounds(newFaces)
+  }
+}
+
+function generateCandidateCornerSlots(w: number, h: number): { x: number; y: number }[] {
+  return [
+    // 1. 左上角空域 (从 Y=30 开始逐级探测)
+    { x: 12, y: 30 },
+    { x: 14, y: 34 },
+    { x: 14, y: 38 },
+    // 2. 右上角空域 (从 Y=30 开始逐级探测)
+    { x: A4_WIDTH_MM - A4_MARGIN_MM - w - 4, y: 30 },
+    { x: A4_WIDTH_MM - A4_MARGIN_MM - w - 4, y: 34 },
+    { x: A4_WIDTH_MM - A4_MARGIN_MM - w - 4, y: 38 },
+    // 3. 左下角空域
+    { x: 12, y: A4_HEIGHT_MM - A4_MARGIN_MM - h - 4 },
+    { x: 14, y: A4_HEIGHT_MM - A4_MARGIN_MM - h - 8 },
+    // 4. 右下角空域
+    { x: A4_WIDTH_MM - A4_MARGIN_MM - w - 4, y: A4_HEIGHT_MM - A4_MARGIN_MM - h - 4 },
+    { x: A4_WIDTH_MM - A4_MARGIN_MM - w - 4, y: A4_HEIGHT_MM - A4_MARGIN_MM - h - 8 },
+    // 5. 侧翼中段空域
+    { x: 12, y: (A4_HEIGHT_MM - h) / 2 },
+    { x: A4_WIDTH_MM - A4_MARGIN_MM - w - 4, y: (A4_HEIGHT_MM - h) / 2 }
+  ]
+}
+
+/**
+ * 全列车编组智能 A4 装箱分页引擎:
+ * 1. 车身主体放置在每页中央；
+ * 2. 智能探测车身四周空白区域：测试 0° 原向与 90° 旋转，若空间充裕（如叮叮车/江之电/短车身/先头车角落），配件直接就地排入角落，零纸张浪费；
+ * 3. 若 0°/90° 均空间不足（如超长车身/多配件），自动开辟「车顶与立体配件专页」集中装箱。
  */
 export function packConsistToA4Pages(cars: ConsistCarItem[]): ConsistPageLayout[] {
   const pages: ConsistPageLayout[] = []
+  const overflowAccessories: { part: UnfoldedPart; car: ConsistCarItem; carIdx: number }[] = []
 
-  // 1. 各车厢独立主体展开图 (每节车厢独占 1 页)
+  const pageOccupiedMap = new Map<number, Point2D[][]>()
+
+  // 1. 各车厢独立主体展开图 + 智能就地容纳配件
   cars.forEach((car, carIdx) => {
     const allParts = car.modelData.generateUnfoldedParts()
     const mainParts = allParts.filter(p => !p.isAccessory)
     const mainPart = mainParts[0] || allParts[0]
+    const carAccessories = allParts.filter(p => p.isAccessory === true)
 
     if (mainPart) {
       // 水平居中并预留页眉图例纵向间距 (确保从 Y=36mm 以下开始)
       const targetX = Math.max(A4_MARGIN_MM, (A4_WIDTH_MM - mainPart.bounds.width) / 2)
       const targetY = Math.max(A4_MARGIN_MM + 26, (A4_HEIGHT_MM - mainPart.bounds.height) / 2)
+      const mainOffsetX = targetX - mainPart.bounds.minX
+      const mainOffsetY = targetY - mainPart.bounds.minY
+
+      const placements: ConsistPartPlacement[] = [
+        {
+          part: mainPart,
+          car,
+          carIndex: carIdx,
+          x: mainOffsetX,
+          y: mainOffsetY,
+          rotation: 0
+        }
+      ]
+
+      // 收集该页面所有已占用的多边形 (含所有展开面与舌片)
+      const occupiedPolygons: Point2D[][] = []
+      mainPart.faces.forEach(face => {
+        const shiftedPoly = face.polygon2D.map(p => ({ x: p.x + mainOffsetX, y: p.y + mainOffsetY }))
+        occupiedPolygons.push(shiftedPoly)
+
+        if (face.glueTabs) {
+          face.glueTabs.forEach(tab => {
+            const tabPts = generateTabPoints(tab.p1, tab.p2, tab.tabWidth || 7, tab.angle || 45, face.polygon2D)
+            occupiedPolygons.push(tabPts.map(p => ({ x: p.x + mainOffsetX, y: p.y + mainOffsetY })))
+          })
+        }
+      })
+
+      // 智能探测：该车厢自身的配件是否能轻松塞入本页的角落空白区？ (测试 0° 原向与 90° 旋转)
+      carAccessories.forEach(rawAcc => {
+        let placed = false
+
+        for (const rotationAngle of [0, 90] as (0 | 90)[]) {
+          const acc = rotateUnfoldedPart(rawAcc, rotationAngle)
+          const accW = acc.bounds.width
+          const accH = acc.bounds.height
+
+          const candidates = generateCandidateCornerSlots(accW, accH)
+
+          for (const cand of candidates) {
+            // 1. 检查是否在 A4 安全打印区内 (留出 10mm 页面外边距与 28mm 页眉间距)
+            if (
+              cand.x < A4_MARGIN_MM + 2 ||
+              cand.y < 28 ||
+              cand.x + accW > A4_WIDTH_MM - A4_MARGIN_MM - 2 ||
+              cand.y + accH > A4_HEIGHT_MM - A4_MARGIN_MM - 2
+            ) {
+              continue
+            }
+
+            // 2. 检查是否与已放置的零件和舌片发生冲突 (保留 5mm 宽裕剪裁安全边距)
+            const box = {
+              minX: cand.x,
+              minY: cand.y,
+              maxX: cand.x + accW,
+              maxY: cand.y + accH
+            }
+
+            if (!doesBoxOverlapPolygons(box, occupiedPolygons, 5)) {
+              // 成功就地嵌入！
+              const accOffsetX = cand.x - acc.bounds.minX
+              const accOffsetY = cand.y - acc.bounds.minY
+
+              placements.push({
+                part: acc,
+                car,
+                carIndex: carIdx,
+                displayName: acc.name,
+                x: accOffsetX,
+                y: accOffsetY,
+                rotation: rotationAngle
+              })
+
+              // 将放入的配件多边形也加入已占用集合
+              acc.faces.forEach(face => {
+                const shiftedPoly = face.polygon2D.map(p => ({ x: p.x + accOffsetX, y: p.y + accOffsetY }))
+                occupiedPolygons.push(shiftedPoly)
+                if (face.glueTabs) {
+                  face.glueTabs.forEach(tab => {
+                    const tabPts = generateTabPoints(tab.p1, tab.p2, tab.tabWidth || 7, tab.angle || 45, face.polygon2D)
+                    occupiedPolygons.push(tabPts.map(p => ({ x: p.x + accOffsetX, y: p.y + accOffsetY })))
+                  })
+                }
+              })
+
+              placed = true
+              break
+            }
+          }
+
+          if (placed) break
+        }
+
+        // 若 0° 和 90° 均明显塞不下（空间不足），先暂存为 overflow
+        if (!placed) {
+          overflowAccessories.push({ part: rawAcc, car, carIdx })
+        }
+      })
+
+      const pageIdx = pages.length
+      pageOccupiedMap.set(pageIdx, occupiedPolygons)
 
       pages.push({
-        pageIndex: pages.length,
+        pageIndex: pageIdx,
         pageTitle: `${car.carNumberText} · ${car.modelData.name}`,
         subTitle: `第 ${carIdx + 1}/${cars.length} 节`,
         carIndex: carIdx,
         car,
         isAccessoryPage: false,
-        placements: [
-          {
-            part: mainPart,
-            car,
-            carIndex: carIdx,
-            x: targetX - mainPart.bounds.minX,
-            y: targetY - mainPart.bounds.minY,
-            rotation: 0
-          }
-        ]
+        placements
       })
     }
   })
 
-  // 2. 收集整列车所有车厢的所有外加立体配件
-  const allAccessories: { part: UnfoldedPart; car: ConsistCarItem; carIdx: number }[] = []
-  cars.forEach((car, carIdx) => {
-    const parts = car.modelData.generateUnfoldedParts()
-    const accParts = parts.filter(p => p.isAccessory === true)
-    accParts.forEach(acc => {
-      allAccessories.push({ part: acc, car, carIdx })
-    })
-  })
+  // 1.5 跨车厢空白智能容纳：若某节车厢（如超长中间车）塞不下，尝试放入先头车或尾车等其他空白充足的车厢角落
+  if (overflowAccessories.length > 0) {
+    const unplacedAccessories: { part: UnfoldedPart; car: ConsistCarItem; carIdx: number }[] = []
 
-  // 3. 排版配件专页 (看一页能排几个，放不下自动开辟下一页)
-  if (allAccessories.length > 0) {
+    for (const item of overflowAccessories) {
+      let placedCrossCar = false
+
+      for (let pIdx = 0; pIdx < pages.length; pIdx++) {
+        const targetPage = pages[pIdx]
+        if (targetPage.isAccessoryPage) continue
+
+        const occupiedPolygons = pageOccupiedMap.get(pIdx) || []
+
+        for (const rotationAngle of [0, 90] as (0 | 90)[]) {
+          const acc = rotateUnfoldedPart(item.part, rotationAngle)
+          const accW = acc.bounds.width
+          const accH = acc.bounds.height
+
+          const candidates = generateCandidateCornerSlots(accW, accH)
+
+          for (const cand of candidates) {
+            if (
+              cand.x < A4_MARGIN_MM + 2 ||
+              cand.y < 28 ||
+              cand.x + accW > A4_WIDTH_MM - A4_MARGIN_MM - 2 ||
+              cand.y + accH > A4_HEIGHT_MM - A4_MARGIN_MM - 2
+            ) {
+              continue
+            }
+
+            const box = {
+              minX: cand.x,
+              minY: cand.y,
+              maxX: cand.x + accW,
+              maxY: cand.y + accH
+            }
+
+            if (!doesBoxOverlapPolygons(box, occupiedPolygons, 5)) {
+              const accOffsetX = cand.x - acc.bounds.minX
+              const accOffsetY = cand.y - acc.bounds.minY
+
+              const carShort = item.car.carNumberText.split(' ')[0]
+              const partShort = item.part.name.replace(/车顶|立体|气动|流线/g, '')
+
+              targetPage.placements.push({
+                part: acc,
+                car: item.car,
+                carIndex: item.carIdx,
+                displayName: `${carShort} ${partShort}`,
+                x: accOffsetX,
+                y: accOffsetY,
+                rotation: rotationAngle
+              })
+
+              acc.faces.forEach(face => {
+                const shiftedPoly = face.polygon2D.map(p => ({ x: p.x + accOffsetX, y: p.y + accOffsetY }))
+                occupiedPolygons.push(shiftedPoly)
+                if (face.glueTabs) {
+                  face.glueTabs.forEach(tab => {
+                    const tabPts = generateTabPoints(tab.p1, tab.p2, tab.tabWidth || 7, tab.angle || 45, face.polygon2D)
+                    occupiedPolygons.push(tabPts.map(p => ({ x: p.x + accOffsetX, y: p.y + accOffsetY })))
+                  })
+                }
+              })
+
+              placedCrossCar = true
+              break
+            }
+          }
+
+          if (placedCrossCar) break
+        }
+
+        if (placedCrossCar) break
+      }
+
+      if (!placedCrossCar) {
+        unplacedAccessories.push(item)
+      }
+    }
+
+    overflowAccessories.length = 0
+    overflowAccessories.push(...unplacedAccessories)
+  }
+
+  // 2. 排版未被就地容纳的剩余配件 (空间不足时自动开辟「车顶与立体配件专页」)
+  if (overflowAccessories.length > 0) {
     let accPageIndex = pages.length
     let accCurX = A4_MARGIN_MM + 8
-    let accCurY = A4_MARGIN_MM + 42 // 顶部留出 52mm 充裕纵向空间
+    let accCurY = A4_MARGIN_MM + 42
     let accRowH = 0
     let curPagePlacements: ConsistPartPlacement[] = []
 
-    for (const item of allAccessories) {
+    for (const item of overflowAccessories) {
       const w = item.part.bounds.width
       const h = item.part.bounds.height
       const colW = Math.max(w, 50)
 
-      // 检查当前行是否放得下，放不下自动换行 (列间距 14mm，行间距 24mm)
       if (accCurX + colW > A4_WIDTH_MM - A4_MARGIN_MM - 8 && curPagePlacements.length > 0) {
         accCurX = A4_MARGIN_MM + 8
         accCurY += accRowH + 24
         accRowH = 0
       }
 
-      // 检查当前页是否放得下，放不下自动开辟下一页配件专页
       if (accCurY + h > A4_HEIGHT_MM - A4_MARGIN_MM - 14 && curPagePlacements.length > 0) {
         pages.push({
           pageIndex: accPageIndex,

@@ -106,10 +106,10 @@ export function renderConsistPageToCanvas(
     const offsetY = placement.y * mmToPx
     const title = placement.displayName || part.name
 
-    // 仅在配件专页居中绘制简短配件名称 (避免在主体车身页上产生多余文字)
-    if (page.isAccessoryPage) {
+    // 在配件专页或车身页内嵌配件上方居中绘制配件名称
+    if (page.isAccessoryPage || part.isAccessory) {
       const partCenterX = offsetX + ((part.bounds.minX || 0) + part.bounds.width / 2) * mmToPx
-      const partLabelY = offsetY + ((part.bounds.minY || 0) - 6) * mmToPx
+      const partLabelY = offsetY + ((part.bounds.minY || 0) - 4) * mmToPx
       ctx.fillStyle = '#475569'
       ctx.font = 'bold 24px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif'
       ctx.textAlign = 'center'

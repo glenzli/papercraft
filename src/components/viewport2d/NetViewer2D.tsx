@@ -287,10 +287,10 @@ export const NetViewer2D: React.FC<NetViewer2DProps> = ({
 
               return (
                 <g key={`${part.id}_${pIdx}`} transform={`translate(${offsetX}, ${offsetY})`}>
-                  {activePage.isAccessoryPage && (
+                  {(activePage.isAccessoryPage || part.isAccessory) && (
                     <text
                       x={(part.bounds.minX || 0) + part.bounds.width / 2}
-                      y={(part.bounds.minY || 0) - 6}
+                      y={(part.bounds.minY || 0) - 4}
                       textAnchor="middle"
                       fontSize="2.6"
                       fontWeight="bold"
