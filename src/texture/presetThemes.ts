@@ -400,14 +400,14 @@ export const PRESET_THEMES: TextureTheme[] = [
     liveryStyle: 'df4b-watermelon',
     compatibleCategories: ['commuter'],
     targetConsistIds: ['df4b-freight-consist'],
-    description: '几代国人的铁路工业记忆：沉稳墨绿车身配浅黄双腰线与前脸红星，牵引深蓝集装箱与煤炭车。',
-    descriptionEn: 'Legendary China Railway DF4B heavy freight locomotive in signature subdued olive green.',
+    description: '几代国人的铁路工业记忆：柔和清雅森绿车身配奶白双腰线与红星徽标，牵引普鲁士蓝与常青绿集装箱。',
+    descriptionEn: 'Legendary China Railway DF4B heavy freight locomotive in signature subdued forest green with classic container livery.',
     colors: {
-      primary: '#2b5239',   // 沉稳复古墨绿
-      secondary: '#f3e9cd', // 温润浅黄双腰线
-      accent: '#c2410c',    // 车头红星
-      roof: '#242b35',      // 工业炭灰车顶与排气管
-      window: '#0f172a',
+      primary: '#325e42',   // 柔和清雅森绿
+      secondary: '#fbf5e6', // 纯净温润奶白双腰线
+      accent: '#dc2626',    // 车头红星
+      roof: '#2d3744',      // 柔和工业钢灰车顶
+      window: '#0a0f1d',
       frame: '#1e293b'
     },
     stripes: {
@@ -424,14 +424,14 @@ export const PRESET_THEMES: TextureTheme[] = [
     liveryStyle: 'df4b-orange',
     compatibleCategories: ['commuter'],
     targetConsistIds: ['df4b-freight-consist'],
-    description: '金温铁路与工矿经典赭石暖橙涂装，配前脸米白破风 V 字拉花。',
+    description: '金温铁路与工矿经典温暖赭橙涂装，配前脸纯白破风 V 字拉花与暖姜黄集装箱。',
     descriptionEn: 'High-visibility weathered ochre orange DF4B locomotive with muted cream chevron striping.',
     colors: {
-      primary: '#b8542b',   // 柔和赭石暖橙
-      secondary: '#f1ede4', // 破风米白 V 带
-      accent: '#d97706',    // 金黄警示带
-      roof: '#262d35',      // 炭黑顶
-      window: '#0f172a',
+      primary: '#c4693b',   // 温暖赭橙
+      secondary: '#f8f6f0', // 纯白破风 V 带
+      accent: '#ea580c',    // 暖橙警示带
+      roof: '#333d49',      // 柔和钢灰顶
+      window: '#0a0f1d',
       frame: '#334155'
     },
     stripes: {
@@ -448,14 +448,14 @@ export const PRESET_THEMES: TextureTheme[] = [
     liveryStyle: 'df4b-blue',
     compatibleCategories: ['commuter'],
     targetConsistIds: ['df4b-freight-consist'],
-    description: '江南干线经典蓝太湖涂装：深邃低饱和度海蓝配银白动感腰带。',
+    description: '江南干线经典蓝太湖涂装：典雅晴空海蓝配银白动感腰带与冰蓝集装箱。',
     descriptionEn: 'Subdued deep ocean blue "Taihu Blue" livery with silver waistband and metallic badges.',
     colors: {
-      primary: '#264673',   // 沉稳深蓝
-      secondary: '#e2e8f0', // 银白腰线
-      accent: '#0284c7',    // 天蓝拉花
-      roof: '#242b35',      // 烟灰车顶
-      window: '#0f172a',
+      primary: '#2b5482',   // 典雅海蓝
+      secondary: '#f1f5f9', // 银白腰线
+      accent: '#38bdf8',    // 天蓝拉花
+      roof: '#2d3744',      // 钢灰车顶
+      window: '#0a0f1d',
       frame: '#1e293b'
     },
     stripes: {
@@ -472,14 +472,14 @@ export const PRESET_THEMES: TextureTheme[] = [
     liveryStyle: 'df4b-jrf-red-thunder',
     compatibleCategories: ['commuter'],
     targetConsistIds: ['df4b-freight-consist'],
-    description: '日本 JR 货物经典重载干线机车：典雅 JRF 栗红车身配银白破风闪电带与 19D 樱花红集装箱。',
-    descriptionEn: 'Iconic JR Freight Red Thunder locomotive in signature deep crimson red with 19D container cars.',
+    description: '日本 JR 货物经典重载机车：典雅暖砖红车身配银灰闪电带与 19D 珊瑚红集装箱。',
+    descriptionEn: 'Iconic JR Freight Red Thunder locomotive in signature deep crimson red with authentic 19D container cars.',
     colors: {
-      primary: '#85222b',   // JRF 经典栗红
-      secondary: '#cbd5e1', // 银灰闪电拉花
+      primary: '#9a373f',   // 典雅暖砖红
+      secondary: '#e2e8f0', // 银灰闪电拉花
       accent: '#facc15',    // 金黄车号
-      roof: '#27272a',      // 炭黑排气顶
-      window: '#0f172a',
+      roof: '#2d3744',      // 工业钢灰顶
+      window: '#0a0f1d',
       frame: '#1e293b'
     },
     stripes: {
@@ -496,14 +496,14 @@ export const PRESET_THEMES: TextureTheme[] = [
     liveryStyle: 'df4b-jrf-blue-momotaro',
     compatibleCategories: ['commuter'],
     targetConsistIds: ['df4b-freight-consist'],
-    description: '日本干线最普及的主力电力货运机车：沉稳深蓝底色配浅灰两分色与海蓝集装箱。',
+    description: '日本干线主力电力货运机车：沉稳深蓝底色配浅灰两分色与日通两色集装箱。',
     descriptionEn: 'Famous JR Freight Momotaro ECO-POWER livery in navy blue with slate grey upper band.',
     colors: {
-      primary: '#234168',   // JRF 蔚蓝武士
-      secondary: '#94a3b8', // 云母灰白
+      primary: '#244872',   // JRF 蔚蓝武士
+      secondary: '#cbd5e1', // 浅灰云母
       accent: '#38bdf8',    // 天蓝流线
-      roof: '#1e293b',      // 炭黑顶
-      window: '#0f172a',
+      roof: '#28323e',      // 炭灰顶
+      window: '#0a0f1d',
       frame: '#1e293b'
     },
     stripes: {
@@ -511,6 +511,54 @@ export const PRESET_THEMES: TextureTheme[] = [
       width: 14
     },
     badgeText: 'JRF EF210'
+  },
+  {
+    id: 'df4b-bnsf-orange',
+    name: '北美重载传奇 BNSF「经典橙黑」',
+    nameEn: 'North America BNSF "Heritage Orange & Black"',
+    category: 'railway',
+    liveryStyle: 'df4b-bnsf-orange',
+    compatibleCategories: ['commuter'],
+    targetConsistIds: ['df4b-freight-consist'],
+    description: '北美跨大陆重载干线传奇：明媚夕阳暖橙配暖炭灰车顶与斜纹斑马前脸，牵引双色重载集装箱。',
+    descriptionEn: 'Iconic North American BNSF Heritage livery in deep sunset orange and jet black with high-cube container cars.',
+    colors: {
+      primary: '#d66824',   // BNSF 夕阳暖橙
+      secondary: '#27272a', // 暖炭灰拉花与车顶
+      accent: '#f59e0b',    // 警示明黄
+      roof: '#27272a',      // 暖炭灰车顶
+      window: '#0a0f1d',
+      frame: '#27272a'
+    },
+    stripes: {
+      style: 'single',
+      width: 16
+    },
+    badgeText: 'BNSF 7210'
+  },
+  {
+    id: 'df4b-sbb-cargo',
+    name: '瑞士联邦铁路 SBB Cargo「深蓝冰白」',
+    nameEn: 'Swiss SBB Cargo "Deep Blue & Glacier White"',
+    category: 'railway',
+    liveryStyle: 'df4b-sbb-cargo',
+    compatibleCategories: ['commuter'],
+    targetConsistIds: ['df4b-freight-consist'],
+    description: '阿尔卑斯欧系现代货运美学：极简深海湛蓝配冰川纯白与瑞士十字标，牵引高精度欧系多式联运集装箱。',
+    descriptionEn: 'Sophisticated Swiss SBB Cargo modern livery in deep ocean navy and glacier white with cross-modal freight.',
+    colors: {
+      primary: '#244d7d',   // 瑞士深海湛蓝
+      secondary: '#f8fafc', // 冰川纯白
+      accent: '#dc2626',    // 瑞士红十字
+      roof: '#2d3744',      // 钢灰车顶
+      window: '#0a0f1d',
+      frame: '#1e293b'
+    },
+    stripes: {
+      style: 'double',
+      width: 14
+    },
+    badgeText: 'SBB 482'
   },
   // ================= 1. 都市通勤电车专属涂装 (Commuter) =================
   {

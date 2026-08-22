@@ -340,7 +340,8 @@ export const NetViewer2D: React.FC<NetViewer2DProps> = ({
                       }
                     }
 
-                    const slotUrl = baker.getSlotDataURL(`${face.textureSlot}_${car.carType}`) || baker.getSlotDataURL(face.textureSlot)
+                    const roleSuffix = car.carType === 'middle' ? `middle_${car.carIndex}` : car.carType
+                    const slotUrl = baker.getSlotDataURL(`${face.textureSlot}_${roleSuffix}`) || baker.getSlotDataURL(`${face.textureSlot}_${car.carType}`) || baker.getSlotDataURL(face.textureSlot)
 
                     return (
                       <g key={face.id}>

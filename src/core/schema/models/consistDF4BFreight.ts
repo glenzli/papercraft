@@ -671,9 +671,9 @@ export const consistDF4BFreight: TrainModelConsist = {
         key: 'trainNumber',
         label: '机车车号',
         labelEn: 'Locomotive Number',
-        placeholder: '如：DF4B-2121 / EF510-1 / EF210-300',
+        placeholder: '如：DF4B-2121 / EF510-1 / BNSF 7210',
         placeholderEn: 'e.g. DF4B-2121 / EF510-1',
-        defaultValue: 'DF4B-2121',
+        defaultValue: '',
         targetSlot: 'front'
       },
       {
@@ -682,7 +682,7 @@ export const consistDF4BFreight: TrainModelConsist = {
         labelEn: 'Freight Route',
         placeholder: '如：中欧班列 / JRF 貨物高速 / 80001次重载',
         placeholderEn: 'e.g. CR Express / JRF Freight',
-        defaultValue: '中欧班列·满洲里 ⇋ 莫斯科',
+        defaultValue: '',
         targetSlot: 'side_left'
       },
       {
@@ -691,7 +691,7 @@ export const consistDF4BFreight: TrainModelConsist = {
         labelEn: 'Railway Bureau / Operator',
         placeholder: '如：京局京段 / JR 貨物 JRF',
         placeholderEn: 'e.g. CR Beijing / JR Freight',
-        defaultValue: '京局京段',
+        defaultValue: '',
         targetSlot: 'side_left'
       }
     ]

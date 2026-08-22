@@ -107,9 +107,11 @@ export class TextureBaker {
       customText
     }
 
-    // 1. 3D 专用横向贴图 (为 head / middle / tail 生成独立真实分面贴图)
-    for (const r of ['head', 'middle', 'tail']) {
-      const roleParams = { ...params, carType: r }
+    // 1. 3D 专用横向贴图 (为 head / middle / middle_1 / middle_2 / tail 生成独立真实分面贴图)
+    for (const r of ['head', 'middle', 'middle_1', 'middle_2', 'tail']) {
+      const isMiddle2 = r === 'middle_2'
+      const baseRole = r.startsWith('middle') ? 'middle' : r
+      const roleParams = { ...params, carType: baseRole, carRole: r, middleVariant: isMiddle2 ? 2 : 1 }
       const leftMaster = this.drawHorizontalSideView(1024, 280, true, roleParams)
       const rightMaster = this.drawHorizontalSideView(1024, 280, false, roleParams)
 
@@ -124,6 +126,9 @@ export class TextureBaker {
       this.slotCanvases.set(`side_left_${r}`, this.rotateAndMapSide(leftMaster, 'left'))
       this.slotCanvases.set(`side_right_${r}`, this.rotateAndMapSide(rightMaster, 'right'))
       this.slotCanvases.set(`roof_${r}`, this.drawRoofView(380, 1600, roleParams))
+      this.slotCanvases.set(`front_${r}`, this.drawFrontView(380, 440, roleParams))
+      this.slotCanvases.set(`back_${r}`, this.drawBackView(380, 440, roleParams))
+      this.slotCanvases.set(`bottom_${r}`, this.drawBottomView(380, 1600, roleParams))
     }
 
     // 默认回退 3D 贴图
@@ -246,6 +251,8 @@ export class TextureBaker {
       theme?.id === 'df4b-blue' ? 'df4b-blue' :
       theme?.id === 'df4b-jrf-red-thunder' ? 'df4b-jrf-red-thunder' :
       theme?.id === 'df4b-jrf-blue-momotaro' ? 'df4b-jrf-blue-momotaro' :
+      theme?.id === 'df4b-bnsf-orange' ? 'df4b-bnsf-orange' :
+      theme?.id === 'df4b-sbb-cargo' ? 'df4b-sbb-cargo' :
       category === 'shinkansen' ? 'shinkansen-e5' :
       category === 'steam' ? 'steam-d51-classic' :
       category === 'vehicle' ? 'tram-enoden-green' :
@@ -1070,17 +1077,17 @@ export class TextureBaker {
     }
 
     // ==========================================
-    // 0.6 铁路重载干线货运列车系列 (DF4B & JRF Freight)
+    // 0.6 铁路重载干线货运列车系列 (DF4B & JRF & BNSF & SBB Freight)
     // ==========================================
     if (style.startsWith('df4b-')) {
       if (params.carType === 'head') {
-        // === 机车车身侧面 (柔和低饱和度工业色调) ===
+        // === 机车车身侧面 (重载工业质感) ===
         if (style === 'df4b-watermelon') {
-          // 沉稳复古墨绿
-          ctx.fillStyle = '#2b5239'
+          // 沉稳复古国铁墨绿
+          ctx.fillStyle = '#264e36'
           ctx.fillRect(0, 0, w, h)
           // 浅奶黄双贯通腰带
-          ctx.fillStyle = '#f3e9cd'
+          ctx.fillStyle = '#f4ebd0'
           ctx.fillRect(0, h * 0.48, w, 4)
           ctx.fillRect(0, h * 0.53, w, 4)
         } else if (style === 'df4b-orange') {
@@ -1110,48 +1117,77 @@ export class TextureBaker {
           // JR Freight EF210 桃太郎: 灰白两分色 + 蔚蓝武士
           ctx.fillStyle = '#94a3b8'
           ctx.fillRect(0, 0, w, h * 0.45)
-          ctx.fillStyle = '#234168'
+          ctx.fillStyle = '#1d3557'
           ctx.fillRect(0, h * 0.45, w, h * 0.55)
           ctx.fillStyle = '#f8fafc'
           ctx.fillRect(0, h * 0.44, w, 3.5)
+        } else if (style === 'df4b-bnsf-orange') {
+          // 北美 BNSF: 经典暖橙 + 墨黑车顶与下车体
+          ctx.fillStyle = '#c45a16'
+          ctx.fillRect(0, 0, w, h)
+          ctx.fillStyle = '#18181b'
+          ctx.fillRect(0, 0, w, h * 0.18)
+          ctx.fillStyle = '#f59e0b'
+          ctx.fillRect(0, h * 0.52, w, 5)
+        } else if (style === 'df4b-sbb-cargo') {
+          // 瑞士 SBB Cargo: 深海湛蓝 + 冰川纯白腰带
+          ctx.fillStyle = '#1b355a'
+          ctx.fillRect(0, 0, w, h)
+          ctx.fillStyle = '#f8fafc'
+          ctx.fillRect(0, h * 0.48, w, 8)
+          ctx.fillStyle = '#dc2626'
+          ctx.fillRect(w * 0.44, h * 0.49, 12, 6)
         } else {
           // 沉稳蓝太湖
-          ctx.fillStyle = '#264673'
+          ctx.fillStyle = '#1e3d6b'
           ctx.fillRect(0, 0, w, h)
           ctx.fillStyle = '#e2e8f0'
           ctx.fillRect(0, h * 0.50, w, 6)
         }
 
-        // 机械室百叶散热侧窗组 (Louvers)
-        ctx.fillStyle = '#181f26'
-        const louverW = w * 0.12
+        // 机械室 3 组重型立体百叶散热窗 (宽距通风百叶，干净不杂乱)
+        const louverW = w * 0.13
         const louverH = h * 0.28
-        for (const lx of [w * 0.28, w * 0.45, w * 0.62]) {
+        for (const lx of [w * 0.26, w * 0.44, w * 0.62]) {
+          // 柔和散热片底色
+          ctx.fillStyle = '#242f3d'
           ctx.fillRect(lx, h * 0.16, louverW, louverH)
-          ctx.strokeStyle = '#334155'
-          ctx.lineWidth = 1
+          // 优雅边框
+          ctx.strokeStyle = '#4a586a'
+          ctx.lineWidth = 1.2
           ctx.strokeRect(lx, h * 0.16, louverW, louverH)
-          for (let ly = h * 0.19; ly < h * 0.42; ly += 4) {
-            ctx.beginPath()
-            ctx.moveTo(lx + 2, ly)
-            ctx.lineTo(lx + louverW - 2, ly)
-            ctx.stroke()
+          // 宽距横向百叶片 (节奏明朗，绝不密密麻麻)
+          for (let ly = h * 0.20; ly < h * 0.42; ly += 7) {
+            ctx.fillStyle = '#1a222c'
+            ctx.fillRect(lx + 2, ly, louverW - 4, 1.5)
+            ctx.fillStyle = '#56667a'
+            ctx.fillRect(lx + 2, ly + 1.5, louverW - 4, 1.5)
           }
         }
 
-        // 驾驶室侧窗 (前后两端驾驶台)
-        ctx.fillStyle = '#020617'
-        ctx.fillRect(w * 0.08, h * 0.18, w * 0.09, h * 0.26)
-        ctx.fillRect(w * 0.83, h * 0.18, w * 0.09, h * 0.26)
-        ctx.strokeStyle = '#475569'
-        ctx.lineWidth = 1.5
-        ctx.strokeRect(w * 0.08, h * 0.18, w * 0.09, h * 0.26)
-        ctx.strokeRect(w * 0.83, h * 0.18, w * 0.09, h * 0.26)
+        // 驾驶室侧窗 (前后两端驾驶台 + 柔和窗框 + 玻璃反光)
+        const drawCabWindow = (wx: number) => {
+          ctx.fillStyle = '#162230'
+          ctx.fillRect(wx, h * 0.18, w * 0.09, h * 0.26)
+          ctx.strokeStyle = '#526173'
+          ctx.lineWidth = 1.2
+          ctx.strokeRect(wx, h * 0.18, w * 0.09, h * 0.26)
+          // 玻璃对角柔和高光
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)'
+          ctx.lineWidth = 1.2
+          ctx.beginPath()
+          ctx.moveTo(wx + 2, h * 0.40)
+          ctx.lineTo(wx + w * 0.07, h * 0.22)
+          ctx.stroke()
+        }
+        drawCabWindow(w * 0.08)
+        drawCabWindow(w * 0.83)
 
-        // 机车侧面车号金属标牌 (仅在用户启用自定义文字时显示文字)
+        // 机车侧面铜铸车号金属标牌
         ctx.fillStyle = '#b45309'
         ctx.fillRect(w * 0.42, h * 0.62, w * 0.16, 11)
         ctx.strokeStyle = '#78350f'
+        ctx.lineWidth = 1
         ctx.strokeRect(w * 0.42, h * 0.62, w * 0.16, 11)
         if (customText && customText.enabled) {
           const trainNo = customText.slots?.trainNumber || customText.trainNumber || ''
@@ -1163,106 +1199,196 @@ export class TextureBaker {
           }
         }
 
-        // 底部重型底盘与中央大容量燃油箱
-        ctx.fillStyle = '#131920'
+        // 底部平整底盘、中央燃油箱 (柔和工业深灰，无夸张黑边)
+        ctx.fillStyle = '#222b36'
         ctx.fillRect(0, h * 0.82, w, h * 0.18)
-        ctx.fillStyle = '#1e2630'
-        ctx.fillRect(w * 0.32, h * 0.82, w * 0.36, h * 0.16)
-        ctx.strokeStyle = '#334155'
-        ctx.lineWidth = 1.5
-        ctx.strokeRect(w * 0.32, h * 0.82, w * 0.36, h * 0.16)
+        // 燃油箱箱体
+        ctx.fillStyle = '#2b3644'
+        ctx.fillRect(w * 0.30, h * 0.82, w * 0.40, h * 0.16)
+        ctx.strokeStyle = '#435163'
+        ctx.lineWidth = 1.2
+        ctx.strokeRect(w * 0.30, h * 0.82, w * 0.40, h * 0.16)
+        // 油位观察窗
+        ctx.fillStyle = '#f59e0b'
+        ctx.fillRect(w * 0.48, h * 0.87, 8, 4)
 
       } else if (params.carType === 'middle') {
-        // === 集装箱平车侧面：前后双 20ft 国际标准集装箱 (无默认文字，纯净工业美学) ===
-        // 底盘：重载平车底盘 (Steel Flatbed Chassis)
-        ctx.fillStyle = '#131920'
+        // === 集装箱平车侧面：前后双 20ft 优雅低饱和度集装箱 (宽距 3D 瓦楞，无过度密集黑条) ===
+        // 1. 底盘：重型平车钢构大梁
+        ctx.fillStyle = '#222b36'
         ctx.fillRect(0, h * 0.80, w, h * 0.20)
-        ctx.fillStyle = '#2d3748'
+        ctx.fillStyle = '#3a4759'
         ctx.fillRect(0, h * 0.80, w, 4)
 
-        // 前 20ft 集装箱
-        const c1X = w * 0.02
-        const c1W = w * 0.46
-        const boxH = h * 0.68
-        const isJrfRed = style === 'df4b-jrf-red-thunder'
-        const isJrfBlue = style === 'df4b-jrf-blue-momotaro'
-        const c1Color = isJrfRed ? '#7e222a' : (isJrfBlue ? '#234168' : '#223d5b')
-        const c1LineColor = isJrfRed ? '#5c171e' : (isJrfBlue ? '#182b44' : '#172a3e')
+        // 2. 根据涂装风格与车厢序号匹配柔和低饱和度的集装箱配色 (支持第 2 节与第 3 节平车异色多宝箱搭配)
+        const isVariant2 = params.middleVariant === 2 || params.carRole === 'middle_2'
 
-        ctx.fillStyle = c1Color
-        ctx.fillRect(c1X, h * 0.12, c1W, boxH)
-        // 瓦楞立筋立体纹理
-        ctx.strokeStyle = c1LineColor
-        ctx.lineWidth = 1
-        for (let x = c1X + 4; x < c1X + c1W - 4; x += 5) {
-          ctx.beginPath()
-          ctx.moveTo(x, h * 0.12)
-          ctx.lineTo(x, h * 0.80)
-          ctx.stroke()
+        let box1Spec = { baseColor: '#2b4d70', ribHighlight: '#3c648f', ribShadow: '#1a334d', hasStripe: false, stripeColor: '' }
+        let box2Spec = { baseColor: '#2d5438', ribHighlight: '#3d704c', ribShadow: '#1a3523', hasStripe: false, stripeColor: '' }
+
+        if (isVariant2) {
+          box1Spec = { baseColor: '#c97f32', ribHighlight: '#e09848', ribShadow: '#8f551c', hasStripe: false, stripeColor: '' }
+          box2Spec = { baseColor: '#327ea8', ribHighlight: '#499ac9', ribShadow: '#1e5473', hasStripe: false, stripeColor: '' }
         }
 
-        // 后 20ft 集装箱
-        const c2X = w * 0.52
-        const c2W = w * 0.46
-        const c2Color = isJrfRed ? '#293845' : (isJrfBlue ? '#2e5b44' : '#6c262e')
-        const c2LineColor = isJrfRed ? '#1c262f' : (isJrfBlue ? '#1e3d2e' : '#4d1b21')
-
-        ctx.fillStyle = c2Color
-        ctx.fillRect(c2X, h * 0.12, c2W, boxH)
-        ctx.strokeStyle = c2LineColor
-        ctx.lineWidth = 1
-        for (let x = c2X + 4; x < c2X + c2W - 4; x += 5) {
-          ctx.beginPath()
-          ctx.moveTo(x, h * 0.12)
-          ctx.lineTo(x, h * 0.80)
-          ctx.stroke()
-        }
-
-        // 仅在用户开启自定义文字时，在集装箱中央绘制文字
-        if (customText && customText.enabled) {
-          const text1 = customText.slots?.operator || customText.trainNumber || ''
-          const text2 = customText.slots?.destination || customText.destination || ''
-          if (text1) {
-            ctx.fillStyle = '#f8fafc'
-            ctx.font = 'bold 9px sans-serif'
-            ctx.textAlign = 'center'
-            ctx.fillText(text1, c1X + c1W * 0.5, h * 0.48)
+        if (style === 'df4b-orange') {
+          if (isVariant2) {
+            box1Spec = { baseColor: '#963940', ribHighlight: '#b34b53', ribShadow: '#611f24', hasStripe: false, stripeColor: '' }
+            box2Spec = { baseColor: '#eae7df', ribHighlight: '#ffffff', ribShadow: '#c4c0b4', hasStripe: true, stripeColor: '#c97f32' }
+          } else {
+            box1Spec = { baseColor: '#c97f32', ribHighlight: '#e09848', ribShadow: '#8f551c', hasStripe: false, stripeColor: '' }
+            box2Spec = { baseColor: '#2d4b68', ribHighlight: '#3d648a', ribShadow: '#1b3248', hasStripe: false, stripeColor: '' }
           }
-          if (text2) {
-            ctx.fillStyle = '#fef08a'
-            ctx.font = 'bold 9px sans-serif'
-            ctx.textAlign = 'center'
-            ctx.fillText(text2, c2X + c2W * 0.5, h * 0.48)
+        } else if (style === 'df4b-jrf-red-thunder') {
+          if (isVariant2) {
+            box1Spec = { baseColor: '#d69e2e', ribHighlight: '#ebb644', ribShadow: '#946c1a', hasStripe: true, stripeColor: '#1e3a8a' }
+            box2Spec = { baseColor: '#8a3339', ribHighlight: '#a8454c', ribShadow: '#571c21', hasStripe: false, stripeColor: '' }
+          } else {
+            box1Spec = { baseColor: '#963940', ribHighlight: '#b34b53', ribShadow: '#611f24', hasStripe: true, stripeColor: '#facc15' }
+            box2Spec = { baseColor: '#284666', ribHighlight: '#395e87', ribShadow: '#172d44', hasStripe: true, stripeColor: '#ffffff' }
+          }
+        } else if (style === 'df4b-jrf-blue-momotaro') {
+          if (isVariant2) {
+            box1Spec = { baseColor: '#284666', ribHighlight: '#395e87', ribShadow: '#172d44', hasStripe: true, stripeColor: '#ffffff' }
+            box2Spec = { baseColor: '#963940', ribHighlight: '#b34b53', ribShadow: '#611f24', hasStripe: true, stripeColor: '#facc15' }
+          } else {
+            box1Spec = { baseColor: '#d69e2e', ribHighlight: '#ebb644', ribShadow: '#946c1a', hasStripe: true, stripeColor: '#1e3a8a' }
+            box2Spec = { baseColor: '#8a3339', ribHighlight: '#a8454c', ribShadow: '#571c21', hasStripe: false, stripeColor: '' }
+          }
+        } else if (style === 'df4b-bnsf-orange') {
+          if (isVariant2) {
+            box1Spec = { baseColor: '#c97f32', ribHighlight: '#e09848', ribShadow: '#8f551c', hasStripe: false, stripeColor: '' }
+            box2Spec = { baseColor: '#2d4b68', ribHighlight: '#3d648a', ribShadow: '#1b3248', hasStripe: true, stripeColor: '#facc15' }
+          } else {
+            box1Spec = { baseColor: '#cb6323', ribHighlight: '#e57a34', ribShadow: '#8a3f11', hasStripe: true, stripeColor: '#27272a' }
+            box2Spec = { baseColor: '#eae7df', ribHighlight: '#ffffff', ribShadow: '#c4c0b4', hasStripe: true, stripeColor: '#d97706' }
+          }
+        } else if (style === 'df4b-sbb-cargo') {
+          if (isVariant2) {
+            box1Spec = { baseColor: '#eae7df', ribHighlight: '#ffffff', ribShadow: '#c4c0b4', hasStripe: true, stripeColor: '#244d7d' }
+            box2Spec = { baseColor: '#2d5438', ribHighlight: '#3d704c', ribShadow: '#1a3523', hasStripe: false, stripeColor: '' }
+          } else {
+            box1Spec = { baseColor: '#244d7d', ribHighlight: '#3466a1', ribShadow: '#153254', hasStripe: true, stripeColor: '#dc2626' }
+            box2Spec = { baseColor: '#d96427', ribHighlight: '#f07b3d', ribShadow: '#913e12', hasStripe: false, stripeColor: '' }
+          }
+        } else if (style === 'df4b-blue') {
+          if (isVariant2) {
+            box1Spec = { baseColor: '#2b4d70', ribHighlight: '#3c648f', ribShadow: '#1a334d', hasStripe: false, stripeColor: '' }
+            box2Spec = { baseColor: '#c97f32', ribHighlight: '#e09848', ribShadow: '#8f551c', hasStripe: false, stripeColor: '' }
+          } else {
+            box1Spec = { baseColor: '#327ea8', ribHighlight: '#499ac9', ribShadow: '#1e5473', hasStripe: false, stripeColor: '' }
+            box2Spec = { baseColor: '#aa3d64', ribHighlight: '#c7517d', ribShadow: '#6e223d', hasStripe: false, stripeColor: '' }
           }
         }
+
+        // 3. 极简工业集装箱渲染函数 (宽距 3D 瓦楞立体条纹 + 柔和转锁，默认完全无文字)
+        const drawRenderContainer = (bx: number, bw: number, spec: typeof box1Spec, customSlotText: string) => {
+          const by = h * 0.10
+          const bh = h * 0.70
+
+          // 箱体底色
+          ctx.fillStyle = spec.baseColor
+          ctx.fillRect(bx, by, bw, bh)
+
+          // 宽距 3D 瓦楞立筋 (14px 宽间距，比例协调，不显繁琐)
+          for (let x = bx + 10; x < bx + bw - 10; x += 14) {
+            ctx.fillStyle = spec.ribShadow
+            ctx.fillRect(x, by + 4, 2, bh - 8)
+            ctx.fillStyle = spec.ribHighlight
+            ctx.fillRect(x + 2, by + 4, 2, bh - 8)
+          }
+
+          // 装饰条纹 (若有)
+          if (spec.hasStripe && spec.stripeColor) {
+            ctx.fillStyle = spec.stripeColor
+            ctx.fillRect(bx + 4, by + bh * 0.48, bw - 8, 4)
+          }
+
+          // 四角 ISO 铸钢角件 (柔和灰底)
+          const drawCorner = (cx: number, cy: number) => {
+            ctx.fillStyle = '#26303d'
+            ctx.fillRect(cx, cy, 6, 6)
+            ctx.fillStyle = '#526378'
+            ctx.beginPath()
+            ctx.arc(cx + 3, cy + 3, 1.5, 0, Math.PI * 2)
+            ctx.fill()
+          }
+          drawCorner(bx, by)
+          drawCorner(bx + bw - 6, by)
+          drawCorner(bx, by + bh - 6)
+          drawCorner(bx + bw - 6, by + bh - 6)
+
+          // 仅在用户主动输入自定义文字时才在中央显示
+          if (customSlotText) {
+            ctx.fillStyle = '#ffffff'
+            ctx.font = 'bold 10px sans-serif'
+            ctx.textAlign = 'center'
+            ctx.fillText(customSlotText, bx + bw * 0.5, by + bh * 0.53)
+          }
+
+          // 平车底梁红色防脱转锁 (Twistlocks)
+          ctx.fillStyle = '#dc2626'
+          ctx.fillRect(bx + 1, by + bh, 5, 4)
+          ctx.fillRect(bx + bw - 6, by + bh, 5, 4)
+        }
+
+        const customText1 = customText && customText.enabled ? (customText.slots?.operator || customText.trainNumber || '') : ''
+        const customText2 = customText && customText.enabled ? (customText.slots?.destination || customText.destination || '') : ''
+
+        drawRenderContainer(w * 0.02, w * 0.46, box1Spec, customText1)
+        drawRenderContainer(w * 0.52, w * 0.46, box2Spec, customText2)
 
       } else {
-        // === 散货煤炭敞车侧面 (C70 Gondola / 纯净工业质感，无默认强印文字) ===
-        ctx.fillStyle = '#242b33'
+        // === 散货煤炭敞车侧面 (C70 Gondola / 柔和工业钢灰 + 宽距工字加强柱) ===
+        ctx.fillStyle = '#2d3540'
         ctx.fillRect(0, h * 0.18, w, h * 0.82)
 
-        // 8 根加强筋外框支柱 (Structural Ribs)
-        ctx.fillStyle = '#161c22'
-        for (let x = w * 0.06; x < w * 0.94; x += w * 0.11) {
-          ctx.fillRect(x, h * 0.18, 3.5, h * 0.65)
+        // 6 根宽距 C70 冲压外加强筋立柱 (比例舒适，不再过细密)
+        for (let x = w * 0.08; x < w * 0.92; x += w * 0.16) {
+          // 暗阴影
+          ctx.fillStyle = '#1e242c'
+          ctx.fillRect(x, h * 0.18, 2, h * 0.64)
+          // 主柱
+          ctx.fillStyle = '#3c4755'
+          ctx.fillRect(x + 2, h * 0.18, 4, h * 0.64)
+          // 高光边
+          ctx.fillStyle = '#556578'
+          ctx.fillRect(x + 6, h * 0.18, 2, h * 0.64)
         }
 
-        // 顶部突出煤炭堆轮廓
-        ctx.fillStyle = '#0f1114'
+        // 中央对开中门接缝与闭锁手柄
+        ctx.fillStyle = '#192028'
+        ctx.fillRect(w * 0.5 - 1, h * 0.22, 2, h * 0.58)
+        ctx.fillStyle = '#94a3b8'
+        ctx.fillRect(w * 0.48, h * 0.48, 12, 3)
+
+        // 下沿高反光安全贴片 (Conspicuity Reflectors)
+        ctx.fillStyle = '#facc15'
+        for (let rx = w * 0.08; rx < w * 0.92; rx += w * 0.16) {
+          ctx.fillRect(rx, h * 0.78, 6, 2.5)
+        }
+
+        // 顶部高密度原煤堆与立体阴影轮廓
+        ctx.fillStyle = '#171c23'
         ctx.beginPath()
         ctx.moveTo(0, h * 0.18)
         ctx.quadraticCurveTo(w * 0.25, h * 0.08, w * 0.5, h * 0.18)
         ctx.quadraticCurveTo(w * 0.75, h * 0.08, w, h * 0.18)
         ctx.fill()
+        // 碎煤颗粒反光点
+        ctx.fillStyle = '#262d36'
+        for (let qx = 8; qx < w - 8; qx += 12) {
+          ctx.fillRect(qx, h * 0.13 + (qx % 5), 3, 2)
+        }
 
-        // 仅在用户开启自定义文字时渲染铭牌
+        // 仅在用户开启自定义文字时渲染车号
         if (customText && customText.enabled) {
           const trainNo = customText.slots?.trainNumber || customText.trainNumber || ''
           if (trainNo) {
-            ctx.fillStyle = '#94a3b8'
+            ctx.fillStyle = '#fef08a'
             ctx.font = 'bold 7px monospace'
             ctx.textAlign = 'left'
-            ctx.fillText(trainNo, w * 0.12, h * 0.58)
+            ctx.fillText(trainNo, w * 0.12, h * 0.65)
           }
         }
       }
@@ -2697,61 +2823,194 @@ export class TextureBaker {
       ctx.strokeRect(w * 0.20, h * 0.55, w * 0.60, h * 0.35)
     } else if (style.startsWith('df4b-')) {
       if (params.carType === 'head') {
-        // === 东风 4B 机车车顶：双大型百叶散热风扇 + 柴油机排气烟道 ===
-        ctx.fillStyle = '#334155'
-        ctx.fillRect(0, 0, w, h)
-        // 双大型冷却散热风扇 (Twin Radiator Fans)
-        const drawFan = (cy: number) => {
-          ctx.fillStyle = '#0f172a'
-          ctx.beginPath()
-          ctx.arc(w * 0.5, cy, w * 0.35, 0, Math.PI * 2)
-          ctx.fill()
+        // === 货运机车车顶：根据具体动力与国家车型实现差异化、清爽、低反差专属车顶 ===
+
+        if (style === 'df4b-jrf-red-thunder' || style === 'df4b-jrf-blue-momotaro') {
+          // --- 1. 日本 JR 货物电力机车车顶 (EF510 / EF210)：极简防滑走道 + 高压母线与电气设备舱 (非柴油风扇) ---
+          ctx.fillStyle = '#2b3644'
+          ctx.fillRect(0, 0, w, h)
+
+          // 浅银灰中央防滑检修走道
+          ctx.fillStyle = '#94a3b8'
+          ctx.fillRect(w * 0.28, h * 0.08, w * 0.44, h * 0.84)
           ctx.strokeStyle = '#64748b'
+          ctx.lineWidth = 1.2
+          ctx.strokeRect(w * 0.28, h * 0.08, w * 0.44, h * 0.84)
+
+          // 两端受电弓底座安装区凹槽
+          ctx.fillStyle = '#1e2836'
+          ctx.fillRect(w * 0.32, h * 0.12, w * 0.36, h * 0.16)
+          ctx.fillRect(w * 0.32, h * 0.72, w * 0.36, h * 0.16)
+
+          // 红色/金黄高压绝缘母线与避雷器
+          ctx.strokeStyle = '#dc2626'
           ctx.lineWidth = 2
+          ctx.beginPath()
+          ctx.moveTo(w * 0.50, h * 0.28)
+          ctx.lineTo(w * 0.50, h * 0.72)
           ctx.stroke()
-          // 4 组十字旋转扇叶
-          ctx.strokeStyle = '#94a3b8'
-          ctx.lineWidth = 3
-          for (let a = 0; a < Math.PI; a += Math.PI / 4) {
+
+          // 白色陶瓷绝缘子基座
+          for (const iy of [0.32, 0.44, 0.56, 0.68]) {
+            ctx.fillStyle = '#f8fafc'
             ctx.beginPath()
-            ctx.moveTo(w * 0.5 - Math.cos(a) * w * 0.30, cy - Math.sin(a) * w * 0.30)
-            ctx.lineTo(w * 0.5 + Math.cos(a) * w * 0.30, cy + Math.sin(a) * w * 0.30)
+            ctx.arc(w * 0.50, h * iy, 4, 0, Math.PI * 2)
+            ctx.fill()
+          }
+
+        } else if (style === 'df4b-sbb-cargo') {
+          // --- 2. 瑞士联邦铁路 SBB Cargo (Traxx / Re 482) 欧系电力机车车顶：浅灰底色 + 横向加强筋与紧凑电气舱 ---
+          ctx.fillStyle = '#334155'
+          ctx.fillRect(0, 0, w, h)
+
+          // 浅灰走道
+          ctx.fillStyle = '#94a3b8'
+          ctx.fillRect(w * 0.25, h * 0.06, w * 0.50, h * 0.88)
+
+          // 简洁横向加强筋
+          ctx.strokeStyle = '#475569'
+          ctx.lineWidth = 1.5
+          for (let y = h * 0.15; y < h * 0.85; y += h * 0.10) {
+            ctx.beginPath()
+            ctx.moveTo(w * 0.25, y)
+            ctx.lineTo(w * 0.75, y)
             ctx.stroke()
           }
-        }
-        drawFan(h * 0.30)
-        drawFan(h * 0.70)
-        // 柴油机排气管出口
-        ctx.fillStyle = '#09090b'
-        ctx.fillRect(w * 0.38, h * 0.48, w * 0.24, h * 0.06)
-      } else if (params.carType === 'middle') {
-        // 集装箱顶部：两节集装箱低饱和度顶盖与加强筋
-        const isJrfRed = style === 'df4b-jrf-red-thunder'
-        const isJrfBlue = style === 'df4b-jrf-blue-momotaro'
-        ctx.fillStyle = isJrfRed ? '#7e222a' : (isJrfBlue ? '#234168' : '#223d5b')
-        ctx.fillRect(0, 0, w, h * 0.5)
-        ctx.fillStyle = isJrfRed ? '#293845' : (isJrfBlue ? '#2e5b44' : '#6c262e')
-        ctx.fillRect(0, h * 0.5, w, h * 0.5)
-        ctx.strokeStyle = '#111827'
-        ctx.lineWidth = 1
-        for (let y = 10; y < h; y += 12) {
+
+          // 中央空调与逆变器散热箱
+          ctx.fillStyle = '#e2e8f0'
+          ctx.fillRect(w * 0.32, h * 0.42, w * 0.36, h * 0.16)
+          ctx.strokeStyle = '#64748b'
+          ctx.lineWidth = 1
+          ctx.strokeRect(w * 0.32, h * 0.42, w * 0.36, h * 0.16)
+
+        } else if (style === 'df4b-bnsf-orange') {
+          // --- 3. 北美 BNSF 重载机车 (GE/EMD)：暖炭灰车顶 + 动态制动电阻舱 + 简洁低轮廓排气 ---
+          ctx.fillStyle = '#272a30'
+          ctx.fillRect(0, 0, w, h)
+
+          // 前部动态制动电阻箱 (Dynamic Brake Hatch)
+          ctx.fillStyle = '#3f4754'
+          ctx.fillRect(w * 0.24, h * 0.16, w * 0.52, h * 0.22)
+          ctx.strokeStyle = '#5a6678'
+          ctx.lineWidth = 1.2
+          ctx.strokeRect(w * 0.24, h * 0.16, w * 0.52, h * 0.22)
+
+          // 简洁排气烟道
+          ctx.fillStyle = '#1c1f24'
+          ctx.fillRect(w * 0.36, h * 0.46, w * 0.28, h * 0.10)
+
+          // 后部微型低轮廓散热扇
+          ctx.fillStyle = '#1c1f24'
           ctx.beginPath()
-          ctx.moveTo(w * 0.1, y)
-          ctx.lineTo(w * 0.9, y)
+          ctx.arc(w * 0.50, h * 0.72, w * 0.24, 0, Math.PI * 2)
+          ctx.fill()
+          ctx.strokeStyle = '#5a6678'
+          ctx.lineWidth = 1.5
           ctx.stroke()
-        }
-      } else {
-        // 煤炭敞车顶部：柔和低反光立体原煤堆质感
-        ctx.fillStyle = '#111315'
-        ctx.fillRect(0, 0, w, h)
-        ctx.fillStyle = '#1c2024'
-        for (let x = 10; x < w - 10; x += 15) {
-          for (let y = 10; y < h - 10; y += 15) {
+
+        } else {
+          // --- 4. 国铁东风 4B 经典内燃机车车顶 (柔和工业钢灰 + 清爽低对比度双散热风扇) ---
+          ctx.fillStyle = '#2e3844'
+          ctx.fillRect(0, 0, w, h)
+
+          // 清爽低反差双冷却风扇 (微凸金属圈 + 4 片大桨叶，无刺眼黑网)
+          const drawGentleFan = (cy: number) => {
+            // 浅凹坑
+            ctx.fillStyle = '#1e2630'
             ctx.beginPath()
-            ctx.arc(x, y, 5, 0, Math.PI * 2)
+            ctx.arc(w * 0.5, cy, w * 0.32, 0, Math.PI * 2)
+            ctx.fill()
+            // 4 片简洁叶片
+            ctx.strokeStyle = '#4a5768'
+            ctx.lineWidth = 2
+            for (let a = 0; a < Math.PI; a += Math.PI / 2) {
+              ctx.beginPath()
+              ctx.moveTo(w * 0.5 + Math.cos(a) * w * 0.28, cy + Math.sin(a) * w * 0.28)
+              ctx.lineTo(w * 0.5 - Math.cos(a) * w * 0.28, cy - Math.sin(a) * w * 0.28)
+              ctx.stroke()
+            }
+            // 柔和金属外圈
+            ctx.strokeStyle = '#64748b'
+            ctx.lineWidth = 1.5
+            ctx.beginPath()
+            ctx.arc(w * 0.5, cy, w * 0.32, 0, Math.PI * 2)
+            ctx.stroke()
+          }
+          drawGentleFan(h * 0.28)
+          drawGentleFan(h * 0.72)
+
+          // 中央简洁排气罩
+          ctx.fillStyle = '#1e2630'
+          ctx.fillRect(w * 0.36, h * 0.46, w * 0.28, h * 0.08)
+          ctx.strokeStyle = '#4a5768'
+          ctx.lineWidth = 1
+          ctx.strokeRect(w * 0.36, h * 0.46, w * 0.28, h * 0.08)
+        }
+
+      } else if (params.carType === 'middle') {
+        // === 集装箱平车顶部：宽距柔和波纹防滑顶板 (无过密黑条，支持第 2 节/第 3 节平车异色搭配) ===
+        const isVariant2 = params.middleVariant === 2 || params.carRole === 'middle_2'
+        let c1Color = isVariant2 ? '#c97f32' : '#2b4d70'
+        let c2Color = isVariant2 ? '#327ea8' : '#2d5438'
+        if (style === 'df4b-orange') {
+          c1Color = isVariant2 ? '#963940' : '#c97f32'
+          c2Color = isVariant2 ? '#eae7df' : '#2d4b68'
+        } else if (style === 'df4b-jrf-red-thunder') {
+          c1Color = isVariant2 ? '#d69e2e' : '#963940'
+          c2Color = isVariant2 ? '#8a3339' : '#284666'
+        } else if (style === 'df4b-jrf-blue-momotaro') {
+          c1Color = isVariant2 ? '#284666' : '#d69e2e'
+          c2Color = isVariant2 ? '#963940' : '#8a3339'
+        } else if (style === 'df4b-bnsf-orange') {
+          c1Color = isVariant2 ? '#c97f32' : '#cb6323'
+          c2Color = isVariant2 ? '#2d4b68' : '#eae7df'
+        } else if (style === 'df4b-sbb-cargo') {
+          c1Color = isVariant2 ? '#eae7df' : '#244d7d'
+          c2Color = isVariant2 ? '#2d5438' : '#d96427'
+        } else if (style === 'df4b-blue') {
+          c1Color = isVariant2 ? '#2b4d70' : '#327ea8'
+          c2Color = isVariant2 ? '#c97f32' : '#aa3d64'
+        }
+
+        // 前集装箱顶
+        ctx.fillStyle = c1Color
+        ctx.fillRect(0, 0, w, h * 0.49)
+        // 后集装箱顶
+        ctx.fillStyle = c2Color
+        ctx.fillRect(0, h * 0.51, w, h * 0.49)
+
+        // 宽距柔和波纹
+        const drawBroadRoofRibs = (startY: number, endY: number) => {
+          for (let y = startY + 16; y < endY - 16; y += 18) {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.15)'
+            ctx.fillRect(w * 0.12, y, w * 0.76, 2)
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.18)'
+            ctx.fillRect(w * 0.12, y + 2, w * 0.76, 1.5)
+          }
+        }
+        drawBroadRoofRibs(0, h * 0.49)
+        drawBroadRoofRibs(h * 0.51, h)
+
+      } else {
+        // === 散货煤炭敞车顶部：柔和磨砂煤炭质感 ===
+        ctx.fillStyle = '#222832'
+        ctx.fillRect(0, 0, w, h)
+
+        // 柔和立体颗粒
+        ctx.fillStyle = '#171c24'
+        for (let y = 10; y < h - 10; y += 24) {
+          for (let x = 10; x < w - 10; x += 20) {
+            ctx.beginPath()
+            ctx.arc(x + 6, y + 6, 8, 0, Math.PI * 2)
             ctx.fill()
           }
         }
+
+        // 边框
+        ctx.strokeStyle = '#3b4654'
+        ctx.lineWidth = 2
+        ctx.strokeRect(0, 0, w, h)
       }
     } else {
       if (style === 'commuter-hankyu') {
@@ -3020,27 +3279,27 @@ export class TextureBaker {
       }
     }
 
-    // 3. 东风 4B 重载货运系列 (DF4B Freight)
+    // 3. 东风 4B 重载货运系列 (DF4B Freight Front View)
     if (style.startsWith('df4b-')) {
       if (params.carType === 'head') {
-        // === 东风 4B 重载内燃机车头 I端/II端经典前脸 ===
+        // === 东风 4B / 货运机车头 I端经典前脸 ===
         if (style === 'df4b-watermelon') {
-          ctx.fillStyle = '#2b5239' // 沉稳复古墨绿
+          ctx.fillStyle = '#264e36' // 沉稳复古墨绿
           ctx.fillRect(0, 0, w, h)
-          ctx.fillStyle = '#f3e9cd'
+          ctx.fillStyle = '#f4ebd0'
           ctx.fillRect(0, h * 0.52, w, 4)
           ctx.fillRect(0, h * 0.56, w, 4)
           // 前脸中央经典红星徽标
           const cx = w * 0.5
           const cy = h * 0.62
-          ctx.fillStyle = '#c2410c'
+          ctx.fillStyle = '#dc2626'
           ctx.beginPath()
           ctx.arc(cx, cy, 13, 0, Math.PI * 2)
           ctx.fill()
-          ctx.strokeStyle = '#f3e9cd'
+          ctx.strokeStyle = '#f4ebd0'
           ctx.lineWidth = 1.5
           ctx.stroke()
-          ctx.fillStyle = '#f3e9cd'
+          ctx.fillStyle = '#f4ebd0'
           ctx.font = 'bold 15px sans-serif'
           ctx.textAlign = 'center'
           ctx.fillText('★', cx, cy + 5)
@@ -3059,102 +3318,233 @@ export class TextureBaker {
           ctx.fill()
         } else if (style === 'df4b-jrf-red-thunder') {
           // JR Freight EF510 红雷前脸
-          ctx.fillStyle = '#85222b'
+          ctx.fillStyle = '#9a373f'
           ctx.fillRect(0, 0, w, h)
-          ctx.fillStyle = '#cbd5e1'
+          ctx.fillStyle = '#e2e8f0'
           ctx.fillRect(0, h * 0.50, w, 6)
-          // JRF 银白车头徽标
           ctx.fillStyle = '#f8fafc'
-          ctx.fillRect(w * 0.40, h * 0.60, w * 0.20, 8)
+          ctx.fillRect(w * 0.35, h * 0.60, w * 0.30, 8)
         } else if (style === 'df4b-jrf-blue-momotaro') {
           // JR Freight EF210 桃太郎前脸
-          ctx.fillStyle = '#94a3b8'
+          ctx.fillStyle = '#cbd5e1'
           ctx.fillRect(0, 0, w, h * 0.45)
-          ctx.fillStyle = '#234168'
+          ctx.fillStyle = '#244872'
           ctx.fillRect(0, h * 0.45, w, h * 0.55)
           ctx.fillStyle = '#f8fafc'
           ctx.fillRect(0, h * 0.44, w, 3.5)
-        } else {
-          ctx.fillStyle = '#264673' // 沉稳蓝太湖
+        } else if (style === 'df4b-bnsf-orange') {
+          // 北美 BNSF 经典南瓜橙 + 前脸深灰斜拉花
+          ctx.fillStyle = '#d66824'
           ctx.fillRect(0, 0, w, h)
-          ctx.fillStyle = '#e2e8f0'
+          ctx.fillStyle = '#27272a'
+          ctx.beginPath()
+          ctx.moveTo(0, h * 0.50)
+          ctx.lineTo(w, h * 0.50)
+          ctx.lineTo(w, h * 0.72)
+          ctx.lineTo(0, h * 0.72)
+          ctx.fill()
+          ctx.fillStyle = '#f59e0b'
+          ctx.fillRect(0, h * 0.49, w, 3)
+          ctx.fillRect(0, h * 0.72, w, 3)
+        } else if (style === 'df4b-sbb-cargo') {
+          // 瑞士 SBB Cargo 前脸 + 瑞士红十字徽章
+          ctx.fillStyle = '#244d7d'
+          ctx.fillRect(0, 0, w, h)
+          ctx.fillStyle = '#f8fafc'
+          ctx.fillRect(0, h * 0.48, w, 8)
+          // 瑞士十字标
+          const scx = w * 0.5, scy = h * 0.64
+          ctx.fillStyle = '#dc2626'
+          ctx.fillRect(scx - 10, scy - 10, 20, 20)
+          ctx.fillStyle = '#ffffff'
+          ctx.fillRect(scx - 7, scy - 2.5, 14, 5)
+          ctx.fillRect(scx - 2.5, scy - 7, 5, 14)
+        } else {
+          ctx.fillStyle = '#2b5482' // 沉稳蓝太湖
+          ctx.fillRect(0, 0, w, h)
+          ctx.fillStyle = '#f1f5f9'
           ctx.fillRect(0, h * 0.52, w, 7)
         }
 
-        // 双前倾观察窗 (Forward-Raked Cab Windows)
-        ctx.fillStyle = '#020617'
+        // 双前倾大视野观察窗 (带柔和密封条 + 玻璃反光)
+        ctx.fillStyle = '#162230'
         ctx.fillRect(w * 0.10, h * 0.20, w * 0.36, h * 0.28)
         ctx.fillRect(w * 0.54, h * 0.20, w * 0.36, h * 0.28)
-        ctx.strokeStyle = '#475569'
-        ctx.lineWidth = 2
+        ctx.strokeStyle = '#4a586a'
+        ctx.lineWidth = 1.2
         ctx.strokeRect(w * 0.10, h * 0.20, w * 0.36, h * 0.28)
         ctx.strokeRect(w * 0.54, h * 0.20, w * 0.36, h * 0.28)
 
-        // 雨刮器
-        ctx.strokeStyle = '#94a3b8'
-        ctx.lineWidth = 1.5
+        // 玻璃高光
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)'
+        ctx.lineWidth = 1.2
         ctx.beginPath()
-        ctx.moveTo(w * 0.28, h * 0.45)
-        ctx.lineTo(w * 0.20, h * 0.24)
-        ctx.moveTo(w * 0.72, h * 0.45)
-        ctx.lineTo(w * 0.64, h * 0.24)
+        ctx.moveTo(w * 0.12, h * 0.44)
+        ctx.lineTo(w * 0.38, h * 0.22)
+        ctx.moveTo(w * 0.56, h * 0.44)
+        ctx.lineTo(w * 0.82, h * 0.22)
         ctx.stroke()
 
-        // 顶部机车双前照大灯
-        ctx.fillStyle = '#0f172a'
-        ctx.fillRect(w * 0.38, h * 0.06, w * 0.24, h * 0.11)
+        // 黑色金属雨刮器
+        ctx.strokeStyle = '#94a3b8'
+        ctx.lineWidth = 1.2
+        ctx.beginPath()
+        ctx.moveTo(w * 0.28, h * 0.46)
+        ctx.lineTo(w * 0.18, h * 0.24)
+        ctx.moveTo(w * 0.72, h * 0.46)
+        ctx.lineTo(w * 0.62, h * 0.24)
+        ctx.stroke()
+
+        // 顶部机车双前照大灯 (镀铬外框 + 晶莹亮黄聚光透镜)
+        ctx.fillStyle = '#26313d'
+        ctx.fillRect(w * 0.36, h * 0.05, w * 0.28, h * 0.12)
+        ctx.strokeStyle = '#94a3b8'
+        ctx.lineWidth = 1.2
+        ctx.strokeRect(w * 0.36, h * 0.05, w * 0.28, h * 0.12)
+        // 双灯珠
         ctx.fillStyle = '#fef08a'
         ctx.beginPath()
-        ctx.arc(w * 0.44, h * 0.115, 6, 0, Math.PI * 2)
-        ctx.arc(w * 0.56, h * 0.115, 6, 0, Math.PI * 2)
+        ctx.arc(w * 0.43, h * 0.11, 5.5, 0, Math.PI * 2)
+        ctx.arc(w * 0.57, h * 0.11, 5.5, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.fillStyle = '#ffffff'
+        ctx.beginPath()
+        ctx.arc(w * 0.42, h * 0.10, 2, 0, Math.PI * 2)
+        ctx.arc(w * 0.56, h * 0.10, 2, 0, Math.PI * 2)
         ctx.fill()
 
-        // 车头机车车号金属牌 (仅在用户开启自定义文字时绘制车号文字)
+        // 车头机车车号铜铸金属牌 (仅在用户开启自定义文字时显示)
         ctx.fillStyle = '#b45309'
-        ctx.fillRect(w * 0.30, h * 0.74, w * 0.40, h * 0.08)
+        ctx.fillRect(w * 0.28, h * 0.74, w * 0.44, h * 0.08)
         ctx.strokeStyle = '#78350f'
-        ctx.strokeRect(w * 0.30, h * 0.74, w * 0.40, h * 0.08)
+        ctx.lineWidth = 1
+        ctx.strokeRect(w * 0.28, h * 0.74, w * 0.44, h * 0.08)
+        if (customText && customText.enabled) {
+          const frontTrainNo = customText.slots?.trainNumber || customText.trainNumber || ''
+          if (frontTrainNo) {
+            ctx.fillStyle = '#fef08a'
+            ctx.font = 'bold 9.5px monospace'
+            ctx.textAlign = 'center'
+            ctx.fillText(frontTrainNo, w * 0.50, h * 0.80)
+          }
+        }
+
+        // 底部重型排障器 (带经典黑黄安全斑马条纹 + 红色重联风管 + 黑色车钩)
+        ctx.fillStyle = '#222b36'
+        ctx.fillRect(w * 0.04, h * 0.84, w * 0.92, h * 0.16)
+        // 斑马警示条
+        ctx.strokeStyle = '#f59e0b'
+        ctx.lineWidth = 2.5
+        for (let x = w * 0.08; x < w * 0.92; x += 11) {
+          ctx.beginPath()
+          ctx.moveTo(x, h * 0.85)
+          ctx.lineTo(x + 7, h * 0.99)
+          ctx.stroke()
+        }
+        // 中央车钩
+        ctx.fillStyle = '#171d24'
+        ctx.fillRect(w * 0.44, h * 0.86, w * 0.12, h * 0.10)
+        // 红色重联风管
+        ctx.fillStyle = '#dc2626'
+        ctx.fillRect(w * 0.32, h * 0.88, 3, 7)
+        ctx.fillRect(w * 0.66, h * 0.88, 3, 7)
+
+        return canvas
+      } else if (params.carType === 'middle') {
+        // === 集装箱平车端面：真实双开集装箱门 + 4 根垂直镀铬锁杆 + 凸轮锁扣 ===
+        const isVariant2 = params.middleVariant === 2 || params.carRole === 'middle_2'
+        let endBoxColor = isVariant2 ? '#c97f32' : '#2b4d70'
+        if (style === 'df4b-orange') endBoxColor = isVariant2 ? '#963940' : '#c97f32'
+        else if (style === 'df4b-jrf-red-thunder') endBoxColor = isVariant2 ? '#d69e2e' : '#963940'
+        else if (style === 'df4b-jrf-blue-momotaro') endBoxColor = isVariant2 ? '#284666' : '#d69e2e'
+        else if (style === 'df4b-bnsf-orange') endBoxColor = isVariant2 ? '#c97f32' : '#cb6323'
+        else if (style === 'df4b-sbb-cargo') endBoxColor = isVariant2 ? '#eae7df' : '#244d7d'
+        else if (style === 'df4b-blue') endBoxColor = isVariant2 ? '#2b4d70' : '#327ea8'
+
+        // 集装箱箱体端面
+        ctx.fillStyle = endBoxColor
+        ctx.fillRect(0, 0, w, h * 0.82)
+
+        // 门框柔和密封胶条
+        ctx.strokeStyle = '#1e2632'
+        ctx.lineWidth = 1.5
+        ctx.strokeRect(2, 2, w - 4, h * 0.82 - 4)
+
+        // 中央对开门缝
+        ctx.fillStyle = '#1e2632'
+        ctx.fillRect(w * 0.5 - 1.5, 4, 3, h * 0.82 - 8)
+
+        // 4 根垂直镀铬锁杆 (Lock Rods) 与锁销凸轮 (Cam Keepers)
+        const rodPositions = [w * 0.22, w * 0.38, w * 0.62, w * 0.78]
+        for (const rx of rodPositions) {
+          ctx.fillStyle = '#94a3b8'
+          ctx.fillRect(rx - 1.5, 6, 3, h * 0.82 - 12)
+          // 顶部/底部锁座
+          ctx.fillStyle = '#475569'
+          ctx.fillRect(rx - 3, 5, 6, 4)
+          ctx.fillRect(rx - 3, h * 0.82 - 9, 6, 4)
+          // 开关把手
+          ctx.fillStyle = '#cbd5e1'
+          ctx.fillRect(rx - 1.5, h * 0.44, 8, 3)
+        }
+
+        // 四角 ISO 铸钢角件
+        ctx.fillStyle = '#1e2632'
+        ctx.fillRect(1, 1, 7, 7)
+        ctx.fillRect(w - 8, 1, 7, 7)
+        ctx.fillRect(1, h * 0.82 - 8, 7, 7)
+        ctx.fillRect(w - 8, h * 0.82 - 8, 7, 7)
+
+        // 底部重载平车端梁与缓冲车钩
+        ctx.fillStyle = '#222b36'
+        ctx.fillRect(0, h * 0.82, w, h * 0.18)
+        ctx.fillStyle = '#3a4759'
+        ctx.fillRect(0, h * 0.82, w, 3)
+        ctx.fillStyle = '#171d24'
+        ctx.fillRect(w * 0.42, h * 0.86, w * 0.16, h * 0.10)
+
+        return canvas
+      } else {
+        // === 散货煤炭敞车端面 (带冲压横向加强筋 + 登车扶梯，纯净无默认字) ===
+        ctx.fillStyle = '#2d3540'
+        ctx.fillRect(0, 0, w, h)
+
+        // 横向冲压加强梁
+        for (let y = h * 0.20; y < h * 0.80; y += h * 0.18) {
+          ctx.fillStyle = '#1e242c'
+          ctx.fillRect(4, y, w - 8, 2)
+          ctx.fillStyle = '#4a5768'
+          ctx.fillRect(4, y + 2, w - 8, 2.5)
+        }
+
+        // 右侧登车检修防滑梯 (Handrails / Ladder)
+        ctx.strokeStyle = '#94a3b8'
+        ctx.lineWidth = 1.2
+        ctx.strokeRect(w * 0.72, h * 0.15, w * 0.18, h * 0.68)
+        for (let ly = h * 0.25; ly < h * 0.80; ly += 10) {
+          ctx.beginPath()
+          ctx.moveTo(w * 0.72, ly)
+          ctx.lineTo(w * 0.90, ly)
+          ctx.stroke()
+        }
+
+        // 仅在用户开启自定义文字时显示车号
         if (customText && customText.enabled) {
           const trainNo = customText.slots?.trainNumber || customText.trainNumber || ''
           if (trainNo) {
             ctx.fillStyle = '#fef08a'
-            ctx.font = 'bold 10px monospace'
-            ctx.textAlign = 'center'
-            ctx.fillText(trainNo, w * 0.50, h * 0.80)
+            ctx.font = 'bold 6px monospace'
+            ctx.textAlign = 'left'
+            ctx.fillText(trainNo, w * 0.08, h * 0.40)
           }
         }
 
-        // 底部重型排障器 (Heavy Cowcatcher Plow)
-        ctx.fillStyle = '#131920'
-        ctx.fillRect(w * 0.04, h * 0.85, w * 0.92, h * 0.14)
-        ctx.strokeStyle = '#d97706'
-        ctx.lineWidth = 2.5
-        for (let x = w * 0.10; x < w * 0.90; x += 12) {
-          ctx.beginPath()
-          ctx.moveTo(x, h * 0.86)
-          ctx.lineTo(x + 8, h * 0.98)
-          ctx.stroke()
-        }
-        return canvas
-      } else if (params.carType === 'middle') {
-        // 集装箱平车端面：双开货柜门
-        ctx.fillStyle = '#0369a1'
-        ctx.fillRect(0, 0, w, h * 0.85)
-        ctx.fillStyle = '#0f172a'
-        ctx.fillRect(w * 0.5 - 2, h * 0.08, 4, h * 0.72)
-        ctx.fillStyle = '#cbd5e1'
-        ctx.fillRect(w * 0.32, h * 0.08, 3, h * 0.72)
-        ctx.fillRect(w * 0.68, h * 0.08, 3, h * 0.72)
-        ctx.fillStyle = '#1e293b'
+        // 底部车钩
+        ctx.fillStyle = '#222b36'
         ctx.fillRect(0, h * 0.85, w, h * 0.15)
-        return canvas
-      } else {
-        // 散货敞车端面
-        ctx.fillStyle = '#1e293b'
-        ctx.fillRect(0, 0, w, h)
-        ctx.strokeStyle = '#cbd5e1'
-        ctx.lineWidth = 2
-        ctx.strokeRect(w * 0.72, h * 0.15, w * 0.16, h * 0.70)
+        ctx.fillStyle = '#171d24'
+        ctx.fillRect(w * 0.42, h * 0.87, w * 0.16, h * 0.11)
+
         return canvas
       }
     }
@@ -3972,14 +4362,14 @@ export class TextureBaker {
       }
     }
 
-    // 2. 东风 4B 重载货运系列 (DF4B Freight Rear)
+    // 2. 东风 4B 重载货运系列 (DF4B Freight Rear View)
     if (style.startsWith('df4b-')) {
       if (params.carType === 'head') {
         // II端机车头尾部
         if (style === 'df4b-watermelon') {
-          ctx.fillStyle = '#2b5239'
+          ctx.fillStyle = '#264e36'
           ctx.fillRect(0, 0, w, h)
-          ctx.fillStyle = '#f3e9cd'
+          ctx.fillStyle = '#f4ebd0'
           ctx.fillRect(0, h * 0.52, w, 4)
           ctx.fillRect(0, h * 0.56, w, 4)
         } else if (style === 'df4b-orange') {
@@ -3995,45 +4385,148 @@ export class TextureBaker {
           ctx.lineTo(0, h * 0.55)
           ctx.fill()
         } else if (style === 'df4b-jrf-red-thunder') {
-          ctx.fillStyle = '#85222b'
-          ctx.fillRect(0, 0, w, h)
-          ctx.fillStyle = '#cbd5e1'
-          ctx.fillRect(0, h * 0.50, w, 6)
-        } else if (style === 'df4b-jrf-blue-momotaro') {
-          ctx.fillStyle = '#94a3b8'
-          ctx.fillRect(0, 0, w, h * 0.45)
-          ctx.fillStyle = '#234168'
-          ctx.fillRect(0, h * 0.45, w, h * 0.55)
-        } else {
-          ctx.fillStyle = '#264673'
+          ctx.fillStyle = '#9a373f'
           ctx.fillRect(0, 0, w, h)
           ctx.fillStyle = '#e2e8f0'
+          ctx.fillRect(0, h * 0.50, w, 6)
+        } else if (style === 'df4b-jrf-blue-momotaro') {
+          ctx.fillStyle = '#cbd5e1'
+          ctx.fillRect(0, 0, w, h * 0.45)
+          ctx.fillStyle = '#244872'
+          ctx.fillRect(0, h * 0.45, w, h * 0.55)
+        } else if (style === 'df4b-bnsf-orange') {
+          ctx.fillStyle = '#d66824'
+          ctx.fillRect(0, 0, w, h)
+          ctx.fillStyle = '#27272a'
+          ctx.fillRect(0, h * 0.50, w, h * 0.22)
+          ctx.fillStyle = '#f59e0b'
+          ctx.fillRect(0, h * 0.49, w, 3)
+          ctx.fillRect(0, h * 0.72, w, 3)
+        } else if (style === 'df4b-sbb-cargo') {
+          ctx.fillStyle = '#244d7d'
+          ctx.fillRect(0, 0, w, h)
+          ctx.fillStyle = '#f8fafc'
+          ctx.fillRect(0, h * 0.48, w, 8)
+        } else {
+          ctx.fillStyle = '#2b5482'
+          ctx.fillRect(0, 0, w, h)
+          ctx.fillStyle = '#f1f5f9'
           ctx.fillRect(0, h * 0.52, w, 7)
         }
-        ctx.fillStyle = '#020617'
+
+        // 双后风挡观察窗 (带柔和密封条 + 玻璃反光)
+        ctx.fillStyle = '#162230'
         ctx.fillRect(w * 0.10, h * 0.20, w * 0.36, h * 0.28)
         ctx.fillRect(w * 0.54, h * 0.20, w * 0.36, h * 0.28)
+        ctx.strokeStyle = '#4a586a'
+        ctx.lineWidth = 1.2
+        ctx.strokeRect(w * 0.10, h * 0.20, w * 0.36, h * 0.28)
+        ctx.strokeRect(w * 0.54, h * 0.20, w * 0.36, h * 0.28)
+
+        // 红色机车尾部标志灯 (Red Marker Lights)
+        ctx.fillStyle = '#26313d'
+        ctx.fillRect(w * 0.36, h * 0.05, w * 0.28, h * 0.12)
+        ctx.strokeStyle = '#94a3b8'
+        ctx.lineWidth = 1.2
+        ctx.strokeRect(w * 0.36, h * 0.05, w * 0.28, h * 0.12)
         ctx.fillStyle = '#ef4444'
         ctx.beginPath()
-        ctx.arc(w * 0.44, h * 0.115, 6, 0, Math.PI * 2)
-        ctx.arc(w * 0.56, h * 0.115, 6, 0, Math.PI * 2)
+        ctx.arc(w * 0.43, h * 0.11, 5.5, 0, Math.PI * 2)
+        ctx.arc(w * 0.57, h * 0.11, 5.5, 0, Math.PI * 2)
         ctx.fill()
-        ctx.fillStyle = '#131920'
-        ctx.fillRect(w * 0.04, h * 0.85, w * 0.92, h * 0.14)
+        ctx.fillStyle = '#fecaca'
+        ctx.beginPath()
+        ctx.arc(w * 0.42, h * 0.10, 2, 0, Math.PI * 2)
+        ctx.arc(w * 0.56, h * 0.10, 2, 0, Math.PI * 2)
+        ctx.fill()
+
+        // 底部重型排障器
+        ctx.fillStyle = '#222b36'
+        ctx.fillRect(w * 0.04, h * 0.84, w * 0.92, h * 0.16)
+        ctx.strokeStyle = '#f59e0b'
+        ctx.lineWidth = 2.5
+        for (let x = w * 0.08; x < w * 0.92; x += 11) {
+          ctx.beginPath()
+          ctx.moveTo(x, h * 0.85)
+          ctx.lineTo(x + 7, h * 0.99)
+          ctx.stroke()
+        }
+        ctx.fillStyle = '#171d24'
+        ctx.fillRect(w * 0.44, h * 0.86, w * 0.12, h * 0.10)
         return canvas
+
       } else if (params.carType === 'middle') {
-        ctx.fillStyle = style === 'df4b-jrf-red-thunder' ? '#7e222a' : (style === 'df4b-jrf-blue-momotaro' ? '#234168' : '#223d5b')
-        ctx.fillRect(0, 0, w, h * 0.85)
-        // 门锁双锁杆 (Door Locking Bars)
-        ctx.fillStyle = '#64748b'
-        ctx.fillRect(w * 0.35, h * 0.10, 2, h * 0.70)
-        ctx.fillRect(w * 0.65, h * 0.10, 2, h * 0.70)
-        ctx.fillStyle = '#131920'
-        ctx.fillRect(0, h * 0.85, w, h * 0.15)
+        // === 集装箱平车后侧端面：双开货柜门与垂直锁杆 ===
+        const isVariant2 = params.middleVariant === 2 || params.carRole === 'middle_2'
+        let endBoxColor = isVariant2 ? '#327ea8' : '#2d5438'
+        if (style === 'df4b-orange') endBoxColor = isVariant2 ? '#eae7df' : '#2d4b68'
+        else if (style === 'df4b-jrf-red-thunder') endBoxColor = isVariant2 ? '#8a3339' : '#284666'
+        else if (style === 'df4b-jrf-blue-momotaro') endBoxColor = isVariant2 ? '#963940' : '#8a3339'
+        else if (style === 'df4b-bnsf-orange') endBoxColor = isVariant2 ? '#2d4b68' : '#eae7df'
+        else if (style === 'df4b-sbb-cargo') endBoxColor = isVariant2 ? '#2d5438' : '#d96427'
+        else if (style === 'df4b-blue') endBoxColor = isVariant2 ? '#c97f32' : '#aa3d64'
+
+        ctx.fillStyle = endBoxColor
+        ctx.fillRect(0, 0, w, h * 0.82)
+        ctx.strokeStyle = '#1e2632'
+        ctx.lineWidth = 1.5
+        ctx.strokeRect(2, 2, w - 4, h * 0.82 - 4)
+
+        ctx.fillStyle = '#1e2632'
+        ctx.fillRect(w * 0.5 - 1.5, 4, 3, h * 0.82 - 8)
+
+        // 4 根垂直锁杆
+        const rodPositions = [w * 0.22, w * 0.38, w * 0.62, w * 0.78]
+        for (const rx of rodPositions) {
+          ctx.fillStyle = '#94a3b8'
+          ctx.fillRect(rx - 1.5, 6, 3, h * 0.82 - 12)
+          ctx.fillStyle = '#475569'
+          ctx.fillRect(rx - 3, 5, 6, 4)
+          ctx.fillRect(rx - 3, h * 0.82 - 9, 6, 4)
+          ctx.fillStyle = '#cbd5e1'
+          ctx.fillRect(rx - 1.5, h * 0.44, 8, 3)
+        }
+
+        ctx.fillStyle = '#1e2632'
+        ctx.fillRect(1, 1, 7, 7)
+        ctx.fillRect(w - 8, 1, 7, 7)
+        ctx.fillRect(1, h * 0.82 - 8, 7, 7)
+        ctx.fillRect(w - 8, h * 0.82 - 8, 7, 7)
+
+        ctx.fillStyle = '#222b36'
+        ctx.fillRect(0, h * 0.82, w, h * 0.18)
+        ctx.fillStyle = '#3a4759'
+        ctx.fillRect(0, h * 0.82, w, 3)
+        ctx.fillStyle = '#171d24'
+        ctx.fillRect(w * 0.42, h * 0.86, w * 0.16, h * 0.10)
         return canvas
+
       } else {
-        ctx.fillStyle = '#242b33'
+        // === 散货煤炭敞车后端面 ===
+        ctx.fillStyle = '#2d3540'
         ctx.fillRect(0, 0, w, h)
+
+        for (let y = h * 0.20; y < h * 0.80; y += h * 0.18) {
+          ctx.fillStyle = '#1e242c'
+          ctx.fillRect(4, y, w - 8, 2)
+          ctx.fillStyle = '#4a5768'
+          ctx.fillRect(4, y + 2, w - 8, 2.5)
+        }
+
+        // 红色车尾标志反光板 (Red End Reflectors)
+        ctx.fillStyle = '#dc2626'
+        ctx.beginPath()
+        ctx.arc(w * 0.20, h * 0.70, 5, 0, Math.PI * 2)
+        ctx.arc(w * 0.80, h * 0.70, 5, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.strokeStyle = '#f87171'
+        ctx.lineWidth = 1
+        ctx.stroke()
+
+        ctx.fillStyle = '#222b36'
+        ctx.fillRect(0, h * 0.85, w, h * 0.15)
+        ctx.fillStyle = '#171d24'
+        ctx.fillRect(w * 0.42, h * 0.87, w * 0.16, h * 0.11)
         return canvas
       }
     }

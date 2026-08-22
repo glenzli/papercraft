@@ -205,8 +205,9 @@ export const Scene3D: React.FC<Scene3DProps> = ({
         geo.setAttribute('position', new THREE.Float32BufferAttribute(pos3DArr, 3))
         geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvArr, 2))
         geo.computeVertexNormals()
-        const slot3DName = `${face.slotName}_${car.carType}_3d`
-        const canvas = baker.getSlotCanvas(slot3DName) || baker.getSlotCanvas(`${face.slotName}_3d`) || baker.getSlotCanvas(face.slotName)
+        const roleSuffix = car.carType === 'middle' ? `middle_${car.carIndex}` : car.carType
+        const slot3DName = `${face.slotName}_${roleSuffix}_3d`
+        const canvas = baker.getSlotCanvas(slot3DName) || baker.getSlotCanvas(`${face.slotName}_${car.carType}_3d`) || baker.getSlotCanvas(`${face.slotName}_3d`) || baker.getSlotCanvas(face.slotName)
         const tex = canvas ? new THREE.CanvasTexture(canvas) : baker.getTexture()
         tex.colorSpace = THREE.SRGBColorSpace
         const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: tex, side: THREE.DoubleSide, roughness: 0.45, metalness: 0.1, wireframe: isWireframe }))
@@ -243,8 +244,9 @@ export const Scene3D: React.FC<Scene3DProps> = ({
           }
           geo.computeVertexNormals()
 
-          const slot3DName = `${acc.slotName}_${car.carType}_3d`
-          const canvas = baker.getSlotCanvas(slot3DName) || baker.getSlotCanvas(`${acc.slotName}_3d`) || baker.getSlotCanvas(acc.slotName)
+          const roleSuffix = car.carType === 'middle' ? `middle_${car.carIndex}` : car.carType
+          const slot3DName = `${acc.slotName}_${roleSuffix}_3d`
+          const canvas = baker.getSlotCanvas(slot3DName) || baker.getSlotCanvas(`${acc.slotName}_${car.carType}_3d`) || baker.getSlotCanvas(`${acc.slotName}_3d`) || baker.getSlotCanvas(acc.slotName)
           const tex = canvas ? new THREE.CanvasTexture(canvas) : baker.getTexture()
           tex.colorSpace = THREE.SRGBColorSpace
           const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: tex, side: THREE.DoubleSide, roughness: 0.45, metalness: 0.1, wireframe: isWireframe }))

@@ -132,7 +132,8 @@ export function renderConsistPageToCanvas(
 
       // 5.1 贴图光栅化填充 或 填色白模线框底色
       const slot = face.textureSlot
-      const slotCanvas = slot ? (baker.getSlotCanvas(`${slot}_${car.carType}`) || baker.getSlotCanvas(slot)) : null
+      const roleSuffix = car.carType === 'middle' ? `middle_${car.carIndex}` : car.carType
+      const slotCanvas = slot ? (baker.getSlotCanvas(`${slot}_${roleSuffix}`) || baker.getSlotCanvas(`${slot}_${car.carType}`) || baker.getSlotCanvas(slot)) : null
       if (!isBlankTemplate && slotCanvas && slot) {
         ctx.save()
         ctx.beginPath()

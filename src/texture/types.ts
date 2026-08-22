@@ -32,12 +32,14 @@ export type LiveryStyle =
   | 'hk-tram-green'            // 香港叮叮车 120号经典墨绿 (传承百年木质电车)
   | 'hk-tram-retro-red'        // 香港叮叮车 怀旧红绿双拼
   | 'hk-tram-blue-ad'          // 香港叮叮车 维港蓝全车身城市广告
-  // 🚂 铁路重载货运与内燃机车系列 (含国铁东风系列与日系 JR Freight)
+  // 🚂 铁路重载货运与内燃机车系列 (含国铁东风系列、日系 JRF、北美 BNSF 与瑞士 SBB)
   | 'df4b-watermelon'          // 东风 4B「经典西瓜皮」: 工业墨绿+浅黄腰线
   | 'df4b-orange'              // 东风 4B「金温橘子皮」: 陶土赭橙+白色破风带
   | 'df4b-blue'                // 东风 4D/4B「蓝太湖」: 沉稳深蓝+银白腰带
   | 'df4b-jrf-red-thunder'     // JR Freight EF510「红雷 Red Thunder」+ 19D 樱花红集装箱
   | 'df4b-jrf-blue-momotaro'   // JR Freight EF210「桃太郎 ECO-POWER」+ 蔚蓝集装箱
+  | 'df4b-bnsf-orange'         // 北美重载传奇 BNSF「经典橙黑」+ 53ft 双色集装箱
+  | 'df4b-sbb-cargo'           // 瑞士联邦铁路 SBB Cargo「深蓝冰白」+ 欧系多式联运
   // 通勤电车系列
   | 'commuter-yamanote'        // 东京山手线 (JR E235): 不锈钢+全高绿门波点+绿檐
   | 'commuter-osaka-loop'      // 大阪环状线 (JR 323系): 窗上粗橙带+窗下橙黑腰线+橙色门框+橙黑斜切+车头环状线O标
