@@ -65,11 +65,13 @@ export interface PapercraftModelSchema {
   version: string
   id: string
   name: string
-  category: 'commuter' | 'shinkansen' | 'steam' | 'vehicle'
+  nameEn?: string
+  category: 'commuter' | 'shinkansen' | 'steam' | 'vehicle' | 'bus' | 'custom' | string
   difficulty: 'easy' | 'medium' | 'hard'
   recommendedAge: string
   estimatedTime: string
   description: string
+  descriptionEn?: string
   dimensions: {
     length: number // mm
     width: number  // mm

@@ -1,4 +1,4 @@
-// Papercraft Studio - 主应用入口 (单行极简导航栏 + 动态 .papercraft 资产加载引擎)
+// Papercraft Studio - 主应用入口 (单行极简导航栏 + 动态 .papercraft 资产加载引擎 + 全局多语言)
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Header } from './components/layout/Header'
 import { Scene3D } from './components/viewport3d/Scene3D'
@@ -19,6 +19,7 @@ import { TrainModelConsist } from './core/schema/consistSchema'
 import { exportConsistToPdf } from './export/pdfExporter'
 import confetti from 'canvas-confetti'
 import { Layers, Palette } from 'lucide-react'
+import { useI18n } from './i18n'
 
 function getInitialThemeForConsist(consist: TrainModelConsist): TextureTheme {
   if (consist.defaultThemeId) {
@@ -30,6 +31,8 @@ function getInitialThemeForConsist(consist: TrainModelConsist): TextureTheme {
 }
 
 export function App() {
+  const { locale, t, isZh } = useI18n()
+
   // 1. 动态模型资产清单与当前编组
   const [modelManifest, setModelManifest] = useState<ModelManifestItem[]>(() => modelRepository.getManifest())
   const [currentConsist, setCurrentConsist] = useState<TrainModelConsist>(CONSIST_REGISTRY[0])
@@ -37,10 +40,10 @@ export function App() {
   const [focusedCarIndex, setFocusedCarIndex] = useState<number>(-1)
   const [current2dPageIndex, setCurrent2dPageIndex] = useState<number>(0)
 
-  // 2. 动态生成整列火车的车厢实例列表
+  // 2. 动态生成整列火车的车厢实例列表 (自适应中英多语言)
   const cars: ConsistCarItem[] = useMemo(() => {
-    return buildTrainConsistCars(currentConsist, middleCarCount)
-  }, [currentConsist, middleCarCount])
+    return buildTrainConsistCars(currentConsist, middleCarCount, locale)
+  }, [currentConsist, middleCarCount, locale])
 
   // 3. 视口与交互状态
   const [viewMode, setViewMode] = useState<'3d' | '2d' | 'split'>('split')
@@ -126,23 +129,24 @@ export function App() {
     localStorage.setItem('papercraft_theme_mode', next)
   }
 
-  // 8. 重新烘焙贴图 (自适应车型类别)
+  // 8. 重新烘焙贴图 (自适应车型类别与特定车型 ID)
   const rebake = useCallback(() => {
     baker.bake({
       theme: currentTheme,
       category: currentConsist.category,
+      consistId: currentConsist.id,
       customColors,
       customText,
       useCustomColors
     })
     setBakeTick(t => t + 1)
-  }, [baker, currentTheme, currentConsist.category, customColors, customText, useCustomColors])
+  }, [baker, currentTheme, currentConsist.category, currentConsist.id, customColors, customText, useCustomColors])
 
   useEffect(() => {
     rebake()
   }, [rebake])
 
-  // 9. 动态切换模型 (自适应匹配专属涂装主题)
+  // 9. 动态切换模型 (自适应匹配专属涂装主题与动态导入涂装)
   const handleSelectConsistById = (id: string) => {
     const found = modelRepository.getConsist(id)
     if (found) {
@@ -150,16 +154,14 @@ export function App() {
       setFocusedCarIndex(-1)
       setCurrent2dPageIndex(0)
 
-      // 强校验：优先匹配车型的 defaultThemeId，或匹配该车型的专属涂装
+      // 优先匹配车型的 defaultThemeId，或匹配该车型的可用涂装
+      const availableThemes = modelRepository.getAllLiveriesForConsist(found.id)
       let targetTheme: TextureTheme | undefined
       if (found.defaultThemeId) {
-        targetTheme = PRESET_THEMES.find(th => th.id === found.defaultThemeId)
+        targetTheme = availableThemes.find(th => th.id === found.defaultThemeId)
       }
       if (!targetTheme) {
-        targetTheme = PRESET_THEMES.find(th => th.targetConsistIds?.includes(found.id))
-      }
-      if (!targetTheme) {
-        targetTheme = PRESET_THEMES.filter(th => th.targetConsistIds?.includes(found.id))[0] || PRESET_THEMES[0]
+        targetTheme = availableThemes[0] || PRESET_THEMES[0]
       }
 
       setUseCustomColors(false)
@@ -173,7 +175,7 @@ export function App() {
     }
   }
 
-  // 10. 导入本地 .papercraft 文件
+  // 10. 导入本地 .papercraft 文件 (支持 2.0 ZIP 容器与 1.0 单 JSON)
   const handleImportFile = async (file: File) => {
     const res = await modelRepository.loadFromFile(file)
     if (res.success && res.consist) {
@@ -182,19 +184,34 @@ export function App() {
       setFocusedCarIndex(-1)
       setCurrent2dPageIndex(0)
 
+      // 优先使用新模型自带的默认涂装或附属涂装
+      const availableThemes = modelRepository.getAllLiveriesForConsist(res.consist.id)
+      let targetTheme = (res.consist.defaultThemeId && availableThemes.find(th => th.id === res.consist!.defaultThemeId))
+        || availableThemes[0]
+        || PRESET_THEMES[0]
+
+      setUseCustomColors(false)
+      setCurrentTheme(targetTheme)
+      setCustomColors({
+        primary: targetTheme.colors.primary,
+        secondary: targetTheme.colors.secondary,
+        accent: targetTheme.colors.accent,
+        roof: targetTheme.colors.roof
+      })
+
       confetti({
         particleCount: 100,
         spread: 70,
         origin: { y: 0.6 }
       })
     } else {
-      alert(`导入失败: ${res.error}`)
+      alert(t('header.importFailed', { error: res.error || '' }))
     }
   }
 
-  // 11. 导出当前模型为 .papercraft 文件
-  const handleExportPackage = () => {
-    modelRepository.exportToFile(currentConsist)
+  // 11. 导出当前模型与附属涂装为标准 .papercraft (ZIP 容器包)
+  const handleExportPackage = async () => {
+    await modelRepository.exportToFile(currentConsist)
   }
 
   // 导出整套列车编组的完整多页 A4 PDF
@@ -202,11 +219,13 @@ export function App() {
     if (isExporting) return
     setIsExporting(true)
     try {
+      const consistDisplayName = isZh ? currentConsist.name : (currentConsist.nameEn || currentConsist.name)
       await exportConsistToPdf({
-        consistName: currentConsist.name,
+        consistName: consistDisplayName,
         cars,
         baker,
-        isBlankTemplate: false
+        isBlankTemplate: false,
+        locale
       })
 
       confetti({
@@ -216,7 +235,7 @@ export function App() {
       })
     } catch (e) {
       console.error('导出 PDF 失败:', e)
-      alert('导出编组 PDF 失败，请重试')
+      alert(t('header.exportFailed'))
     } finally {
       setIsExporting(false)
     }
@@ -317,7 +336,7 @@ export function App() {
                 }`}
               >
                 <Layers className="w-3.5 h-3.5" />
-                列车编组
+                {t('sidebar.tabConsist')}
               </button>
               <button
                 onClick={() => setSidebarTab('texture')}
@@ -330,7 +349,7 @@ export function App() {
                 }`}
               >
                 <Palette className="w-3.5 h-3.5" />
-                涂装
+                {t('sidebar.tabLivery')}
               </button>
             </div>
 
@@ -352,6 +371,7 @@ export function App() {
 
               {sidebarTab === 'texture' && (
                 <TextureEditor
+                  currentConsist={currentConsist}
                   currentConsistId={currentConsist.id}
                   currentConsistCategory={currentConsist.category}
                   currentTheme={currentTheme}

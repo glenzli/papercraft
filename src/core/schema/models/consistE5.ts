@@ -263,9 +263,11 @@ const e5TailSchema: PapercraftModelSchema = {
 export const e5TrainConsist: TrainModelConsist = {
   id: 'e5-consist',
   name: '新干线 E5系 (隼号)',
+  nameEn: 'Shinkansen E5 Series (Hayabusa)',
   category: 'shinkansen',
   defaultThemeId: 'hayabusa-emerald',
   description: '超长气动长鼻与高速流线客车，支持自由组合多节新干线高铁编组。',
+  descriptionEn: 'High-speed bullet train featuring long aerodynamic nose and streamline coaches.',
   difficulty: 'medium',
   recommendedAge: '7-14 岁',
   estimatedTimePerCar: '25 分钟/节',

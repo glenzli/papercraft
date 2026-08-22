@@ -607,11 +607,13 @@ export const harukaTailSchema: PapercraftModelSchema = {
 export const harukaTrainConsist: TrainModelConsist = {
   id: "haruka-kitty-consist",
   name: "JR 281系 Haruka",
+  nameEn: "JR 281 Series Haruka",
   category: "shinkansen",
   difficulty: "medium",
   recommendedAge: "5-10 岁",
   estimatedTimePerCar: "15-20 分钟",
   description: "穿梭于关西空港与京都的关空特急，高位流线驾驶室与典雅纯白车身。",
+  descriptionEn: "Kansai Airport Express connecting Kansai Airport and Kyoto with elevated cab design.",
   defaultThemeId: "haruka-hellokitty",
   carDefinitions: {
     head: {

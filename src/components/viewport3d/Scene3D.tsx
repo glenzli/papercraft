@@ -6,6 +6,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { ConsistCarItem } from '../../core/models/consistManager'
 import { TextureBaker } from '../../texture/textureBaker'
 import { RotateCw, Layers } from 'lucide-react'
+import { useI18n } from '../../i18n'
 
 interface Scene3DProps {
   cars: ConsistCarItem[]
@@ -23,6 +24,7 @@ export const Scene3D: React.FC<Scene3DProps> = ({
   bakeTick = 0,
   themeMode = 'dark'
 }) => {
+  const { t } = useI18n()
   const containerRef = useRef<HTMLDivElement>(null)
   const sceneRef = useRef<THREE.Scene | null>(null)
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null)
@@ -164,6 +166,11 @@ export const Scene3D: React.FC<Scene3DProps> = ({
   useEffect(() => {
     if (!sceneRef.current || !trainRootGroupRef.current) return
 
+    const isBusOrRoadVehicle = cars[0]?.schema.category === 'bus'
+    if (railGroupRef.current) {
+      railGroupRef.current.visible = !isBusOrRoadVehicle
+    }
+
     const trainRoot = trainRootGroupRef.current
     while (trainRoot.children.length > 0) {
       trainRoot.remove(trainRoot.children[0])
@@ -284,7 +291,7 @@ export const Scene3D: React.FC<Scene3DProps> = ({
                 ? 'bg-white/90 border-zinc-200 text-zinc-600 hover:bg-zinc-100'
                 : 'bg-zinc-900/90 border-zinc-800 text-zinc-300 hover:bg-zinc-800'
           }`}
-          title="自动 360° 旋转展示"
+          title={t('viewer3D.autoRotateTitle')}
         >
           <RotateCw className={`w-3.5 h-3.5 ${autoRotate ? 'animate-spin' : ''}`} />
         </button>
@@ -297,7 +304,7 @@ export const Scene3D: React.FC<Scene3DProps> = ({
                 ? 'bg-white/90 border-zinc-200 text-zinc-600 hover:bg-zinc-100'
                 : 'bg-zinc-900/90 border-zinc-800 text-zinc-300 hover:bg-zinc-800'
           }`}
-          title="折痕与多边形拓扑线框"
+          title={t('viewer3D.wireframeTitle')}
         >
           <Layers className="w-3.5 h-3.5" />
         </button>

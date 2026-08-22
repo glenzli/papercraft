@@ -287,9 +287,11 @@ const e235TailSchema: PapercraftModelSchema = {
 export const e235TrainConsist: TrainModelConsist = {
   id: 'e235-consist',
   name: 'JR E235系 (山手线)',
+  nameEn: 'JR E235 Series (Yamanote Line)',
   category: 'commuter',
   defaultThemeId: 'yamanote-green',
   description: '经典日本都市电车，包含先头驾驶车、带受电弓中间客车与尾部驾驶车。',
+  descriptionEn: 'Iconic Tokyo commuter train including lead cab, pantograph coach, and tail cab.',
   difficulty: 'easy',
   recommendedAge: '5-9 岁',
   estimatedTimePerCar: '15 分钟/节',

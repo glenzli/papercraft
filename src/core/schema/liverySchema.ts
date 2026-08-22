@@ -8,10 +8,10 @@ export interface PapercraftLiverySchema {
   name: string
   author?: string
   description: string
-  category: 'railway' | 'bullet' | 'retro' | 'custom'
+  category: 'railway' | 'bullet' | 'retro' | 'bus' | 'custom'
 
   // 严格的车型兼容与关联声明 (绝不允许无关联胡乱套用)
-  targetCategory: 'commuter' | 'shinkansen' | 'steam' | 'all'
+  targetCategory: 'commuter' | 'shinkansen' | 'steam' | 'bus' | 'all'
   targetConsistIds: string[]     // 绑定的具体编组 ID，如 ['e235-consist'] 或 ['e5-consist']
   compatibleModelIds?: string[]  // 兼容的模型 ID，如 ['e5-hayabusa-head', 'e5-middle-car']
 

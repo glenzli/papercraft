@@ -128,8 +128,14 @@ export function loadPapercraftFromSchema(schema: PapercraftModelSchema): Papercr
     generateUnfoldedParts: () => {
       const unfoldedParts: UnfoldedPart[] = []
 
-      // 1. 车身主体
-      schema.parts.forEach(part => {
+      // 1. 车身主体与附加展开配件 (如车顶立体受电弓、集电杆)
+      schema.parts.forEach((part, partIdx) => {
+        const isAcc = partIdx > 0 ||
+          part.id.includes('pantograph') ||
+          part.id.includes('pole') ||
+          part.id.includes('accessory') ||
+          part.id.includes('bellows')
+
         const faces: UnfoldedFace[] = part.faces.map(face => {
           const rawPolygon2D: Point2D[] = face.vertices2D.map(v => ({ x: v[0], y: v[1] }))
           const rawUvs: Point2D[] = face.uvCoords.map(uv => ({ x: uv[0], y: uv[1] }))
@@ -163,7 +169,7 @@ export function loadPapercraftFromSchema(schema: PapercraftModelSchema): Papercr
         unfoldedParts.push({
           id: part.id,
           name: part.name,
-          isAccessory: false,
+          isAccessory: isAcc,
           faces,
           bounds: calculatePartBounds(faces)
         })

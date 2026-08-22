@@ -633,11 +633,13 @@ export const cr400TailSchema: PapercraftModelSchema = {
 export const cr400TrainConsist: TrainModelConsist = {
   id: "cr400-fuxing-consist",
   name: "中国高铁 复兴号 / 和谐号",
+  nameEn: "China High-Speed CR400 / CRH",
   category: "shinkansen",
   difficulty: "medium",
   recommendedAge: "7-14 岁",
   estimatedTimePerCar: "15-20 分钟",
   description: "中国标准动车组 CR400 复兴号 (红神龙/金凤凰) 与 CRH 和谐号高速列车编组。",
+  descriptionEn: "China standard bullet train CR400 Fuxing & CRH Hexie high-speed EMU consist.",
   defaultThemeId: "cr400-fuxing-red",
   carDefinitions: {
     head: {

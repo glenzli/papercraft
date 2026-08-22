@@ -1,4 +1,4 @@
-// 顶部全局单行导航栏 (整合车型切换、动态 .papercraft 资产导入导出、车厢分页与全局导出)
+// 顶部全局单行导航栏 (整合车型切换、动态 .papercraft 资产导入导出、车厢分页、双语切换与全局导出)
 import React, { useRef } from 'react'
 import { TrainModelConsist } from '../../core/schema/consistSchema'
 import { ConsistCarItem } from '../../core/models/consistManager'
@@ -16,9 +16,11 @@ import {
   PanelRightOpen,
   FolderOpen,
   Download,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Languages
 } from 'lucide-react'
 import { packConsistToA4Pages } from '../../core/unfoldEngine'
+import { useI18n } from '../../i18n'
 
 interface HeaderProps {
   currentConsist: TrainModelConsist
@@ -59,9 +61,16 @@ export const Header: React.FC<HeaderProps> = ({
   isSidebarOpen,
   onToggleSidebar
 }) => {
+  const { locale, setLocale, t, isZh } = useI18n()
   const isLight = themeMode === 'light'
   const fileInputRef = useRef<HTMLInputElement>(null)
   const pageLayout = packConsistToA4Pages(cars)
+
+  const toggleLanguage = () => {
+    setLocale(locale === 'zh-CN' ? 'en-US' : 'zh-CN')
+  }
+
+  const currentDisplayName = isZh ? currentConsist.name : (currentConsist.nameEn || currentConsist.name)
 
   return (
     <header
@@ -90,7 +99,7 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="p-1 rounded-md bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 shadow-xs">
             <Train className="w-3.5 h-3.5" />
           </div>
-          <span className="hidden sm:inline">Papercraft Studio</span>
+          <span className="hidden sm:inline">{t('common.appTitle')}</span>
         </div>
 
         {/* 车型选择下拉气泡 */}
@@ -102,7 +111,7 @@ export const Header: React.FC<HeaderProps> = ({
                 : 'bg-zinc-800 hover:bg-zinc-700/80 text-zinc-200 border-zinc-700'
             }`}
           >
-            <span className="truncate max-w-[120px] sm:max-w-[160px]">{currentConsist.name}</span>
+            <span className="truncate max-w-[120px] sm:max-w-[160px]">{currentDisplayName}</span>
             <ChevronDown className="w-3 h-3 opacity-60 group-hover:rotate-180 transition-transform" />
           </button>
 
@@ -113,11 +122,12 @@ export const Header: React.FC<HeaderProps> = ({
             }`}
           >
             <div className="px-2 py-1 text-[10px] font-semibold opacity-50 uppercase tracking-wider">
-              内置列车车型
+              {t('header.builtInTrains')}
             </div>
             <div className="max-h-60 overflow-y-auto space-y-0.5">
               {modelManifest.map(m => {
                 const isSelected = m.id === currentConsist.id
+                const mName = isZh ? m.name : (m.nameEn || m.name)
                 return (
                   <button
                     key={m.id}
@@ -129,8 +139,8 @@ export const Header: React.FC<HeaderProps> = ({
                     }`}
                   >
                     <div>
-                      <div>{m.name}</div>
-                      <div className="text-[10px] opacity-50">{m.category} · {m.difficulty}</div>
+                      <div>{mName}</div>
+                      <div className="text-[10px] opacity-50">{m.category.toUpperCase()} · {m.difficulty.toUpperCase()}</div>
                     </div>
                     {isSelected && <span className="text-sky-500 text-xs">●</span>}
                   </button>
@@ -147,7 +157,7 @@ export const Header: React.FC<HeaderProps> = ({
                 }`}
               >
                 <FolderOpen className="w-3.5 h-3.5 opacity-70" />
-                <span>导入 .papercraft 资产</span>
+                <span>{t('header.importPapercraftAsset')}</span>
               </div>
 
               <button
@@ -157,7 +167,7 @@ export const Header: React.FC<HeaderProps> = ({
                 }`}
               >
                 <Download className="w-3.5 h-3.5 opacity-70" />
-                <span>导出当前模型为 .papercraft</span>
+                <span>{t('header.exportCurrentPapercraft')}</span>
               </button>
             </div>
           </div>
@@ -179,10 +189,10 @@ export const Header: React.FC<HeaderProps> = ({
                 ? isLight ? 'bg-white text-zinc-900 shadow-xs' : 'bg-zinc-700 text-white shadow-xs'
                 : 'opacity-60 hover:opacity-100'
             }`}
-            title="3D 实景装配与折叠视角"
+            title={t('header.view3DTitle')}
           >
             <Box className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">3D 预览</span>
+            <span className="hidden sm:inline">{t('header.view3D')}</span>
           </button>
           <button
             onClick={() => onViewModeChange('split')}
@@ -191,10 +201,10 @@ export const Header: React.FC<HeaderProps> = ({
                 ? isLight ? 'bg-white text-zinc-900 shadow-xs' : 'bg-zinc-700 text-white shadow-xs'
                 : 'opacity-60 hover:opacity-100'
             }`}
-            title="双屏对照视角"
+            title={t('header.viewSplitTitle')}
           >
             <Columns className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">分屏</span>
+            <span className="hidden sm:inline">{t('header.viewSplit')}</span>
           </button>
           <button
             onClick={() => onViewModeChange('2d')}
@@ -203,40 +213,59 @@ export const Header: React.FC<HeaderProps> = ({
                 ? isLight ? 'bg-white text-zinc-900 shadow-xs' : 'bg-zinc-700 text-white shadow-xs'
                 : 'opacity-60 hover:opacity-100'
             }`}
-            title="2D 展开图纸排版与打印视角"
+            title={t('header.view2DTitle')}
           >
             <FileSpreadsheet className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">2D 图纸</span>
+            <span className="hidden sm:inline">{t('header.view2D')}</span>
           </button>
         </div>
 
         {/* 2D 分页快捷标签 (仅在 2D 或分屏模式下高亮展示) */}
         {viewMode !== '3d' && (
           <div className="hidden md:flex items-center gap-1">
-            {pageLayout.map((page, idx) => (
-              <button
-                key={page.pageIndex}
-                onClick={() => onSelect2dPageIndex(page.pageIndex)}
-                className={`px-2 py-0.5 rounded-md text-[11px] font-medium border transition-colors ${
-                  current2dPageIndex === page.pageIndex
-                    ? isLight
-                      ? 'bg-zinc-900 text-white border-zinc-900'
-                      : 'bg-white text-zinc-900 border-white'
-                    : isLight
-                      ? 'bg-zinc-50 hover:bg-zinc-100 text-zinc-700 border-zinc-200'
-                      : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border-zinc-700'
-                }`}
-                title={`跳转至第 ${idx + 1} 页 (${page.car?.carNumberText || '配件专页'})`}
-              >
-                P{idx + 1}: {(page.car?.carNumberText || '配件').slice(0, 4)}
-              </button>
-            ))}
+            {pageLayout.map((page, idx) => {
+              const carText = page.car?.carNumberText || t('header.pageAccessory')
+              const shortText = carText.slice(0, 5)
+              return (
+                <button
+                  key={page.pageIndex}
+                  onClick={() => onSelect2dPageIndex(page.pageIndex)}
+                  className={`px-2 py-0.5 rounded-md text-[11px] font-medium border transition-colors ${
+                    current2dPageIndex === page.pageIndex
+                      ? isLight
+                        ? 'bg-zinc-900 text-white border-zinc-900'
+                        : 'bg-white text-zinc-900 border-white'
+                      : isLight
+                        ? 'bg-zinc-50 hover:bg-zinc-100 text-zinc-700 border-zinc-200'
+                        : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border-zinc-700'
+                  }`}
+                  title={t('header.pageJumpTitle', { page: idx + 1, name: carText })}
+                >
+                  P{idx + 1}: {shortText}
+                </button>
+              )
+            })}
           </div>
         )}
       </div>
 
-      {/* 右侧: 工具、主题与导出 PDF */}
+      {/* 右侧: 语言切换、主题、组装指南与导出 PDF */}
       <div className="flex items-center gap-1.5">
+        {/* 语言切换按钮 (中/EN) */}
+        <button
+          onClick={toggleLanguage}
+          className={`px-2 py-1 rounded-md border text-xs font-semibold flex items-center gap-1 transition-colors ${
+            isLight
+              ? 'bg-zinc-50 hover:bg-zinc-100 text-zinc-700 border-zinc-200'
+              : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border-zinc-700'
+          }`}
+          title={t('common.switchLanguage')}
+        >
+          <Languages className="w-3.5 h-3.5 opacity-80" />
+          <span className="text-[11px]">{isZh ? 'EN' : '中文'}</span>
+        </button>
+
+        {/* 亮色/暗色模式切换 */}
         <button
           onClick={onToggleThemeMode}
           className={`p-1.5 rounded-md border text-xs transition-colors ${
@@ -244,11 +273,12 @@ export const Header: React.FC<HeaderProps> = ({
               ? 'bg-zinc-50 hover:bg-zinc-100 text-zinc-700 border-zinc-200'
               : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border-zinc-700'
           }`}
-          title={isLight ? '切换为暗色模式' : '切换为亮色模式'}
+          title={isLight ? t('common.darkMode') : t('common.lightMode')}
         >
           {isLight ? <Moon className="w-3.5 h-3.5" /> : <Sun className="w-3.5 h-3.5" />}
         </button>
 
+        {/* 组装指南 */}
         <button
           onClick={onOpenGuide}
           className={`flex items-center gap-1 px-2 py-1 rounded-md border text-xs transition-colors ${
@@ -258,9 +288,10 @@ export const Header: React.FC<HeaderProps> = ({
           }`}
         >
           <HelpCircle className="w-3 h-3 opacity-70" />
-          <span>指南</span>
+          <span>{t('common.guide')}</span>
         </button>
 
+        {/* PDF 导出 */}
         <button
           onClick={onExportPdf}
           disabled={isExporting}
@@ -273,9 +304,10 @@ export const Header: React.FC<HeaderProps> = ({
           }`}
         >
           <Printer className={`w-3.5 h-3.5 ${isExporting ? 'animate-bounce' : ''}`} />
-          <span>{isExporting ? '正在导出...' : '导出'}</span>
+          <span>{isExporting ? t('common.exporting') : t('common.export')}</span>
         </button>
 
+        {/* 侧边栏折叠/展开 */}
         <button
           onClick={onToggleSidebar}
           className={`p-1.5 rounded-md border text-xs transition-colors ml-0.5 ${
@@ -283,7 +315,7 @@ export const Header: React.FC<HeaderProps> = ({
               ? 'bg-zinc-50 hover:bg-zinc-100 text-zinc-700 border-zinc-200'
               : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border-zinc-700'
           }`}
-          title={isSidebarOpen ? '收起右侧边栏' : '展开右侧边栏'}
+          title={isSidebarOpen ? t('common.collapseSidebar') : t('common.expandSidebar')}
         >
           {isSidebarOpen ? <PanelRightClose className="w-3.5 h-3.5" /> : <PanelRightOpen className="w-3.5 h-3.5" />}
         </button>

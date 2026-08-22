@@ -1,9 +1,10 @@
-// 2D 展开图与工程排版预览器 (无顶栏堆叠、右上方浮动微型工具胶囊、大幅放大与平移)
+// 2D 展开图与工程排版预览器 (双语支持、无顶栏堆叠、右上方浮动微型工具胶囊、大幅放大与平移)
 import React, { useState, useRef, useEffect } from 'react'
 import { ConsistCarItem } from '../../core/models/consistManager'
 import { TextureBaker } from '../../texture/textureBaker'
 import { packConsistToA4Pages, A4_WIDTH_MM, A4_HEIGHT_MM, generateTabPoints, ConsistPageLayout, ConsistPartPlacement } from '../../core/unfoldEngine'
 import { ZoomIn, ZoomOut, Maximize2, Scissors, Compass, Move } from 'lucide-react'
+import { useI18n } from '../../i18n'
 
 interface NetViewer2DProps {
   cars: ConsistCarItem[]
@@ -24,6 +25,7 @@ export const NetViewer2D: React.FC<NetViewer2DProps> = ({
   baker,
   themeMode = 'dark'
 }) => {
+  const { t } = useI18n()
   const containerRef = useRef<HTMLDivElement>(null)
 
   // 缩放与平移状态 (默认大幅放大 2.4x)
@@ -131,12 +133,16 @@ export const NetViewer2D: React.FC<NetViewer2DProps> = ({
               }}
               disabled={currentPageIndex === 0}
               className="p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-800 disabled:opacity-30 cursor-pointer"
-              title="上一页"
+              title={t('viewer2D.prevPage')}
             >
               ◀
             </button>
             <span className="font-semibold text-[11px] px-1 max-w-[260px] truncate">
-              第 {currentPageIndex + 1}/{consistPages.length} 页: <span className="opacity-80">{activePage?.pageTitle || '图纸'}</span>
+              {t('viewer2D.pageTitle', {
+                current: currentPageIndex + 1,
+                total: consistPages.length,
+                title: activePage?.pageTitle || t('viewer2D.sheetTitle')
+              })}
             </span>
             <button
               onClick={() => {
@@ -148,7 +154,7 @@ export const NetViewer2D: React.FC<NetViewer2DProps> = ({
               }}
               disabled={currentPageIndex === consistPages.length - 1}
               className="p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-800 disabled:opacity-30 cursor-pointer"
-              title="下一页"
+              title={t('viewer2D.nextPage')}
             >
               ▶
             </button>
@@ -166,7 +172,7 @@ export const NetViewer2D: React.FC<NetViewer2DProps> = ({
                 : 'opacity-50 hover:opacity-100'
             }`}
           >
-            贴图
+            {t('viewer2D.toggleTexture')}
           </button>
           <button
             onClick={() => setShowCreases(!showCreases)}
@@ -176,7 +182,7 @@ export const NetViewer2D: React.FC<NetViewer2DProps> = ({
                 : 'opacity-50 hover:opacity-100'
             }`}
           >
-            折痕
+            {t('viewer2D.toggleCreases')}
           </button>
           <button
             onClick={() => setShowTabs(!showTabs)}
@@ -186,7 +192,7 @@ export const NetViewer2D: React.FC<NetViewer2DProps> = ({
                 : 'opacity-50 hover:opacity-100'
             }`}
           >
-            粘合翼
+            {t('viewer2D.toggleTabs')}
           </button>
 
           <div className={`h-3 w-px ${isLight ? 'bg-zinc-200' : 'bg-zinc-800'} mx-0.5`} />
@@ -194,21 +200,21 @@ export const NetViewer2D: React.FC<NetViewer2DProps> = ({
           <button
             onClick={() => setScale(s => Math.min(5.0, s * 1.2))}
             className="p-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-800"
-            title="放大"
+            title={t('viewer2D.zoomIn')}
           >
             <ZoomIn className="w-3 h-3" />
           </button>
           <button
             onClick={() => setScale(s => Math.max(0.8, s / 1.2))}
             className="p-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-800"
-            title="缩小"
+            title={t('viewer2D.zoomOut')}
           >
             <ZoomOut className="w-3 h-3" />
           </button>
           <button
             onClick={fitToScreen}
             className="p-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-800"
-            title="适中铺满"
+            title={t('viewer2D.fitScreen')}
           >
             <Maximize2 className="w-3 h-3" />
           </button>
@@ -253,7 +259,7 @@ export const NetViewer2D: React.FC<NetViewer2DProps> = ({
             {/* 1. 图例说明与页码标题 */}
             <g transform="translate(10, 12)">
               <text x="0" y="0" fontSize="4.2" fontWeight="bold" fill="#0f172a">
-                {activePage?.pageTitle || '展开图纸'}
+                {activePage?.pageTitle || t('viewer2D.sheetTitle')}
               </text>
               <text x="0" y="4.5" fontSize="2.6" fill="#64748b">
                 P. {currentPageIndex + 1} / {consistPages.length}
@@ -261,13 +267,13 @@ export const NetViewer2D: React.FC<NetViewer2DProps> = ({
 
               <g transform="translate(0, 9)">
                 <line x1="0" y1="0" x2="8" y2="0" stroke="#0f172a" strokeWidth="0.4" />
-                <text x="9.5" y="1" fontSize="2.3" fill="#334155">剪切</text>
+                <text x="9.5" y="1" fontSize="2.3" fill="#334155">{t('viewer2D.legendCut')}</text>
 
                 <line x1="22" y1="0" x2="30" y2="0" stroke="#dc2626" strokeWidth="0.35" strokeDasharray="1.5, 1" />
-                <text x="31.5" y="1" fontSize="2.3" fill="#dc2626">山折</text>
+                <text x="31.5" y="1" fontSize="2.3" fill="#dc2626">{t('viewer2D.legendMountain')}</text>
 
                 <line x1="44" y1="0" x2="52" y2="0" stroke="#0284c7" strokeWidth="0.35" strokeDasharray="2.5, 1, 0.8, 1" />
-                <text x="53.5" y="1" fontSize="2.3" fill="#0284c7">谷折</text>
+                <text x="53.5" y="1" fontSize="2.3" fill="#0284c7">{t('viewer2D.legendValley')}</text>
               </g>
             </g>
 
@@ -427,15 +433,15 @@ export const NetViewer2D: React.FC<NetViewer2DProps> = ({
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1">
             <Scissors className="w-3 h-3 text-emerald-500" />
-            裁剪线已对齐
+            {t('viewer2D.statusCutAligned')}
           </span>
           <span className="flex items-center gap-1">
             <Compass className="w-3 h-3 text-blue-500" />
-            45° 倒角粘合舌片
+            {t('viewer2D.statusTabsChamfered')}
           </span>
           <span className="flex items-center gap-1 opacity-60">
             <Move className="w-3 h-3" />
-            滚轮缩放 / 拖拽平移
+            {t('viewer2D.statusNavHint')}
           </span>
         </div>
         <div className="font-mono text-[10px] opacity-70">A4 (210×297mm) · Page {currentCarIndex + 1}/{cars.length}</div>

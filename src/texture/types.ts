@@ -9,9 +9,35 @@ export interface CustomTextConfig {
   offsetX?: number // 水平横向偏移百分比 (-50 到 50, 默认 0)
   offsetY?: number // 垂直纵向偏移百分比 (-50 到 50, 默认 0)
   enabled: boolean
+  // 数据驱动的动态插槽映射 (Key: slotKey, Value: string)
+  slots?: Record<string, string>
 }
 
 export type LiveryStyle =
+  // 🚌 城市公交与客车系列 (含 12米标准客车、18米双节铰接巨龙与双层大巴)
+  | 'bus-shanghai-71'          // 上海公交 71 路 (水墨科技蓝白+柠檬黄腰线)
+  | 'bus-london-red'           // 伦敦经典红巴士 (Heritage Red + Roundel 环标)
+  | 'bus-retro-green'          // 复古双拼绿电车 (经典草绿+奶白双拼)
+  | 'bus-eco-cyan'             // 现代新能源清风绿 (浅灰+荧光青绿流线)
+  | 'bus-articulated-71'       // 18米巨龙中运量 71 路 (水墨蓝白+立体手风琴风挡)
+  | 'bus-articulated-beijing'  // 18米北京经典红白巨龙大通道
+  | 'bus-articulated-metro'    // 18米欧洲现代都市大容量铰接快线
+  | 'bus-double-london-red'    // 伦敦 Routemaster 经典双层纯红巴士
+  | 'bus-double-kmb-gold'      // 香港九巴经典「金巴」香槟金
+  | 'bus-double-sightseeing'   // 都市全景双层观光巴士
+  // 🚊 经典有轨电车与轻轨系列 (含镰仓江之电与香港双层叮叮车)
+  | 'tram-enoden-green'        // 镰仓江之电 300形 (经典墨绿+奶油黄+车顶受电弓)
+  | 'tram-modern-cyan'         // 现代低地板流线轻轨 (极简白+科技青绿+全景大窗)
+  | 'tram-melbourne-green'     // 墨尔本经典 W-Class 绿金电车 (深绿+金黄车顶檐)
+  | 'hk-tram-green'            // 香港叮叮车 120号经典墨绿 (传承百年木质电车)
+  | 'hk-tram-retro-red'        // 香港叮叮车 怀旧红绿双拼
+  | 'hk-tram-blue-ad'          // 香港叮叮车 维港蓝全车身城市广告
+  // 🚂 铁路重载货运与内燃机车系列 (含国铁东风系列与日系 JR Freight)
+  | 'df4b-watermelon'          // 东风 4B「经典西瓜皮」: 工业墨绿+浅黄腰线
+  | 'df4b-orange'              // 东风 4B「金温橘子皮」: 陶土赭橙+白色破风带
+  | 'df4b-blue'                // 东风 4D/4B「蓝太湖」: 沉稳深蓝+银白腰带
+  | 'df4b-jrf-red-thunder'     // JR Freight EF510「红雷 Red Thunder」+ 19D 樱花红集装箱
+  | 'df4b-jrf-blue-momotaro'   // JR Freight EF210「桃太郎 ECO-POWER」+ 蔚蓝集装箱
   // 通勤电车系列
   | 'commuter-yamanote'        // 东京山手线 (JR E235): 不锈钢+全高绿门波点+绿檐
   | 'commuter-osaka-loop'      // 大阪环状线 (JR 323系): 窗上粗橙带+窗下橙黑腰线+橙色门框+橙黑斜切+车头环状线O标
@@ -54,12 +80,14 @@ export type LiveryStyle =
 export interface TextureTheme {
   id: string
   name: string
+  nameEn?: string
   author?: string
-  category: 'railway' | 'bullet' | 'retro' | 'custom'
+  category: 'railway' | 'bullet' | 'retro' | 'bus' | 'custom'
   liveryStyle?: LiveryStyle
-  compatibleCategories: ('commuter' | 'shinkansen' | 'steam' | 'all')[]
+  compatibleCategories: ('commuter' | 'shinkansen' | 'steam' | 'bus' | 'vehicle' | 'freight' | 'all')[]
   targetConsistIds?: string[]
   description: string
+  descriptionEn?: string
   colors: {
     primary: string      // 主色调 (如车身底色)
     secondary: string    // 强调色/条纹色
@@ -91,3 +119,4 @@ export interface TextureState {
   isGeneratingAi: boolean
   aiGeneratedImage: string | null // Data URL 或远端 URL
 }
+

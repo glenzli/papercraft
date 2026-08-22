@@ -1,4 +1,4 @@
-// 300 DPI 印刷级高保真 A4 多页 PDF 导出器 (原生 Canvas 渲染，100% 杜绝中文乱码，支持整列编组与配件专页一键导出)
+// 300 DPI 印刷级高保真 A4 多页 PDF 导出器 (原生 Canvas 渲染，中英双语支持，100% 杜绝中文乱码，支持整列编组与配件专页一键导出)
 import { jsPDF } from 'jspdf'
 import { ConsistCarItem } from '../core/models/consistManager'
 import { packConsistToA4Pages, A4_WIDTH_MM, A4_HEIGHT_MM, generateTabPoints, ConsistPageLayout } from '../core/unfoldEngine'
@@ -9,6 +9,7 @@ export interface ExportConsistPdfOptions {
   cars: ConsistCarItem[]
   baker: TextureBaker
   isBlankTemplate?: boolean
+  locale?: 'zh-CN' | 'en-US'
 }
 
 /**
@@ -19,12 +20,18 @@ export function renderConsistPageToCanvas(
   consistName: string,
   totalPages: number,
   baker: TextureBaker,
-  isBlankTemplate: boolean = false
+  isBlankTemplate: boolean = false,
+  locale: 'zh-CN' | 'en-US' = 'zh-CN'
 ): HTMLCanvasElement {
   // 300 DPI 下的标准 A4 像素尺寸 (210mm x 297mm)
   const canvasW = 2480
   const canvasH = 3508
   const mmToPx = canvasW / A4_WIDTH_MM // 约 11.8095 px/mm
+
+  const isEn = locale === 'en-US'
+  const textCut = isEn ? 'Cut' : '剪切'
+  const textMountain = isEn ? 'Mountain' : '山折'
+  const textValley = isEn ? 'Valley' : '谷折'
 
   const canvas = document.createElement('canvas')
   canvas.width = canvasW
@@ -35,7 +42,7 @@ export function renderConsistPageToCanvas(
   ctx.fillStyle = '#ffffff'
   ctx.fillRect(0, 0, canvasW, canvasH)
 
-  // 2. 页眉标题栏 (中文 100% 原生支持)
+  // 2. 页眉标题栏 (中文与英文 100% 原生支持)
   const titleX = 12 * mmToPx
   const titleY = 14 * mmToPx
 
@@ -43,16 +50,16 @@ export function renderConsistPageToCanvas(
   const displaySubTitle = `P. ${page.pageIndex + 1} / ${totalPages}`
 
   ctx.fillStyle = '#0f172a'
-  ctx.font = 'bold 40px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif'
+  ctx.font = 'bold 40px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif'
   ctx.fillText(displayTitle, titleX, titleY)
 
   ctx.fillStyle = '#64748b'
-  ctx.font = '500 26px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif'
+  ctx.font = '500 26px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif'
   ctx.fillText(displaySubTitle, titleX, titleY + 36)
 
   // 3. 折线与剪切图例说明 (精简克制)
   const legendY = 22 * mmToPx
-  ctx.font = '500 24px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif'
+  ctx.font = '500 24px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif'
 
   // 实线 (剪切)
   ctx.strokeStyle = '#0f172a'
@@ -63,10 +70,10 @@ export function renderConsistPageToCanvas(
   ctx.lineTo(titleX + 22 * mmToPx, legendY)
   ctx.stroke()
   ctx.fillStyle = '#334155'
-  ctx.fillText('剪切', titleX + 25 * mmToPx, legendY + 8)
+  ctx.fillText(textCut, titleX + 25 * mmToPx, legendY + 8)
 
   // 红色虚线 (山折)
-  const mountainX = titleX + 48 * mmToPx
+  const mountainX = titleX + (isEn ? 52 : 48) * mmToPx
   ctx.strokeStyle = '#dc2626'
   ctx.lineWidth = 3
   ctx.setLineDash([16, 12])
@@ -75,10 +82,10 @@ export function renderConsistPageToCanvas(
   ctx.lineTo(mountainX + 22 * mmToPx, legendY)
   ctx.stroke()
   ctx.fillStyle = '#dc2626'
-  ctx.fillText('山折', mountainX + 25 * mmToPx, legendY + 8)
+  ctx.fillText(textMountain, mountainX + 25 * mmToPx, legendY + 8)
 
   // 蓝色点划线 (谷折)
-  const valleyX = mountainX + 54 * mmToPx
+  const valleyX = mountainX + (isEn ? 62 : 54) * mmToPx
   ctx.strokeStyle = '#0284c7'
   ctx.lineWidth = 3
   ctx.setLineDash([24, 10, 8, 10])
@@ -87,7 +94,7 @@ export function renderConsistPageToCanvas(
   ctx.lineTo(valleyX + 22 * mmToPx, legendY)
   ctx.stroke()
   ctx.fillStyle = '#0284c7'
-  ctx.fillText('谷折', valleyX + 25 * mmToPx, legendY + 8)
+  ctx.fillText(textValley, valleyX + 25 * mmToPx, legendY + 8)
 
   ctx.setLineDash([]) // 重置虚线
 
@@ -104,7 +111,7 @@ export function renderConsistPageToCanvas(
       const partCenterX = offsetX + ((part.bounds.minX || 0) + part.bounds.width / 2) * mmToPx
       const partLabelY = offsetY + ((part.bounds.minY || 0) - 6) * mmToPx
       ctx.fillStyle = '#475569'
-      ctx.font = 'bold 24px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif'
+      ctx.font = 'bold 24px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif'
       ctx.textAlign = 'center'
       ctx.fillText(title, partCenterX, partLabelY)
     }
@@ -124,8 +131,9 @@ export function renderConsistPageToCanvas(
       }
 
       // 5.1 贴图光栅化填充 或 填色白模线框底色
-      const slotCanvas = baker.getSlotCanvas(`${face.textureSlot}_${car.carType}`) || baker.getSlotCanvas(face.textureSlot)
-      if (!isBlankTemplate && slotCanvas && face.textureSlot) {
+      const slot = face.textureSlot
+      const slotCanvas = slot ? (baker.getSlotCanvas(`${slot}_${car.carType}`) || baker.getSlotCanvas(slot)) : null
+      if (!isBlankTemplate && slotCanvas && slot) {
         ctx.save()
         ctx.beginPath()
         ctx.moveTo(poly[0].x, poly[0].y)
@@ -267,7 +275,7 @@ export function renderConsistPageToCanvas(
   // 6. 页脚页码
   ctx.setLineDash([])
   ctx.fillStyle = '#94a3b8'
-  ctx.font = '500 22px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif'
+  ctx.font = '500 22px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif'
   ctx.textAlign = 'left'
   ctx.fillText(`Papercraft Studio · P. ${page.pageIndex + 1} / ${totalPages}`, titleX, canvasH - 16 * mmToPx)
 
@@ -278,7 +286,7 @@ export function renderConsistPageToCanvas(
  * 导出整列火车的完整多页 A4 PDF (支持组装图纸与填色模版)
  */
 export async function exportConsistToPdf(options: ExportConsistPdfOptions): Promise<void> {
-  const { consistName, cars, baker, isBlankTemplate = false } = options
+  const { consistName, cars, baker, isBlankTemplate = false, locale = 'zh-CN' } = options
 
   const consistPages = packConsistToA4Pages(cars)
 
@@ -299,14 +307,18 @@ export async function exportConsistToPdf(options: ExportConsistPdfOptions): Prom
       consistName,
       consistPages.length,
       baker,
-      isBlankTemplate
+      isBlankTemplate,
+      locale
     )
 
     const imgDataUrl = canvas.toDataURL('image/jpeg', 0.95)
     doc.addImage(imgDataUrl, 'JPEG', 0, 0, A4_WIDTH_MM, A4_HEIGHT_MM, undefined, 'FAST')
   }
 
-  const suffix = isBlankTemplate ? '填色模版' : '全套组装图纸'
+  const isEn = locale === 'en-US'
+  const suffix = isBlankTemplate
+    ? (isEn ? 'Coloring-Template' : '填色模版')
+    : (isEn ? 'Assembly-Sheets' : '全套组装图纸')
   doc.save(`${consistName}-${suffix}.pdf`)
 }
 
@@ -319,12 +331,16 @@ export function exportConsistPageToPng(options: {
   totalPages: number
   baker: TextureBaker
   isBlankTemplate?: boolean
+  locale?: 'zh-CN' | 'en-US'
 }): void {
-  const { page, consistName, totalPages, baker, isBlankTemplate = false } = options
-  const canvas = renderConsistPageToCanvas(page, consistName, totalPages, baker, isBlankTemplate)
+  const { page, consistName, totalPages, baker, isBlankTemplate = false, locale = 'zh-CN' } = options
+  const canvas = renderConsistPageToCanvas(page, consistName, totalPages, baker, isBlankTemplate, locale)
   const imgUrl = canvas.toDataURL('image/png')
   const link = document.createElement('a')
-  const suffix = isBlankTemplate ? '填色模版' : '图纸'
+  const isEn = locale === 'en-US'
+  const suffix = isBlankTemplate
+    ? (isEn ? 'Coloring-Template' : '填色模版')
+    : (isEn ? 'Sheet' : '图纸')
   link.download = `${consistName}-${page.pageTitle}-${suffix}.png`
   link.href = imgUrl
   link.click()

@@ -1,13 +1,14 @@
-// 涂装设计面板 (支持车型专属预设、贴图总模版导出与自定义贴图导入、高对比度文字与自由调色)
+// 涂装设计面板 (支持车型专属预设、贴图总模版导出与自定义贴图导入、高对比度文字与自由调色、多语言)
 import React, { useState, useRef } from 'react'
-import { PRESET_THEMES } from '../../texture/presetThemes'
 import { TextureTheme, CustomTextConfig } from '../../texture/types'
+import { TrainModelConsist } from '../../core/schema/consistSchema'
 import {
   downloadLiveryFile,
   loadLiveryFromFile,
   convertThemeToLiverySchema,
   convertLiverySchemaToTheme
 } from '../../core/schema/liverySchema'
+import { modelRepository } from '../../core/models/modelRepository'
 import { TextureBaker } from '../../texture/textureBaker'
 import {
   sliceAndProcessTextureImage,
@@ -28,8 +29,10 @@ import {
   Sliders,
   Move
 } from 'lucide-react'
+import { useI18n } from '../../i18n'
 
 interface TextureEditorProps {
+  currentConsist?: TrainModelConsist
   currentConsistId?: string
   currentConsistCategory?: string
   currentTheme: TextureTheme
@@ -51,6 +54,7 @@ interface TextureEditorProps {
 }
 
 export const TextureEditor: React.FC<TextureEditorProps> = ({
+  currentConsist,
   currentConsistId = 'e235-consist',
   currentConsistCategory = 'commuter',
   currentTheme,
@@ -65,6 +69,7 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
   baker,
   onCustomTextureApplied
 }) => {
+  const { t, isZh } = useI18n()
   const [activeTab, setActiveTab] = useState<'preset' | 'customize'>('preset')
   const [importError, setImportError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -79,18 +84,15 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
 
   const isLight = themeMode === 'light'
 
-  // 严格过滤涂装列表：100% 精准匹配当前车型 ID，严禁任何跨车型混用
-  const matchedThemes = PRESET_THEMES.filter(t => {
-    return t.targetConsistIds && t.targetConsistIds.includes(currentConsistId)
-  })
-  const displayThemes = matchedThemes
+  // 获取当前车型的全量涂装列表 (官方预设 + 动态导入的附属涂装)
+  const displayThemes = modelRepository.getAllLiveriesForConsist(currentConsistId)
 
   const getCategoryLabel = (category: string) => {
     switch (category) {
-      case 'shinkansen': return '新干线高速列车'
-      case 'steam': return '蒸汽机车'
-      case 'commuter': return '都市通勤电车'
-      default: return '通用列车'
+      case 'shinkansen': return t('models.categoryShinkansen')
+      case 'steam': return t('models.categorySteam')
+      case 'commuter': return t('models.categoryCommuter')
+      default: return category.toUpperCase()
     }
   }
 
@@ -127,7 +129,7 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
 
     const res = await loadLiveryFromFile(file)
     if (!res.success || !res.livery) {
-      setImportError(res.error || '涂装文件解析失败')
+      setImportError(res.error || t('texture.liveryParseError'))
       return
     }
 
@@ -138,11 +140,16 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
     const isConsistMatch = !livery.targetConsistIds || livery.targetConsistIds.includes(currentConsistId)
 
     if (!isCategoryMatch && !isConsistMatch) {
-      setImportError(`⚠️ 涂装车型不匹配: 该涂装为【${getCategoryLabel(livery.targetCategory)}】专属设计，无法套用于当前【${getCategoryLabel(currentConsistCategory)}】`)
+      setImportError(t('texture.liveryMismatchError', {
+        target: getCategoryLabel(livery.targetCategory),
+        current: getCategoryLabel(currentConsistCategory)
+      }))
       return
     }
 
     const newTheme = convertLiverySchemaToTheme(livery)
+    // 动态注册到涂装仓库
+    modelRepository.registerDynamicLiveries(currentConsistId, [newTheme])
     onThemeChange(newTheme)
     if (livery.customText) {
       onCustomTextChange({
@@ -184,7 +191,7 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
         setIsProcessingImage(false)
       }
       img.onerror = () => {
-        setImportError('图片读取失败，请上传标准的 PNG、JPG 或 WebP 图像')
+        setImportError(t('texture.imageReadError'))
         setIsProcessingImage(false)
       }
       img.src = src
@@ -261,7 +268,7 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
           }`}
         >
           <Palette className="w-3.5 h-3.5" />
-          <span>涂装</span>
+          <span>{t('sidebar.tabLivery')}</span>
         </button>
         <button
           onClick={() => setActiveTab('customize')}
@@ -274,7 +281,7 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
           }`}
         >
           <Type className="w-3.5 h-3.5" />
-          <span>文字与调色</span>
+          <span>{t('sidebar.tabTextAndColor')}</span>
         </button>
       </div>
 
@@ -297,7 +304,7 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
               <div className="flex items-center justify-between gap-1 flex-wrap pb-0.5">
                 <div className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-700 dark:text-zinc-300">
                   <Palette className="w-3.5 h-3.5 text-sky-500" />
-                  <span>专属涂装 ({displayThemes.length})</span>
+                  <span>{t('texture.exclusiveLiveries', { count: displayThemes.length })}</span>
                 </div>
 
                 <div className="flex items-center gap-1">
@@ -309,7 +316,7 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
                     }`}
                   >
                     <Upload className="w-3 h-3" />
-                    导入涂装
+                    {t('texture.importLivery')}
                   </button>
                   <button
                     onClick={handleExportLivery}
@@ -319,7 +326,7 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
                     }`}
                   >
                     <Download className="w-3 h-3" />
-                    导出涂装
+                    {t('texture.exportLivery')}
                   </button>
                 </div>
               </div>
@@ -327,6 +334,8 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
               <div className="grid grid-cols-1 gap-2">
                 {displayThemes.map(theme => {
                   const isSelected = currentTheme.id === theme.id
+                  const themeName = isZh ? theme.name : (theme.nameEn || theme.name)
+                  const themeDesc = isZh ? theme.description : (theme.descriptionEn || theme.description)
 
                   return (
                     <div
@@ -348,14 +357,14 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
                     >
                       <div className="flex items-center justify-between mb-1">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="font-semibold text-xs">{theme.name}</span>
+                          <span className="font-semibold text-xs">{themeName}</span>
                           <span className="text-[9px] px-1 py-0.2 rounded bg-indigo-500/15 text-indigo-500 dark:text-indigo-400 font-medium">
-                            专属涂装
+                            {t('texture.exclusiveBadge')}
                           </span>
                         </div>
                         {isSelected && <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />}
                       </div>
-                      <p className="text-[10px] opacity-60 mb-2 leading-relaxed">{theme.description}</p>
+                      <p className="text-[10px] opacity-60 mb-2 leading-relaxed">{themeDesc}</p>
                       <div className="flex items-center gap-1">
                         <div className="h-2.5 flex-1 rounded border border-black/10" style={{ backgroundColor: theme.colors.primary }} />
                         <div className="h-2.5 flex-1 rounded border border-black/10" style={{ backgroundColor: theme.colors.secondary }} />
@@ -373,13 +382,13 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-700 dark:text-zinc-300">
                   <ImageIcon className="w-3.5 h-3.5 text-indigo-500" />
-                  <span>自定义贴图设计</span>
+                  <span>{t('texture.customTextureDesign')}</span>
                 </div>
 
                 <button
                   onClick={() => {
                     exportMasterTextureAtlas({
-                      consistName: currentTheme.name || '列车',
+                      consistName: (isZh ? currentTheme.name : (currentTheme.nameEn || currentTheme.name)) || 'Train',
                       category: currentConsistCategory as any,
                       style: currentTheme.liveryStyle || 'shinkansen-nankai-rapit',
                       carType: 'head'
@@ -388,10 +397,10 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
                   className={`px-2 py-1 rounded-md border text-[10px] font-medium flex items-center gap-1 transition-all ${
                     isLight ? 'bg-white hover:bg-zinc-50 border-zinc-200 text-zinc-800' : 'bg-zinc-800 hover:bg-zinc-700 border-zinc-700 text-zinc-200'
                   }`}
-                  title="下载包含左右车身、车顶、车头车尾的 2048x1536 贴图总设计模版"
+                  title={t('texture.downloadAtlasTitle')}
                 >
                   <Download className="w-3 h-3 text-sky-500" />
-                  <span>下载设计模版 (总)</span>
+                  <span>{t('texture.downloadAtlasTemplate')}</span>
                 </button>
               </div>
 
@@ -415,9 +424,9 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
                 </div>
                 <div className="text-center">
                   <div className="font-semibold text-xs text-zinc-900 dark:text-zinc-100">
-                    {isProcessingImage ? '正在智能解析贴图...' : '点击上传或将贴图图片拖到此处'}
+                    {isProcessingImage ? t('texture.dropzoneProcessing') : t('texture.dropzoneIdle')}
                   </div>
-                  <div className="text-[10px] opacity-50 mt-0.5">支持 2048×1536 总谱图或 1024×280 侧身插画</div>
+                  <div className="text-[10px] opacity-50 mt-0.5">{t('texture.dropzoneHint')}</div>
                 </div>
               </div>
 
@@ -428,7 +437,7 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
                     <div className="flex items-center gap-1.5 font-medium">
                       <Check className="w-3.5 h-3.5" />
                       <span>
-                        {importedTexture.detectedType === 'atlas' ? '已识别：2048×1536 贴图总谱 (5面完整切片)' : '已识别：单侧身插画 (自动镜像生成双侧)'}
+                        {importedTexture.detectedType === 'atlas' ? t('texture.detectedAtlas') : t('texture.detectedSide')}
                       </span>
                     </div>
                   </div>
@@ -438,8 +447,8 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
                     <div className="flex items-center gap-1.5">
                       <Layers className="w-3.5 h-3.5 text-indigo-500" />
                       <div>
-                        <div className="font-medium text-xs">自动叠加写实门窗结构</div>
-                        <div className="text-[9px] opacity-50">在底图上叠加高精黑化玻璃与车门边框</div>
+                        <div className="font-medium text-xs">{t('texture.overlayStructure')}</div>
+                        <div className="text-[9px] opacity-50">{t('texture.overlayStructureDesc')}</div>
                       </div>
                     </div>
                     <input
@@ -454,22 +463,22 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
                   <div className="space-y-1.5">
                     <div className="text-[10px] font-medium opacity-60 flex items-center gap-1">
                       <Eye className="w-3 h-3" />
-                      <span>各分面切片预览:</span>
+                      <span>{t('texture.slicePreview')}</span>
                     </div>
 
                     <div className="space-y-1.5">
                       <div>
-                        <div className="text-[9px] opacity-50 mb-0.5">左侧身 (1024 × 280)</div>
-                        <img src={importedTexture.dataUrls.side_left} alt="左侧身" className="w-full h-12 object-cover rounded border border-black/10 shadow-xs" />
+                        <div className="text-[9px] opacity-50 mb-0.5">{t('texture.sliceLeftSide')}</div>
+                        <img src={importedTexture.dataUrls.side_left} alt="Left Side" className="w-full h-12 object-cover rounded border border-black/10 shadow-xs" />
                       </div>
                       <div>
-                        <div className="text-[9px] opacity-50 mb-0.5">右侧身 (1024 × 280)</div>
-                        <img src={importedTexture.dataUrls.side_right} alt="右侧身" className="w-full h-12 object-cover rounded border border-black/10 shadow-xs" />
+                        <div className="text-[9px] opacity-50 mb-0.5">{t('texture.sliceRightSide')}</div>
+                        <img src={importedTexture.dataUrls.side_right} alt="Right Side" className="w-full h-12 object-cover rounded border border-black/10 shadow-xs" />
                       </div>
                       {importedTexture.dataUrls.roof && (
                         <div>
-                          <div className="text-[9px] opacity-50 mb-0.5">车顶 (1024 × 280)</div>
-                          <img src={importedTexture.dataUrls.roof} alt="车顶" className="w-full h-10 object-cover rounded border border-black/10 shadow-xs" />
+                          <div className="text-[9px] opacity-50 mb-0.5">{t('texture.sliceRoof')}</div>
+                          <img src={importedTexture.dataUrls.roof} alt="Roof" className="w-full h-10 object-cover rounded border border-black/10 shadow-xs" />
                         </div>
                       )}
                     </div>
@@ -482,7 +491,7 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
                       className="w-full py-2 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-medium rounded-xl flex items-center justify-center gap-1.5 text-xs transition-all shadow-md active:scale-98"
                     >
                       <Check className="w-4 h-4" />
-                      <span>{hasAppliedCustom ? '✓ 贴图已应用至 3D 与展开图' : '🚀 立即应用到 3D 与展开图纸'}</span>
+                      <span>{hasAppliedCustom ? t('texture.appliedSuccess') : t('texture.applyToModel')}</span>
                     </button>
 
                     <button
@@ -492,7 +501,7 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
                       }`}
                     >
                       <RotateCcw className="w-3 h-3" />
-                      <span>恢复预设涂装</span>
+                      <span>{t('texture.resetToPreset')}</span>
                     </button>
                   </div>
                 </div>
@@ -507,7 +516,7 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
             {/* 1. 定制标语与车牌 */}
             <div className={`p-3 rounded-xl border ${isLight ? 'bg-zinc-50 border-zinc-200' : 'bg-zinc-950/60 border-zinc-800'} space-y-2.5`}>
               <div className="flex items-center justify-between">
-                <span className="font-semibold text-xs">车身专属标识与文字</span>
+                <span className="font-semibold text-xs">{t('customization.decalsTitle')}</span>
                 <input
                   type="checkbox"
                   checked={customText.enabled}
@@ -518,44 +527,80 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
 
               {customText.enabled && (
                 <div className="space-y-3 pt-1">
-                  <div>
-                    <label className="text-[10px] opacity-60 mb-0.5 block">车侧铭牌 (名字 / 车系):</label>
-                    <input
-                      type="text"
-                      value={customText.kidName}
-                      onChange={e => onCustomTextChange({ ...customText, kidName: e.target.value })}
-                      placeholder="如：复兴号 或 ALEX'S EXPRESS"
-                      className={`w-full ${isLight ? 'bg-white border-zinc-200' : 'bg-zinc-900 border-zinc-700'} border rounded-lg px-2 py-1 text-xs`}
-                    />
-                  </div>
+                  {currentConsist?.customization?.textSlots && currentConsist.customization.textSlots.length > 0 ? (
+                    /* 数据驱动的动态文字插槽 */
+                    <div className="space-y-2">
+                      {currentConsist.customization.textSlots.map(slot => {
+                        const val = customText.slots?.[slot.key] ?? slot.defaultValue ?? ''
+                        const slotLabel = isZh ? slot.label : (slot.labelEn || slot.label)
+                        const placeholder = isZh ? slot.placeholder : (slot.placeholderEn || slot.placeholder)
 
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="text-[10px] opacity-60 mb-0.5 block">车次编号:</label>
-                      <input
-                        type="text"
-                        value={customText.trainNumber}
-                        onChange={e => onCustomTextChange({ ...customText, trainNumber: e.target.value })}
-                        placeholder="如：G1234"
-                        className={`w-full ${isLight ? 'bg-white border-zinc-200' : 'bg-zinc-900 border-zinc-700'} border rounded-lg px-2 py-1 text-xs`}
-                      />
+                        return (
+                          <div key={slot.key}>
+                            <label className="text-[10px] opacity-60 mb-0.5 block">{slotLabel}</label>
+                            <input
+                              type="text"
+                              value={val}
+                              onChange={e => {
+                                const nextSlots = { ...(customText.slots || {}), [slot.key]: e.target.value }
+                                onCustomTextChange({
+                                  ...customText,
+                                  slots: nextSlots,
+                                  ...(slot.key === 'routeNumber' ? { trainNumber: e.target.value } : {}),
+                                  ...(slot.key === 'destination' ? { destination: e.target.value } : {}),
+                                  ...(slot.key === 'operator' ? { kidName: e.target.value } : {})
+                                })
+                              }}
+                              placeholder={placeholder}
+                              className={`w-full ${isLight ? 'bg-white border-zinc-200' : 'bg-zinc-900 border-zinc-700'} border rounded-lg px-2 py-1 text-xs`}
+                            />
+                          </div>
+                        )
+                      })}
                     </div>
-                    <div>
-                      <label className="text-[10px] opacity-60 mb-0.5 block">目的地 (LED):</label>
-                      <input
-                        type="text"
-                        value={customText.destination}
-                        onChange={e => onCustomTextChange({ ...customText, destination: e.target.value })}
-                        placeholder="如：北京南·上海虹桥"
-                        className={`w-full ${isLight ? 'bg-white border-zinc-200' : 'bg-zinc-900 border-zinc-700'} border rounded-lg px-2 py-1 text-xs`}
-                      />
-                    </div>
-                  </div>
+                  ) : (
+                    /* 默认列车铭牌与车次车牌 */
+                    <>
+                      <div>
+                        <label className="text-[10px] opacity-60 mb-0.5 block">{t('customization.nameplateLabel')}</label>
+                        <input
+                          type="text"
+                          value={customText.kidName}
+                          onChange={e => onCustomTextChange({ ...customText, kidName: e.target.value })}
+                          placeholder={t('customization.nameplatePlaceholder')}
+                          className={`w-full ${isLight ? 'bg-white border-zinc-200' : 'bg-zinc-900 border-zinc-700'} border rounded-lg px-2 py-1 text-xs`}
+                        />
+                      </div>
 
-                  {/* 文字与底框色彩设置 (解决纯白车身看不到文字问题) */}
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-[10px] opacity-60 mb-0.5 block">{t('customization.trainNumberLabel')}</label>
+                          <input
+                            type="text"
+                            value={customText.trainNumber}
+                            onChange={e => onCustomTextChange({ ...customText, trainNumber: e.target.value })}
+                            placeholder={t('customization.trainNumberPlaceholder')}
+                            className={`w-full ${isLight ? 'bg-white border-zinc-200' : 'bg-zinc-900 border-zinc-700'} border rounded-lg px-2 py-1 text-xs`}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] opacity-60 mb-0.5 block">{t('customization.destinationLabel')}</label>
+                          <input
+                            type="text"
+                            value={customText.destination}
+                            onChange={e => onCustomTextChange({ ...customText, destination: e.target.value })}
+                            placeholder={t('customization.destinationPlaceholder')}
+                            className={`w-full ${isLight ? 'bg-white border-zinc-200' : 'bg-zinc-900 border-zinc-700'} border rounded-lg px-2 py-1 text-xs`}
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {/* 文字与底框色彩设置 */}
                   <div className="grid grid-cols-2 gap-2 pt-1 border-t border-black/5 dark:border-white/5">
                     <div>
-                      <label className="text-[10px] opacity-60 mb-0.5 block">文字颜色:</label>
+                      <label className="text-[10px] opacity-60 mb-0.5 block">{t('customization.textColorLabel')}</label>
                       <div className="flex items-center gap-1.5">
                         <input
                           type="color"
@@ -568,7 +613,7 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
                     </div>
 
                     <div>
-                      <label className="text-[10px] opacity-60 mb-0.5 block">铭牌底框颜色:</label>
+                      <label className="text-[10px] opacity-60 mb-0.5 block">{t('customization.bgColorLabel')}</label>
                       <div className="flex items-center gap-1.5">
                         <input
                           type="color"
@@ -586,13 +631,13 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
                     <div className="flex items-center justify-between text-[10px]">
                       <span className="opacity-60 flex items-center gap-1">
                         <Move className="w-3 h-3" />
-                        <span>水平横向偏移: {customText.offsetX ?? 0}%</span>
+                        <span>{t('customization.horizontalOffset', { val: customText.offsetX ?? 0 })}</span>
                       </span>
                       <button
                         onClick={() => onCustomTextChange({ ...customText, offsetX: 0 })}
                         className="opacity-50 hover:opacity-100 text-[9px]"
                       >
-                        居中
+                        {t('customization.center')}
                       </button>
                     </div>
                     <input
@@ -607,13 +652,13 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
                     <div className="flex items-center justify-between text-[10px] pt-1">
                       <span className="opacity-60 flex items-center gap-1">
                         <Sliders className="w-3 h-3" />
-                        <span>垂直高度偏移: {customText.offsetY ?? 0}%</span>
+                        <span>{t('customization.verticalOffset', { val: customText.offsetY ?? 0 })}</span>
                       </span>
                       <button
                         onClick={() => onCustomTextChange({ ...customText, offsetY: 0 })}
                         className="opacity-50 hover:opacity-100 text-[9px]"
                       >
-                        默认
+                        {t('customization.default')}
                       </button>
                     </div>
                     <input
@@ -632,7 +677,7 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
             {/* 2. 自由调色板 */}
             <div className={`p-3 rounded-xl border ${isLight ? 'bg-zinc-50 border-zinc-200' : 'bg-zinc-950/60 border-zinc-800'} space-y-2.5`}>
               <div className="flex items-center justify-between">
-                <span className="font-semibold text-xs">车身色彩微调</span>
+                <span className="font-semibold text-xs">{t('customization.colorTuningTitle')}</span>
                 <button
                   onClick={() => onUseCustomColorsChange(!useCustomColors)}
                   className={`text-[10px] px-2 py-0.5 rounded border transition-colors ${
@@ -641,13 +686,13 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
                       : isLight ? 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
                   }`}
                 >
-                  {useCustomColors ? '已启用自定义' : '点击启用自定义色'}
+                  {useCustomColors ? t('customization.customColorsActive') : t('customization.enableCustomColors')}
                 </button>
               </div>
 
               <div className="grid grid-cols-2 gap-2.5 pt-1">
                 <div>
-                  <label className="text-[10px] opacity-60 mb-0.5 block">车身主色:</label>
+                  <label className="text-[10px] opacity-60 mb-0.5 block">{t('customization.primaryColor')}</label>
                   <div className="flex items-center gap-1.5">
                     <input
                       type="color"
@@ -663,7 +708,7 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
                 </div>
 
                 <div>
-                  <label className="text-[10px] opacity-60 mb-0.5 block">条纹副色:</label>
+                  <label className="text-[10px] opacity-60 mb-0.5 block">{t('customization.secondaryStripe')}</label>
                   <div className="flex items-center gap-1.5">
                     <input
                       type="color"
@@ -679,7 +724,7 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
                 </div>
 
                 <div>
-                  <label className="text-[10px] opacity-60 mb-0.5 block">点缀线条:</label>
+                  <label className="text-[10px] opacity-60 mb-0.5 block">{t('customization.accentStripe')}</label>
                   <div className="flex items-center gap-1.5">
                     <input
                       type="color"
@@ -695,7 +740,7 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
                 </div>
 
                 <div>
-                  <label className="text-[10px] opacity-60 mb-0.5 block">车顶色:</label>
+                  <label className="text-[10px] opacity-60 mb-0.5 block">{t('customization.roofColor')}</label>
                   <div className="flex items-center gap-1.5">
                     <input
                       type="color"

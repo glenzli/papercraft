@@ -652,11 +652,13 @@ const nankaiRapitTailSchema: PapercraftModelSchema = {
 export const nankaiRapitConsist: TrainModelConsist = {
   id: "nankai-rapit-consist",
   name: "南海 50000系 Rapi:t",
+  nameEn: "Nankai 50000 Series Rapi:t",
   category: "shinkansen",
   difficulty: "medium",
   recommendedAge: "6-12 岁",
   estimatedTimePerCar: "20-25 分钟",
   description: "关西空港特急：复古未来主义机甲子弹头与飞机客舱圆形舷窗，外贴立体武士面罩。",
+  descriptionEn: "Retro-futuristic Kansai airport express with round airplane windows and mecha mask.",
   defaultThemeId: "nankai-rapit",
   carDefinitions: {
     head: {
