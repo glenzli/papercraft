@@ -15,6 +15,7 @@ import { consistTram } from '../schema/models/consistTram'
 import { consistHKTram } from '../schema/models/consistHKTram'
 import { consistDF4BFreight } from '../schema/models/consistDF4BFreight'
 import { loadPapercraftFromSchema } from '../schema/modelLoader'
+import { couplerDrawbarAccessory, bellowsGangwayAccessory } from '../schema/accessories/couplerAccessories'
 import { PapercraftModelData } from '../types'
 
 export const CONSIST_REGISTRY: TrainModelConsist[] = [
@@ -88,7 +89,17 @@ export function buildTrainConsistCars(
 
   // 2. 多节编组列车/铰接车：头车 (Head Car / Lead Section)
   const headSchema = consist.carDefinitions.head.schema
-  const headModel = loadPapercraftFromSchema(headSchema)
+  const headAccessories = [...(headSchema.accessories || [])]
+  if (isArticulated) {
+    headAccessories.push(bellowsGangwayAccessory)
+  } else if (!isSingle) {
+    headAccessories.push(couplerDrawbarAccessory)
+  }
+  const effectiveHeadSchema: import('../schema/papercraftSchema').PapercraftModelSchema = {
+    ...headSchema,
+    accessories: headAccessories
+  }
+  const headModel = loadPapercraftFromSchema(effectiveHeadSchema)
   const headLen = headModel.dimensions.length * 0.01 // 转换为米/3D单位
   currentZ = headLen / 2
 
@@ -106,7 +117,7 @@ export function buildTrainConsistCars(
     carNumberText: headText,
     carType: 'head',
     modelData: headModel,
-    schema: headSchema,
+    schema: effectiveHeadSchema,
     spacingOffsetZ: currentZ
   })
 

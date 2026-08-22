@@ -157,7 +157,7 @@ const doubleDeckerBusSchema: PapercraftModelSchema = {
             [112, 251],
             [148, 251]
           ],
-          uvCoords: [[0, 0], [1, 0], [0, 1], [1, 1]],
+          uvCoords: [[0, 1], [1, 1], [0, 0], [1, 0]],
           indices: [0, 1, 2, 1, 3, 2],
           creases: [
             { type: 'mountain', p1: { x: 112, y: 195 }, p2: { x: 148, y: 195 } }
@@ -187,7 +187,7 @@ const doubleDeckerBusSchema: PapercraftModelSchema = {
             [148, 4],
             [112, 4]
           ],
-          uvCoords: [[0, 0], [1, 0], [0, 1], [1, 1]],
+          uvCoords: [[0, 1], [1, 1], [0, 0], [1, 0]],
           indices: [0, 1, 2, 1, 3, 2],
           creases: [
             { type: 'mountain', p1: { x: 112, y: 60 }, p2: { x: 148, y: 60 } }

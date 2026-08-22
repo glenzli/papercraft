@@ -157,7 +157,7 @@ const hkTramBodySchema: PapercraftModelSchema = {
             [110, 226],
             [138, 226]
           ],
-          uvCoords: [[0, 0], [1, 0], [0, 1], [1, 1]],
+          uvCoords: [[0, 1], [1, 1], [0, 0], [1, 0]],
           indices: [0, 1, 2, 1, 3, 2],
           creases: [
             { type: 'mountain', p1: { x: 110, y: 168 }, p2: { x: 138, y: 168 } }
@@ -187,7 +187,7 @@ const hkTramBodySchema: PapercraftModelSchema = {
             [138, 22],
             [110, 22]
           ],
-          uvCoords: [[0, 0], [1, 0], [0, 1], [1, 1]],
+          uvCoords: [[0, 1], [1, 1], [0, 0], [1, 0]],
           indices: [0, 1, 2, 1, 3, 2],
           creases: [
             { type: 'mountain', p1: { x: 110, y: 80 }, p2: { x: 138, y: 80 } }

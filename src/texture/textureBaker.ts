@@ -152,6 +152,17 @@ export class TextureBaker {
     this.slotCanvases.set('nose_chin', this.drawNoseChinView(380, 120, params))
     this.slotCanvases.set('back', this.drawBackView(380, 440, params))
     this.slotCanvases.set('bottom', this.drawBottomView(380, 1600, params))
+
+    // 3. 车厢连接件与铰接风挡专用贴图 (T-Coupler & Bellows Gangway)
+    const couplerCanvas2D = this.drawCouplerView(380, 260)
+    const couplerCanvas3D = this.drawCouplerView(280, 180)
+    const bellowsCanvas2D = this.drawBellowsView(380, 380)
+    const bellowsCanvas3D = this.drawBellowsView(280, 280)
+
+    this.slotCanvases.set('coupler', couplerCanvas2D)
+    this.slotCanvases.set('coupler_3d', couplerCanvas3D)
+    this.slotCanvases.set('bellows', bellowsCanvas2D)
+    this.slotCanvases.set('bellows_3d', bellowsCanvas3D)
   }
 
   /**
@@ -335,10 +346,242 @@ export class TextureBaker {
     const isMiddle = params.carType === 'middle'
 
     // ==========================================
-    // 0. 城市公交与客车系列 (Bus & Transit)
+    // 0.45 经典双层客车系列 (Double-Decker Bus - 真实双层完整排窗)
     // ==========================================
+    if (style.startsWith('bus-double-')) {
+      const physL = 135
+      const physH = 56
+      const physR = 10.5
+      const rx = (physR / physL) * w
+      const ry = (physR / physH) * h
+
+      if (style === 'bus-double-london-red') {
+        // === 🇬🇧 伦敦 Routemaster 经典双层大巴: 伦敦经典深红 (Carmine) ===
+        ctx.fillStyle = primaryColor || '#982127'
+        ctx.fillRect(0, 0, w, h)
+        // 伦敦交通局 Roundel 圆环标志
+        ctx.fillStyle = '#1c304a'
+        ctx.beginPath()
+        ctx.arc(w * 0.15, h * 0.44, 8, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.fillStyle = '#982127'
+        ctx.beginPath()
+        ctx.arc(w * 0.15, h * 0.44, 5, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.fillStyle = '#1c304a'
+        ctx.fillRect(w * 0.11, h * 0.43, w * 0.08, 3)
+      } else if (style === 'bus-double-kmb-gold') {
+        // === 🇭🇰 香港九巴经典「金巴」: 香槟金底色 + 典雅暗红腰带 ===
+        ctx.fillStyle = primaryColor || '#d5c7ab'
+        ctx.fillRect(0, 0, w, h)
+        ctx.fillStyle = secondaryColor || '#802028'
+        ctx.fillRect(0, h * 0.40, w, h * 0.08)
+        ctx.fillStyle = '#18222d'
+        ctx.fillRect(0, h * 0.92, w, h * 0.08)
+      } else {
+        // === 🌆 都市全景双层观光巴士: 典雅酒红 + 暖金波浪拉花 ===
+        ctx.fillStyle = primaryColor || '#8c222c'
+        ctx.fillRect(0, 0, w, h)
+        ctx.fillStyle = secondaryColor || '#d89c32'
+        ctx.beginPath()
+        ctx.moveTo(0, h * 0.44)
+        ctx.quadraticCurveTo(w * 0.5, h * 0.38, w, h * 0.44)
+        ctx.lineTo(w, h * 0.49)
+        ctx.quadraticCurveTo(w * 0.5, h * 0.43, 0, h * 0.49)
+        ctx.fill()
+      }
+
+      // 中层贯通分割腰线 (Upper/Lower Deck Waist Beltline: Y=0.40..0.435)
+      ctx.fillStyle = accentColor || '#d49b35'
+      ctx.fillRect(0, h * 0.40, w, h * 0.035)
+
+      // 3 轴重载底盘轮对 (前转向轮 + 后部双驱动轴轮)
+      const drawWheel = (cx: number) => {
+        const cy = h * 0.91
+        ctx.fillStyle = '#09090b'
+        ctx.beginPath()
+        ctx.ellipse(cx, cy, rx * 1.15, ry * 1.15, 0, Math.PI, 0)
+        ctx.fill()
+        ctx.lineWidth = 1.5
+        ctx.strokeStyle = '#27272a'
+        ctx.stroke()
+        ctx.fillStyle = '#18181b'
+        ctx.beginPath()
+        ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.fillStyle = '#94a3b8'
+        ctx.beginPath()
+        ctx.ellipse(cx, cy, rx * 0.65, ry * 0.65, 0, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.fillStyle = '#1e293b'
+        ctx.beginPath()
+        ctx.ellipse(cx, cy, rx * 0.52, ry * 0.52, 0, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.fillStyle = '#f8fafc'
+        ctx.beginPath()
+        ctx.ellipse(cx, cy, rx * 0.22, ry * 0.22, 0, 0, Math.PI * 2)
+        ctx.fill()
+      }
+      drawWheel(w * 0.18) // 前转向轴
+      drawWheel(w * 0.76) // 中驱动轴
+      drawWheel(w * 0.88) // 后从动轴
+
+      // ==========================================
+      // 🌟 2 楼整排客窗 (Upper Deck: Y=0.08..0.38, 7 扇贯通全景大窗，与车头/车尾高度精准对齐)
+      // ==========================================
+      const uWinTop = h * 0.08
+      const uWinH = h * 0.30
+      const uWinCount = 7
+      const uWinStep = (w * 0.88) / uWinCount
+      for (let i = 0; i < uWinCount; i++) {
+        const wx = w * 0.06 + i * uWinStep + 2
+        ctx.fillStyle = frameColor || '#334155'
+        ctx.beginPath()
+        ctx.roundRect(wx - 2, uWinTop - 2, uWinStep - 4, uWinH + 4, 3)
+        ctx.fill()
+        ctx.fillStyle = windowColor || '#020617'
+        ctx.beginPath()
+        ctx.roundRect(wx, uWinTop, uWinStep - 8, uWinH, 2)
+        ctx.fill()
+        // 玻璃高光反光线
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)'
+        ctx.lineWidth = 1
+        ctx.beginPath()
+        ctx.moveTo(wx + 2, uWinTop + 3)
+        ctx.lineTo(wx + uWinStep - 10, uWinTop + 3)
+        ctx.stroke()
+      }
+
+      // ==========================================
+      // 🌟 1 楼整排客窗与高大落地双开车门 (Lower Deck: Y=0.47..0.77 客窗，车门 Y=0.44..0.91)
+      // ==========================================
+      const lWinTop = h * 0.47
+      const lWinH = h * 0.30
+      if (!isLeft) {
+        // --- 🚪 右侧 (乘客上下客侧): 前后高大双开门 + 贯通客窗 ---
+        const drawDoubleDoor = (dx: number) => {
+          const doorTop = h * 0.44
+          const doorBottom = h * 0.91
+          const doorH = doorBottom - doorTop
+          const doorW = w * 0.095
+
+          // 门框外框 (从腰线下一直落地到踏板裙边)
+          ctx.fillStyle = frameColor || '#1e293b'
+          ctx.fillRect(dx - 1, doorTop, doorW + 2, doorH)
+
+          // 左右两扇活动门扇底色
+          const leafW = (doorW - 4) / 2
+          ctx.fillStyle = primaryColor || '#982127'
+          ctx.fillRect(dx + 1, doorTop + 2, leafW, doorH - 4)
+          ctx.fillRect(dx + 3 + leafW, doorTop + 2, leafW, doorH - 4)
+
+          // 门扇上段大幅视窗 (与 1 楼客窗高度严格平行 Y: 0.47..0.76)
+          const glassTop = lWinTop
+          const glassH = lWinH - 3
+          ctx.fillStyle = windowColor || '#020617'
+          ctx.fillRect(dx + 3, glassTop, leafW - 4, glassH)
+          ctx.fillRect(dx + 5 + leafW, glassTop, leafW - 4, glassH)
+
+          // 门扇下段防踢观察窗 (Y: 0.79..0.87)
+          ctx.fillStyle = windowColor || '#020617'
+          ctx.fillRect(dx + 3, h * 0.79, leafW - 4, h * 0.08)
+          ctx.fillRect(dx + 5 + leafW, h * 0.79, leafW - 4, h * 0.08)
+
+          // 亮黄乘车扶手杆
+          ctx.fillStyle = '#facc15'
+          ctx.fillRect(dx + leafW * 0.6, glassTop + 10, 2, glassH - 20)
+          ctx.fillRect(dx + leafW + 4 + leafW * 0.4, glassTop + 10, 2, glassH - 20)
+
+          // 中间黑色防夹密封胶条
+          ctx.fillStyle = '#0f172a'
+          ctx.fillRect(dx + leafW + 1, doorTop, 2, doorH)
+        }
+
+        drawDoubleDoor(w * 0.06) // 1. 前上客大门
+
+        // 2. 中前段 3 扇客窗
+        const midCount = 3
+        const midStep = (w * 0.32) / midCount
+        for (let i = 0; i < midCount; i++) {
+          const wx = w * 0.175 + i * midStep + 2
+          ctx.fillStyle = frameColor || '#334155'
+          ctx.beginPath()
+          ctx.roundRect(wx - 2, lWinTop - 2, midStep - 4, lWinH + 4, 3)
+          ctx.fill()
+          ctx.fillStyle = windowColor || '#020617'
+          ctx.beginPath()
+          ctx.roundRect(wx, lWinTop, midStep - 8, lWinH, 2)
+          ctx.fill()
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)'
+          ctx.lineWidth = 1
+          ctx.beginPath()
+          ctx.moveTo(wx + 2, lWinTop + 3)
+          ctx.lineTo(wx + midStep - 10, lWinTop + 3)
+          ctx.stroke()
+        }
+
+        drawDoubleDoor(w * 0.51) // 3. 中下客大门
+
+        // 4. 后段 3 扇客窗
+        const rearCount = 3
+        const rearStep = (w * 0.32) / rearCount
+        for (let i = 0; i < rearCount; i++) {
+          const wx = w * 0.625 + i * rearStep + 2
+          ctx.fillStyle = frameColor || '#334155'
+          ctx.beginPath()
+          ctx.roundRect(wx - 2, lWinTop - 2, rearStep - 4, lWinH + 4, 3)
+          ctx.fill()
+          ctx.fillStyle = windowColor || '#020617'
+          ctx.beginPath()
+          ctx.roundRect(wx, lWinTop, rearStep - 8, lWinH, 2)
+          ctx.fill()
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)'
+          ctx.lineWidth = 1
+          ctx.beginPath()
+          ctx.moveTo(wx + 2, lWinTop + 3)
+          ctx.lineTo(wx + rearStep - 10, lWinTop + 3)
+          ctx.stroke()
+        }
+      } else {
+        // --- 🪟 左侧 (司机侧): 司机大窗 + 贯通整车的 6 扇连续大客窗 ---
+        // 1. 司机侧窗
+        ctx.fillStyle = frameColor || '#334155'
+        ctx.beginPath()
+        ctx.roundRect(w * 0.05, lWinTop - 2, w * 0.10, lWinH + 4, 3)
+        ctx.fill()
+        ctx.fillStyle = windowColor || '#020617'
+        ctx.beginPath()
+        ctx.roundRect(w * 0.05 + 2, lWinTop, w * 0.10 - 4, lWinH, 2)
+        ctx.fill()
+
+        // 2. 连续 6 扇宽阔客窗 (从前到后完整贯通，覆盖整个 1 楼)
+        const lCount = 6
+        const lStep = (w * 0.77) / lCount
+        for (let i = 0; i < lCount; i++) {
+          const wx = w * 0.17 + i * lStep + 2
+          ctx.fillStyle = frameColor || '#334155'
+          ctx.beginPath()
+          ctx.roundRect(wx - 2, lWinTop - 2, lStep - 4, lWinH + 4, 3)
+          ctx.fill()
+          ctx.fillStyle = windowColor || '#020617'
+          ctx.beginPath()
+          ctx.roundRect(wx, lWinTop, lStep - 8, lWinH, 2)
+          ctx.fill()
+          // 玻璃高光反光线
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)'
+          ctx.lineWidth = 1
+          ctx.beginPath()
+          ctx.moveTo(wx + 2, lWinTop + 3)
+          ctx.lineTo(wx + lStep - 10, lWinTop + 3)
+          ctx.stroke()
+        }
+      }
+
+      return canvas
+    }
+
     // ==========================================
-    // 0. 城市公交与客车系列 (Bus & Transit)
+    // 0. 单节与巨龙城市公交系列 (Single & Articulated Bus)
     // ==========================================
     if (category === 'bus') {
       // 1. 各车型独具特色且写实还原的专属底色与拉花架构 (彻底杜绝千篇一律的一半一半)
@@ -702,202 +945,7 @@ export class TextureBaker {
       return canvas
     }
 
-    // ==========================================
-    // 0.45 经典双层客车系列 (Double-Decker Bus - 真实双层完整排窗)
-    // ==========================================
-    if (style.startsWith('bus-double-')) {
-      const physL = 135
-      const physH = 56
-      const physR = 10.5
-      const rx = (physR / physL) * w
-      const ry = (physR / physH) * h
 
-      if (style === 'bus-double-london-red') {
-        // === 🇬🇧 伦敦 Routemaster 经典双层大巴: 伦敦经典深红 (Carmine) ===
-        ctx.fillStyle = primaryColor || '#982127'
-        ctx.fillRect(0, 0, w, h)
-        // 伦敦交通局 Roundel 圆环标志
-        ctx.fillStyle = '#1c304a'
-        ctx.beginPath()
-        ctx.arc(w * 0.15, h * 0.44, 8, 0, Math.PI * 2)
-        ctx.fill()
-        ctx.fillStyle = '#982127'
-        ctx.beginPath()
-        ctx.arc(w * 0.15, h * 0.44, 5, 0, Math.PI * 2)
-        ctx.fill()
-        ctx.fillStyle = '#1c304a'
-        ctx.fillRect(w * 0.11, h * 0.43, w * 0.08, 3)
-      } else if (style === 'bus-double-kmb-gold') {
-        // === 🇭🇰 香港九巴经典「金巴」: 香槟金底色 + 典雅暗红腰带 ===
-        ctx.fillStyle = primaryColor || '#d5c7ab'
-        ctx.fillRect(0, 0, w, h)
-        ctx.fillStyle = secondaryColor || '#802028'
-        ctx.fillRect(0, h * 0.40, w, h * 0.08)
-        ctx.fillStyle = '#18222d'
-        ctx.fillRect(0, h * 0.92, w, h * 0.08)
-      } else {
-        // === 🌆 都市全景双层观光巴士: 典雅酒红 + 暖金波浪拉花 ===
-        ctx.fillStyle = primaryColor || '#8c222c'
-        ctx.fillRect(0, 0, w, h)
-        ctx.fillStyle = secondaryColor || '#d89c32'
-        ctx.beginPath()
-        ctx.moveTo(0, h * 0.44)
-        ctx.quadraticCurveTo(w * 0.5, h * 0.38, w, h * 0.44)
-        ctx.lineTo(w, h * 0.49)
-        ctx.quadraticCurveTo(w * 0.5, h * 0.43, 0, h * 0.49)
-        ctx.fill()
-      }
-
-      // 中层贯通分割腰线 (Upper/Lower Deck Waist Beltline)
-      ctx.fillStyle = accentColor || '#d49b35'
-      ctx.fillRect(0, h * 0.41, w, 2.5)
-
-      // 3 轴重载底盘轮对 (前转向轮 + 后部双驱动轴轮)
-      const drawWheel = (cx: number) => {
-        const cy = h * 0.91
-        ctx.fillStyle = '#09090b'
-        ctx.beginPath()
-        ctx.ellipse(cx, cy, rx * 1.15, ry * 1.15, 0, Math.PI, 0)
-        ctx.fill()
-        ctx.lineWidth = 1.5
-        ctx.strokeStyle = '#27272a'
-        ctx.stroke()
-        ctx.fillStyle = '#18181b'
-        ctx.beginPath()
-        ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2)
-        ctx.fill()
-        ctx.fillStyle = '#94a3b8'
-        ctx.beginPath()
-        ctx.ellipse(cx, cy, rx * 0.65, ry * 0.65, 0, 0, Math.PI * 2)
-        ctx.fill()
-        ctx.fillStyle = '#1e293b'
-        ctx.beginPath()
-        ctx.ellipse(cx, cy, rx * 0.52, ry * 0.52, 0, 0, Math.PI * 2)
-        ctx.fill()
-        ctx.fillStyle = '#f8fafc'
-        ctx.beginPath()
-        ctx.ellipse(cx, cy, rx * 0.22, ry * 0.22, 0, 0, Math.PI * 2)
-        ctx.fill()
-      }
-      drawWheel(w * 0.18) // 前转向轴
-      drawWheel(w * 0.76) // 中驱动轴
-      drawWheel(w * 0.88) // 后从动轴
-
-      // ==========================================
-      // 🌟 2 楼整排客窗 (Upper Deck: 7 扇贯通全景大窗)
-      // ==========================================
-      const uWinTop = h * 0.09
-      const uWinH = h * 0.28
-      const uWinCount = 7
-      const uWinStep = (w * 0.88) / uWinCount
-      for (let i = 0; i < uWinCount; i++) {
-        const wx = w * 0.06 + i * uWinStep + 2
-        ctx.fillStyle = frameColor || '#334155'
-        ctx.beginPath()
-        ctx.roundRect(wx - 2, uWinTop - 2, uWinStep - 4, uWinH + 4, 3)
-        ctx.fill()
-        ctx.fillStyle = windowColor || '#020617'
-        ctx.beginPath()
-        ctx.roundRect(wx, uWinTop, uWinStep - 8, uWinH, 2)
-        ctx.fill()
-        // 玻璃高光反光线
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)'
-        ctx.lineWidth = 1
-        ctx.beginPath()
-        ctx.moveTo(wx + 2, uWinTop + 3)
-        ctx.lineTo(wx + uWinStep - 10, uWinTop + 3)
-        ctx.stroke()
-      }
-
-      // ==========================================
-      // 🌟 1 楼整排客窗与车门 (Lower Deck: 贯通全长)
-      // ==========================================
-      const lWinTop = h * 0.50
-      const lWinH = h * 0.27
-      if (!isLeft) {
-        // --- 🚪 右侧 (乘客上下客侧): 前双开门 + 3中窗 + 中双开门 + 3后窗 ---
-        const drawDoubleDoor = (dx: number) => {
-          ctx.fillStyle = frameColor || '#334155'
-          ctx.fillRect(dx, lWinTop - 2, w * 0.09, lWinH + 16)
-          ctx.fillStyle = windowColor || '#020617'
-          ctx.fillRect(dx + 2, lWinTop + 2, w * 0.04, lWinH * 0.75)
-          ctx.fillRect(dx + w * 0.045 + 1, lWinTop + 2, w * 0.04, lWinH * 0.75)
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)'
-          ctx.lineWidth = 1
-          ctx.strokeRect(dx + 2, lWinTop + 2, w * 0.04, lWinH * 0.75)
-          ctx.strokeRect(dx + w * 0.045 + 1, lWinTop + 2, w * 0.04, lWinH * 0.75)
-        }
-
-        drawDoubleDoor(w * 0.06) // 1. 前上客门
-
-        // 2. 中前段 3 扇客窗
-        const midCount = 3
-        const midStep = (w * 0.32) / midCount
-        for (let i = 0; i < midCount; i++) {
-          const wx = w * 0.17 + i * midStep + 2
-          ctx.fillStyle = frameColor || '#334155'
-          ctx.beginPath()
-          ctx.roundRect(wx - 2, lWinTop - 2, midStep - 4, lWinH + 4, 3)
-          ctx.fill()
-          ctx.fillStyle = windowColor || '#020617'
-          ctx.beginPath()
-          ctx.roundRect(wx, lWinTop, midStep - 8, lWinH, 2)
-          ctx.fill()
-        }
-
-        drawDoubleDoor(w * 0.51) // 3. 中下客门
-
-        // 4. 后段 3 扇客窗
-        const rearCount = 3
-        const rearStep = (w * 0.32) / rearCount
-        for (let i = 0; i < rearCount; i++) {
-          const wx = w * 0.62 + i * rearStep + 2
-          ctx.fillStyle = frameColor || '#334155'
-          ctx.beginPath()
-          ctx.roundRect(wx - 2, lWinTop - 2, rearStep - 4, lWinH + 4, 3)
-          ctx.fill()
-          ctx.fillStyle = windowColor || '#020617'
-          ctx.beginPath()
-          ctx.roundRect(wx, lWinTop, rearStep - 8, lWinH, 2)
-          ctx.fill()
-        }
-      } else {
-        // --- 🪟 左侧 (司机侧): 司机前大窗 + 贯通整车的 6 扇连续大客窗 ---
-        // 1. 司机侧窗
-        ctx.fillStyle = frameColor || '#334155'
-        ctx.beginPath()
-        ctx.roundRect(w * 0.05, lWinTop - 2, w * 0.10, lWinH + 4, 3)
-        ctx.fill()
-        ctx.fillStyle = windowColor || '#020617'
-        ctx.beginPath()
-        ctx.roundRect(w * 0.05 + 2, lWinTop, w * 0.10 - 4, lWinH, 2)
-        ctx.fill()
-
-        // 2. 连续 6 扇宽阔客窗 (从前到后完整贯通，覆盖整个 1 楼)
-        const lCount = 6
-        const lStep = (w * 0.77) / lCount
-        for (let i = 0; i < lCount; i++) {
-          const wx = w * 0.17 + i * lStep + 2
-          ctx.fillStyle = frameColor || '#334155'
-          ctx.beginPath()
-          ctx.roundRect(wx - 2, lWinTop - 2, lStep - 4, lWinH + 4, 3)
-          ctx.fill()
-          ctx.fillStyle = windowColor || '#020617'
-          ctx.beginPath()
-          ctx.roundRect(wx, lWinTop, lStep - 8, lWinH, 2)
-          ctx.fill()
-          // 玻璃高光反光线
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)'
-          ctx.lineWidth = 1
-          ctx.beginPath()
-          ctx.moveTo(wx + 2, lWinTop + 3)
-          ctx.lineTo(wx + lStep - 10, lWinTop + 3)
-          ctx.stroke()
-        }
-      }
-
-      return canvas
-    }
 
     // ==========================================
     // 0.48 香港双层叮叮车系列 (Hong Kong Ding Ding Tram - 窄格木质复古窗)
@@ -3109,19 +3157,23 @@ export class TextureBaker {
         ctx.fillText([routeText, destText].filter(Boolean).join('  '), w * 0.50, h * 0.07)
       }
 
-      // 2 楼曲面全景大窗 (2nd Floor Front Window)
+      // 中层分割腰线 (Y: 0.40..0.435, 与侧身腰线完全水平贯通)
+      ctx.fillStyle = accentColor || '#d49b35'
+      ctx.fillRect(0, h * 0.40, w, h * 0.035)
+
+      // 2 楼曲面全景大窗 (2nd Floor Front Window: Y=0.08..0.38, 与侧面 2 楼窗户高度 100% 水平对齐)
       ctx.fillStyle = '#020617'
       ctx.beginPath()
-      ctx.roundRect(w * 0.08, h * 0.10, w * 0.84, h * 0.28, [5, 5, 2, 2])
+      ctx.roundRect(w * 0.08, h * 0.08, w * 0.84, h * 0.30, [5, 5, 2, 2])
       ctx.fill()
       ctx.strokeStyle = frameColor || '#334155'
       ctx.lineWidth = 1.5
       ctx.stroke()
 
-      // 1 楼司机与乘客前挡风玻璃 (1st Floor Front Window)
+      // 1 楼司机与乘客前挡风玻璃 (1st Floor Front Window: Y=0.47..0.77, 与侧面 1 楼窗户高度 100% 水平对齐)
       ctx.fillStyle = '#020617'
       ctx.beginPath()
-      ctx.roundRect(w * 0.08, h * 0.44, w * 0.84, h * 0.30, [4, 4, 2, 2])
+      ctx.roundRect(w * 0.08, h * 0.47, w * 0.84, h * 0.30, [4, 4, 2, 2])
       ctx.fill()
       ctx.strokeStyle = frameColor || '#334155'
       ctx.lineWidth = 1.5
@@ -3131,10 +3183,10 @@ export class TextureBaker {
       ctx.strokeStyle = '#64748b'
       ctx.lineWidth = 1.5
       ctx.beginPath()
-      ctx.moveTo(w * 0.30, h * 0.74)
-      ctx.lineTo(w * 0.22, h * 0.52)
-      ctx.moveTo(w * 0.70, h * 0.74)
-      ctx.lineTo(w * 0.62, h * 0.52)
+      ctx.moveTo(w * 0.30, h * 0.75)
+      ctx.lineTo(w * 0.22, h * 0.54)
+      ctx.moveTo(w * 0.70, h * 0.75)
+      ctx.lineTo(w * 0.62, h * 0.54)
       ctx.stroke()
 
       // 双前大灯组
@@ -4246,37 +4298,41 @@ export class TextureBaker {
       ctx.fillStyle = primaryColor || (style === 'bus-double-london-red' ? '#982127' : (style === 'bus-double-kmb-gold' ? '#d5c7ab' : '#8c222c'))
       ctx.fillRect(0, 0, w, h)
 
-      // 2 楼后部观景窗
+      // 中层分割腰线 (Y: 0.40..0.435, 与侧身腰线完全水平贯通)
+      ctx.fillStyle = accentColor || '#d49b35'
+      ctx.fillRect(0, h * 0.40, w, h * 0.035)
+
+      // 2 楼后部观景窗 (Y: 0.08..0.38, 与侧身 2 楼窗户高度 100% 对齐)
       ctx.fillStyle = '#020617'
       ctx.beginPath()
-      ctx.roundRect(w * 0.12, h * 0.10, w * 0.76, h * 0.26, 3.5)
+      ctx.roundRect(w * 0.12, h * 0.08, w * 0.76, h * 0.30, 3.5)
       ctx.fill()
       ctx.strokeStyle = frameColor || '#334155'
       ctx.lineWidth = 1.5
       ctx.stroke()
 
-      // 1 楼发动机散热格栅 (Louvers)
+      // 1 楼发动机散热格栅 (Louvers: Y: 0.47..0.77, 与 1 楼窗户高度对齐)
       ctx.fillStyle = '#111827'
-      ctx.fillRect(w * 0.15, h * 0.52, w * 0.70, h * 0.26)
+      ctx.fillRect(w * 0.15, h * 0.47, w * 0.70, h * 0.30)
       ctx.strokeStyle = '#334155'
       ctx.lineWidth = 1
-      for (let y = h * 0.55; y < h * 0.76; y += 6) {
+      for (let y = h * 0.50; y < h * 0.75; y += 6) {
         ctx.beginPath()
         ctx.moveTo(w * 0.18, y)
         ctx.lineTo(w * 0.82, y)
         ctx.stroke()
       }
 
-      // 立式尾灯组
+      // 立式尾灯组 (Y: 0.47..0.77)
       const drawTailLight = (lx: number) => {
         ctx.fillStyle = '#020617'
-        ctx.fillRect(lx, h * 0.50, w * 0.09, h * 0.30)
+        ctx.fillRect(lx, h * 0.47, w * 0.09, h * 0.30)
         ctx.fillStyle = '#982127' // 刹车红
-        ctx.fillRect(lx + 2, h * 0.52, w * 0.09 - 4, h * 0.09)
+        ctx.fillRect(lx + 2, h * 0.49, w * 0.09 - 4, h * 0.09)
         ctx.fillStyle = '#d97706' // 转向橙
-        ctx.fillRect(lx + 2, h * 0.62, w * 0.09 - 4, h * 0.08)
+        ctx.fillRect(lx + 2, h * 0.59, w * 0.09 - 4, h * 0.08)
         ctx.fillStyle = '#f8fafc' // 倒车白
-        ctx.fillRect(lx + 2, h * 0.71, w * 0.09 - 4, h * 0.08)
+        ctx.fillRect(lx + 2, h * 0.68, w * 0.09 - 4, h * 0.08)
       }
       drawTailLight(w * 0.04)
       drawTailLight(w * 0.87)
@@ -5359,7 +5415,7 @@ export class TextureBaker {
   }
 
   /**
-   * 绘制车底贴图 (优雅机械浅灰 + 检修盖板，避免大面积死黑且打印省墨)
+   * 绘制车底贴图 (优雅机械浅灰 + 检修盖板 + T型挂钩开槽虚线与 5mm 磁铁位标记)
    */
   private drawBottomView(w: number, h: number, _params: any): HTMLCanvasElement {
     const canvas = document.createElement('canvas')
@@ -5373,8 +5429,8 @@ export class TextureBaker {
 
     // 设备箱与转向架预留安装区
     ctx.fillStyle = '#94a3b8'
-    ctx.fillRect(w * 0.10, h * 0.06, w * 0.80, h * 0.18)
-    ctx.fillRect(w * 0.10, h * 0.76, w * 0.80, h * 0.18)
+    ctx.fillRect(w * 0.10, h * 0.08, w * 0.80, h * 0.16)
+    ctx.fillRect(w * 0.10, h * 0.76, w * 0.80, h * 0.16)
 
     // 底盘设备箱格栅与检修口线条
     ctx.strokeStyle = '#64748b'
@@ -5386,11 +5442,109 @@ export class TextureBaker {
       ctx.stroke()
     }
 
-    // 中央底盘标示
-    ctx.fillStyle = '#475569'
-    ctx.font = 'bold 11px monospace'
+    // 1. 前后端物理连接插槽与磁铁位 (仅保留纯净几何开槽线与磁铁定位圈，无繁杂文字)
+    const drawCouplerSlotAndMagnet = (slotY: number, magnetY: number) => {
+      // ✂ 裁切暗槽实线与端部限位刻度
+      ctx.strokeStyle = '#dc2626'
+      ctx.lineWidth = 2.5
+      ctx.beginPath()
+      ctx.moveTo(w * 0.30, slotY)
+      ctx.lineTo(w * 0.70, slotY)
+      ctx.stroke()
+
+      // 插槽端部垂直限位标线
+      ctx.lineWidth = 1.5
+      ctx.beginPath()
+      ctx.moveTo(w * 0.30, slotY - 4)
+      ctx.lineTo(w * 0.30, slotY + 4)
+      ctx.moveTo(w * 0.70, slotY - 4)
+      ctx.lineTo(w * 0.70, slotY + 4)
+      ctx.stroke()
+
+      // [ 🧲 磁铁粘贴位 ] 极简虚线圆圈
+      ctx.strokeStyle = '#2563eb'
+      ctx.lineWidth = 1.5
+      ctx.setLineDash([4, 4])
+      ctx.beginPath()
+      ctx.arc(w * 0.5, magnetY, 13, 0, Math.PI * 2)
+      ctx.stroke()
+      ctx.setLineDash([])
+    }
+
+    drawCouplerSlotAndMagnet(h * 0.05, h * 0.11)
+    drawCouplerSlotAndMagnet(h * 0.95, h * 0.89)
+
+    return canvas
+  }
+
+  /**
+   * 绘制纯纸质 T 型活动牵引插扣贴图 (深灰耐磨工业质感 + 金属铆钉与结构线)
+   */
+  private drawCouplerView(w: number, h: number): HTMLCanvasElement {
+    const canvas = document.createElement('canvas')
+    canvas.width = w
+    canvas.height = h
+    const ctx = canvas.getContext('2d')!
+
+    // 工业深冷灰底漆
+    ctx.fillStyle = '#334155'
+    ctx.fillRect(0, 0, w, h)
+
+    // 边缘金属倒角微高光
+    ctx.strokeStyle = '#475569'
+    ctx.lineWidth = 1.5
+    ctx.strokeRect(2, 2, w - 4, h - 4)
+
+    // 金属骨架加强筋与铆钉细节 (无需对折，剪下即为完整对称 T 型插扣)
+    ctx.fillStyle = '#64748b'
+    ctx.fillRect(w * 0.20, 6, w * 0.10, h - 12)
+    ctx.fillRect(w * 0.70, 6, w * 0.10, h - 12)
+
+    ctx.fillStyle = '#94a3b8'
+    ctx.beginPath()
+    ctx.arc(w * 0.25, h * 0.22, 3, 0, Math.PI * 2)
+    ctx.arc(w * 0.25, h * 0.78, 3, 0, Math.PI * 2)
+    ctx.arc(w * 0.75, h * 0.22, 3, 0, Math.PI * 2)
+    ctx.arc(w * 0.75, h * 0.78, 3, 0, Math.PI * 2)
+    ctx.fill()
+
+    return canvas
+  }
+
+  /**
+   * 绘制 18米双节巨龙公交立体手风琴折棚贴图 (3D 褶皱阴影与折痕指示)
+   */
+  private drawBellowsView(w: number, h: number): HTMLCanvasElement {
+    const canvas = document.createElement('canvas')
+    canvas.width = w
+    canvas.height = h
+    const ctx = canvas.getContext('2d')!
+
+    // 哑光深炭黑底色
+    ctx.fillStyle = '#1e252e'
+    ctx.fillRect(0, 0, w, h)
+
+    // 3D 橡胶手风琴褶皱条纹
+    const pleatHeight = h / 8
+    for (let i = 0; i < 8; i++) {
+      const py = i * pleatHeight
+      ctx.fillStyle = i % 2 === 0 ? '#181c22' : '#2f3844'
+      ctx.fillRect(0, py, w, pleatHeight)
+      // 凸起折棱高光
+      ctx.fillStyle = '#475569'
+      ctx.fillRect(0, py, w, 1.5)
+    }
+
+    // 边框保护条
+    ctx.strokeStyle = '#0f141a'
+    ctx.lineWidth = 3
+    ctx.strokeRect(1, 1, w - 2, h - 2)
+
+    // 标注
+    ctx.fillStyle = '#94a3b8'
+    ctx.font = 'bold 10px sans-serif'
     ctx.textAlign = 'center'
-    ctx.fillText('PAPERCRAFT CHASSIS', w * 0.5, h * 0.5)
+    ctx.fillText('BELLOWS GANGWAY 折棚', w * 0.5, h * 0.5)
 
     return canvas
   }

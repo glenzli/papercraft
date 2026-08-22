@@ -257,6 +257,101 @@ export const Scene3D: React.FC<Scene3DProps> = ({
       }
     })
 
+    // 渲染相邻车厢之间的跨车厢贯通道/铰接折棚/物理车钩连挂 (Inter-Car Gangway & Coupler Mesh)
+    if (focusedCarIndex === -1 && cars.length > 1) {
+      for (let i = 0; i < cars.length - 1; i++) {
+        const car1 = cars[i]
+        const car2 = cars[i + 1]
+
+        const car1Len = car1.modelData.dimensions.length * scale
+        const car2Len = car2.modelData.dimensions.length * scale
+        const car1RearZ = car1.spacingOffsetZ - car1Len / 2
+        const car2FrontZ = car2.spacingOffsetZ + car2Len / 2
+
+        const gapLen = Math.max(0.01, car1RearZ - car2FrontZ)
+        const centerZ = (car1RearZ + car2FrontZ) / 2
+
+        const minW = Math.min(car1.modelData.dimensions.width, car2.modelData.dimensions.width) * scale
+        const minH = Math.min(car1.modelData.dimensions.height, car2.modelData.dimensions.height) * scale
+
+        const isBendyBus = isBusOrRoadVehicle && car1.schema.id.includes('articulated')
+        const isFreight = car1.schema.id.includes('freight') || car2.schema.id.includes('flatcar') || car2.schema.id.includes('gondola')
+
+        const couplerGroup = new THREE.Group()
+        couplerGroup.position.set(0, 0, centerZ)
+        trainRoot.add(couplerGroup)
+
+        if (isBendyBus) {
+          // 1. 18米巨龙公交立体手风琴折棚 (Bellows) 与底盘铰接盘 (Turntable)
+          const bellowsW = minW * 0.96
+          const bellowsH = minH * 0.94
+          const bellowsGeo = new THREE.BoxGeometry(bellowsW, bellowsH, gapLen)
+          const bellowsTexCanvas = baker.getSlotCanvas('bellows_3d') || baker.getSlotCanvas('bellows')
+          const bellowsTex = bellowsTexCanvas ? new THREE.CanvasTexture(bellowsTexCanvas) : undefined
+          if (bellowsTex) bellowsTex.colorSpace = THREE.SRGBColorSpace
+
+          const bellowsMat = new THREE.MeshStandardMaterial({
+            map: bellowsTex,
+            color: bellowsTex ? 0xffffff : 0x1e252e,
+            roughness: 0.8,
+            wireframe: isWireframe
+          })
+          const bellowsMesh = new THREE.Mesh(bellowsGeo, bellowsMat)
+          bellowsMesh.position.set(0, bellowsH / 2 + 0.015, 0)
+          bellowsMesh.castShadow = true
+          couplerGroup.add(bellowsMesh)
+
+          // 底部铰接回转转盘
+          const turntableGeo = new THREE.CylinderGeometry(minW * 0.44, minW * 0.44, 0.008, 24)
+          const turntableMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.6, wireframe: isWireframe })
+          const turntableMesh = new THREE.Mesh(turntableGeo, turntableMat)
+          turntableMesh.position.set(0, 0.01, 0)
+          couplerGroup.add(turntableMesh)
+
+        } else if (isFreight) {
+          // 2. 铁路重载货车：下部重型联结器 (Knuckle Coupler) 与贯通牵引钢梁
+          const drawbarGeo = new THREE.BoxGeometry(minW * 0.28, 0.035, gapLen)
+          const drawbarMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.5, metalness: 0.3, wireframe: isWireframe })
+          const drawbarMesh = new THREE.Mesh(drawbarGeo, drawbarMat)
+          drawbarMesh.position.set(0, 0.045, 0)
+          drawbarMesh.castShadow = true
+          couplerGroup.add(drawbarMesh)
+
+          // 双侧红色/黑色制动重联风管
+          const hoseGeo = new THREE.BoxGeometry(0.012, 0.012, gapLen)
+          const hoseMat = new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.7, wireframe: isWireframe })
+          const leftHose = new THREE.Mesh(hoseGeo, hoseMat)
+          leftHose.position.set(-minW * 0.22, 0.035, 0)
+          const rightHose = new THREE.Mesh(hoseGeo, hoseMat)
+          rightHose.position.set(minW * 0.22, 0.035, 0)
+          couplerGroup.add(leftHose)
+          couplerGroup.add(rightHose)
+
+        } else {
+          // 3. 高铁 / 动车组 / 通勤电车：高密封外风挡 (Outer Diaphragm Gangway) + 密接式车钩
+          const gangwayW = minW * 0.72
+          const gangwayH = minH * 0.82
+          const gangwayGeo = new THREE.BoxGeometry(gangwayW, gangwayH, gapLen)
+          const gangwayMat = new THREE.MeshStandardMaterial({
+            color: 0x242c38,
+            roughness: 0.85,
+            wireframe: isWireframe
+          })
+          const gangwayMesh = new THREE.Mesh(gangwayGeo, gangwayMat)
+          gangwayMesh.position.set(0, gangwayH / 2 + 0.04, 0)
+          gangwayMesh.castShadow = true
+          couplerGroup.add(gangwayMesh)
+
+          // 底部密接式车钩 (Tight-Lock Coupler)
+          const couplerGeo = new THREE.BoxGeometry(minW * 0.22, 0.03, gapLen)
+          const couplerMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.4, metalness: 0.4, wireframe: isWireframe })
+          const couplerMesh = new THREE.Mesh(couplerGeo, couplerMat)
+          couplerMesh.position.set(0, 0.025, 0)
+          couplerGroup.add(couplerMesh)
+        }
+      }
+    }
+
     if (cameraRef.current && controlsRef.current) {
       if (focusedCarIndex === -1) {
         const totalCars = cars.length

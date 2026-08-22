@@ -256,24 +256,24 @@ export const NetViewer2D: React.FC<NetViewer2DProps> = ({
               </pattern>
             </defs>
 
-            {/* 1. 图例说明与页码标题 */}
-            <g transform="translate(10, 12)">
-              <text x="0" y="0" fontSize="4.2" fontWeight="bold" fill="#0f172a">
+            {/* 1. 单行紧凑页眉：车厢标题 + 页码 + 剪折图例 (极度节约纵向空间) */}
+            <g transform="translate(10, 8)">
+              <text x="0" y="3.5" fontSize="3.6" fontWeight="bold" fill="#0f172a">
                 {activePage?.pageTitle || t('viewer2D.sheetTitle')}
+                <tspan fontSize="2.5" fontWeight="normal" fill="#64748b" dx="4">
+                  (P. {currentPageIndex + 1} / {consistPages.length})
+                </tspan>
               </text>
-              <text x="0" y="4.5" fontSize="2.6" fill="#64748b">
-                P. {currentPageIndex + 1} / {consistPages.length}
-              </text>
 
-              <g transform="translate(0, 9)">
-                <line x1="0" y1="0" x2="8" y2="0" stroke="#0f172a" strokeWidth="0.4" />
-                <text x="9.5" y="1" fontSize="2.3" fill="#334155">{t('viewer2D.legendCut')}</text>
+              <g transform="translate(115, 2.5)">
+                <line x1="0" y1="0" x2="6" y2="0" stroke="#0f172a" strokeWidth="0.4" />
+                <text x="7.5" y="1" fontSize="2.2" fill="#334155">{t('viewer2D.legendCut')}</text>
 
-                <line x1="22" y1="0" x2="30" y2="0" stroke="#dc2626" strokeWidth="0.35" strokeDasharray="1.5, 1" />
-                <text x="31.5" y="1" fontSize="2.3" fill="#dc2626">{t('viewer2D.legendMountain')}</text>
+                <line x1="20" y1="0" x2="26" y2="0" stroke="#dc2626" strokeWidth="0.35" strokeDasharray="1.5, 1" />
+                <text x="27.5" y="1" fontSize="2.2" fill="#dc2626">{t('viewer2D.legendMountain')}</text>
 
-                <line x1="44" y1="0" x2="52" y2="0" stroke="#0284c7" strokeWidth="0.35" strokeDasharray="2.5, 1, 0.8, 1" />
-                <text x="53.5" y="1" fontSize="2.3" fill="#0284c7">{t('viewer2D.legendValley')}</text>
+                <line x1="40" y1="0" x2="46" y2="0" stroke="#0284c7" strokeWidth="0.35" strokeDasharray="2.5, 1, 0.8, 1" />
+                <text x="47.5" y="1" fontSize="2.2" fill="#0284c7">{t('viewer2D.legendValley')}</text>
               </g>
             </g>
 
@@ -287,7 +287,7 @@ export const NetViewer2D: React.FC<NetViewer2DProps> = ({
 
               return (
                 <g key={`${part.id}_${pIdx}`} transform={`translate(${offsetX}, ${offsetY})`}>
-                  {(activePage.isAccessoryPage || part.isAccessory) && (
+                  {activePage.isAccessoryPage && (
                     <text
                       x={(part.bounds.minX || 0) + part.bounds.width / 2}
                       y={(part.bounds.minY || 0) - 4}

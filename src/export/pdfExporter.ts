@@ -42,59 +42,61 @@ export function renderConsistPageToCanvas(
   ctx.fillStyle = '#ffffff'
   ctx.fillRect(0, 0, canvasW, canvasH)
 
-  // 2. 页眉标题栏 (中文与英文 100% 原生支持)
-  const titleX = 12 * mmToPx
-  const titleY = 14 * mmToPx
+  // 2. 单行紧凑页眉：车厢标题 + 页码 + 剪折图例 (极度节约纵向空间)
+  const titleX = 10 * mmToPx
+  const headerY = 10 * mmToPx
 
   const displayTitle = `${consistName} · ${page.pageTitle}`
-  const displaySubTitle = `P. ${page.pageIndex + 1} / ${totalPages}`
+  const displaySubTitle = `(P. ${page.pageIndex + 1} / ${totalPages})`
 
   ctx.fillStyle = '#0f172a'
-  ctx.font = 'bold 40px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif'
-  ctx.fillText(displayTitle, titleX, titleY)
+  ctx.font = 'bold 32px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif'
+  ctx.fillText(displayTitle, titleX, headerY)
 
+  const titleWidth = ctx.measureText(displayTitle).width
   ctx.fillStyle = '#64748b'
-  ctx.font = '500 26px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif'
-  ctx.fillText(displaySubTitle, titleX, titleY + 36)
+  ctx.font = 'normal 22px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif'
+  ctx.fillText(displaySubTitle, titleX + titleWidth + 14, headerY)
 
-  // 3. 折线与剪切图例说明 (精简克制)
-  const legendY = 22 * mmToPx
-  ctx.font = '500 24px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif'
+  // 3. 右侧对齐剪折图例说明
+  const legendX = canvasW - (isEn ? 95 : 82) * mmToPx
+  const legendY = headerY - 6
+  ctx.font = '500 20px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif'
 
   // 实线 (剪切)
   ctx.strokeStyle = '#0f172a'
-  ctx.lineWidth = 3.5
+  ctx.lineWidth = 3
   ctx.setLineDash([])
   ctx.beginPath()
-  ctx.moveTo(titleX, legendY)
-  ctx.lineTo(titleX + 22 * mmToPx, legendY)
+  ctx.moveTo(legendX, legendY)
+  ctx.lineTo(legendX + 16 * mmToPx, legendY)
   ctx.stroke()
   ctx.fillStyle = '#334155'
-  ctx.fillText(textCut, titleX + 25 * mmToPx, legendY + 8)
+  ctx.fillText(textCut, legendX + 18 * mmToPx, legendY + 6)
 
   // 红色虚线 (山折)
-  const mountainX = titleX + (isEn ? 52 : 48) * mmToPx
+  const mountainX = legendX + (isEn ? 38 : 34) * mmToPx
   ctx.strokeStyle = '#dc2626'
-  ctx.lineWidth = 3
-  ctx.setLineDash([16, 12])
+  ctx.lineWidth = 2.5
+  ctx.setLineDash([12, 8])
   ctx.beginPath()
   ctx.moveTo(mountainX, legendY)
-  ctx.lineTo(mountainX + 22 * mmToPx, legendY)
+  ctx.lineTo(mountainX + 16 * mmToPx, legendY)
   ctx.stroke()
   ctx.fillStyle = '#dc2626'
-  ctx.fillText(textMountain, mountainX + 25 * mmToPx, legendY + 8)
+  ctx.fillText(textMountain, mountainX + 18 * mmToPx, legendY + 6)
 
   // 蓝色点划线 (谷折)
-  const valleyX = mountainX + (isEn ? 62 : 54) * mmToPx
+  const valleyX = mountainX + (isEn ? 44 : 38) * mmToPx
   ctx.strokeStyle = '#0284c7'
-  ctx.lineWidth = 3
-  ctx.setLineDash([24, 10, 8, 10])
+  ctx.lineWidth = 2.5
+  ctx.setLineDash([18, 8, 6, 8])
   ctx.beginPath()
   ctx.moveTo(valleyX, legendY)
-  ctx.lineTo(valleyX + 22 * mmToPx, legendY)
+  ctx.lineTo(valleyX + 16 * mmToPx, legendY)
   ctx.stroke()
   ctx.fillStyle = '#0284c7'
-  ctx.fillText(textValley, valleyX + 25 * mmToPx, legendY + 8)
+  ctx.fillText(textValley, valleyX + 18 * mmToPx, legendY + 6)
 
   ctx.setLineDash([]) // 重置虚线
 
@@ -106,8 +108,8 @@ export function renderConsistPageToCanvas(
     const offsetY = placement.y * mmToPx
     const title = placement.displayName || part.name
 
-    // 在配件专页或车身页内嵌配件上方居中绘制配件名称
-    if (page.isAccessoryPage || part.isAccessory) {
+    // 仅在纯配件专页上方绘制零件标示，车身主页内嵌配件保持纯净无文字重叠
+    if (page.isAccessoryPage) {
       const partCenterX = offsetX + ((part.bounds.minX || 0) + part.bounds.width / 2) * mmToPx
       const partLabelY = offsetY + ((part.bounds.minY || 0) - 4) * mmToPx
       ctx.fillStyle = '#475569'

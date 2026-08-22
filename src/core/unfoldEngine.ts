@@ -284,25 +284,30 @@ export function rotateUnfoldedPart(part: UnfoldedPart, angleDeg: 0 | 90): Unfold
 }
 
 function generateCandidateCornerSlots(w: number, h: number): { x: number; y: number }[] {
-  return [
-    // 1. 左上角空域 (从 Y=30 开始逐级探测)
-    { x: 12, y: 30 },
-    { x: 14, y: 34 },
-    { x: 14, y: 38 },
-    // 2. 右上角空域 (从 Y=30 开始逐级探测)
-    { x: A4_WIDTH_MM - A4_MARGIN_MM - w - 4, y: 30 },
-    { x: A4_WIDTH_MM - A4_MARGIN_MM - w - 4, y: 34 },
-    { x: A4_WIDTH_MM - A4_MARGIN_MM - w - 4, y: 38 },
-    // 3. 左下角空域
-    { x: 12, y: A4_HEIGHT_MM - A4_MARGIN_MM - h - 4 },
-    { x: 14, y: A4_HEIGHT_MM - A4_MARGIN_MM - h - 8 },
-    // 4. 右下角空域
-    { x: A4_WIDTH_MM - A4_MARGIN_MM - w - 4, y: A4_HEIGHT_MM - A4_MARGIN_MM - h - 4 },
-    { x: A4_WIDTH_MM - A4_MARGIN_MM - w - 4, y: A4_HEIGHT_MM - A4_MARGIN_MM - h - 8 },
-    // 5. 侧翼中段空域
-    { x: 12, y: (A4_HEIGHT_MM - h) / 2 },
-    { x: A4_WIDTH_MM - A4_MARGIN_MM - w - 4, y: (A4_HEIGHT_MM - h) / 2 }
+  const slots: { x: number; y: number }[] = []
+
+  const xLeftList = [10, 12, 14, 18, 22]
+  const xRightList = [
+    A4_WIDTH_MM - A4_MARGIN_MM - w - 2,
+    A4_WIDTH_MM - A4_MARGIN_MM - w - 6,
+    A4_WIDTH_MM - A4_MARGIN_MM - w - 10
   ]
+
+  // 1. 左侧自上而下逐级步进扫描 (步长 4mm，确保冷气组、导流罩与连接件等多个配件可紧凑叠放于左侧空白区)
+  for (let y = 22; y <= A4_HEIGHT_MM - A4_MARGIN_MM - h - 2; y += 4) {
+    for (const x of xLeftList) {
+      slots.push({ x, y })
+    }
+  }
+
+  // 2. 右侧自上而下逐级步进扫描
+  for (let y = 22; y <= A4_HEIGHT_MM - A4_MARGIN_MM - h - 2; y += 4) {
+    for (const x of xRightList) {
+      slots.push({ x, y })
+    }
+  }
+
+  return slots
 }
 
 /**
@@ -325,9 +330,10 @@ export function packConsistToA4Pages(cars: ConsistCarItem[]): ConsistPageLayout[
     const carAccessories = allParts.filter(p => p.isAccessory === true)
 
     if (mainPart) {
-      // 水平居中并预留页眉图例纵向间距 (确保从 Y=36mm 以下开始)
+      // 水平居中并预留页眉图例纵向间距 (确保在页眉下方且不超出底边安全边距)
       const targetX = Math.max(A4_MARGIN_MM, (A4_WIDTH_MM - mainPart.bounds.width) / 2)
-      const targetY = Math.max(A4_MARGIN_MM + 26, (A4_HEIGHT_MM - mainPart.bounds.height) / 2)
+      const maxAvailableY = A4_HEIGHT_MM - A4_MARGIN_MM - mainPart.bounds.height
+      const targetY = Math.min(Math.max(22, (A4_HEIGHT_MM - mainPart.bounds.height) / 2), Math.max(20, maxAvailableY))
       const mainOffsetX = targetX - mainPart.bounds.minX
       const mainOffsetY = targetY - mainPart.bounds.minY
 
@@ -336,6 +342,7 @@ export function packConsistToA4Pages(cars: ConsistCarItem[]): ConsistPageLayout[
           part: mainPart,
           car,
           carIndex: carIdx,
+          displayName: mainPart.name || '车身主体',
           x: mainOffsetX,
           y: mainOffsetY,
           rotation: 0
@@ -368,17 +375,17 @@ export function packConsistToA4Pages(cars: ConsistCarItem[]): ConsistPageLayout[
           const candidates = generateCandidateCornerSlots(accW, accH)
 
           for (const cand of candidates) {
-            // 1. 检查是否在 A4 安全打印区内 (留出 10mm 页面外边距与 28mm 页眉间距)
+            // 1. 检查是否在 A4 安全打印区内 (留出 10mm 页面外边距与 22mm 页眉间距)
             if (
-              cand.x < A4_MARGIN_MM + 2 ||
-              cand.y < 28 ||
-              cand.x + accW > A4_WIDTH_MM - A4_MARGIN_MM - 2 ||
-              cand.y + accH > A4_HEIGHT_MM - A4_MARGIN_MM - 2
+              cand.x < A4_MARGIN_MM ||
+              cand.y < 22 ||
+              cand.x + accW > A4_WIDTH_MM - A4_MARGIN_MM ||
+              cand.y + accH > A4_HEIGHT_MM - A4_MARGIN_MM
             ) {
               continue
             }
 
-            // 2. 检查是否与已放置的零件和舌片发生冲突 (保留 5mm 宽裕剪裁安全边距)
+            // 2. 检查是否与已放置的零件和舌片发生冲突 (保留 2.5mm 剪裁安全边距)
             const box = {
               minX: cand.x,
               minY: cand.y,
@@ -386,7 +393,7 @@ export function packConsistToA4Pages(cars: ConsistCarItem[]): ConsistPageLayout[
               maxY: cand.y + accH
             }
 
-            if (!doesBoxOverlapPolygons(box, occupiedPolygons, 5)) {
+            if (!doesBoxOverlapPolygons(box, occupiedPolygons, 2.5)) {
               // 成功就地嵌入！
               const accOffsetX = cand.x - acc.bounds.minX
               const accOffsetY = cand.y - acc.bounds.minY
@@ -464,10 +471,10 @@ export function packConsistToA4Pages(cars: ConsistCarItem[]): ConsistPageLayout[
 
           for (const cand of candidates) {
             if (
-              cand.x < A4_MARGIN_MM + 2 ||
-              cand.y < 28 ||
-              cand.x + accW > A4_WIDTH_MM - A4_MARGIN_MM - 2 ||
-              cand.y + accH > A4_HEIGHT_MM - A4_MARGIN_MM - 2
+              cand.x < A4_MARGIN_MM ||
+              cand.y < 22 ||
+              cand.x + accW > A4_WIDTH_MM - A4_MARGIN_MM ||
+              cand.y + accH > A4_HEIGHT_MM - A4_MARGIN_MM
             ) {
               continue
             }
@@ -479,7 +486,7 @@ export function packConsistToA4Pages(cars: ConsistCarItem[]): ConsistPageLayout[
               maxY: cand.y + accH
             }
 
-            if (!doesBoxOverlapPolygons(box, occupiedPolygons, 5)) {
+            if (!doesBoxOverlapPolygons(box, occupiedPolygons, 2.5)) {
               const accOffsetX = cand.x - acc.bounds.minX
               const accOffsetY = cand.y - acc.bounds.minY
 
