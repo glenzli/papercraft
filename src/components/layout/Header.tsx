@@ -11,7 +11,6 @@ import {
   ChevronDown,
   Sun,
   Moon,
-  Train,
   PanelRightClose,
   PanelRightOpen,
   FolderOpen,
@@ -96,9 +95,11 @@ export const Header: React.FC<HeaderProps> = ({
       {/* 左侧: Logo 与车型切换 */}
       <div className="flex items-center gap-2">
         <div className="flex items-center gap-1.5 font-bold tracking-tight text-xs">
-          <div className="p-1 rounded-md bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 shadow-xs">
-            <Train className="w-3.5 h-3.5" />
-          </div>
+          <img
+            src="/icon-192.png"
+            alt="Papercraft Studio"
+            className="w-5 h-5 rounded-md object-contain shadow-xs border border-zinc-200/50 dark:border-zinc-700/50"
+          />
           <span className="hidden sm:inline">{t('common.appTitle')}</span>
         </div>
 
