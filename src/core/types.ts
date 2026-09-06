@@ -32,6 +32,15 @@ export interface CreaseLine {
   label?: string
 }
 
+export interface MountingGuide {
+  id: string
+  label: string // 粘贴对齐提示，如 "空调粘贴区 T"
+  x: number     // 2D 矩形左上角 X (mm)
+  y: number     // 2D 矩形左上角 Y (mm)
+  width: number // 宽度 (mm)
+  height: number// 高度 (mm)
+}
+
 export interface UnfoldedFace {
   id: string
   name: string // 如 "front", "side_left", "side_right", "roof", "bottom", "back"
@@ -40,6 +49,7 @@ export interface UnfoldedFace {
   creases: CreaseLine[]
   glueTabs: GlueTab[]
   textureSlot: string // 对应的纹理面名称
+  mountingGuides?: MountingGuide[] // 配件安装/粘合位参考提示框
 }
 
 export interface UnfoldedPart {

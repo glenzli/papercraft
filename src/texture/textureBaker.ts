@@ -121,6 +121,8 @@ export class TextureBaker {
       this.slotCanvases.set(`front_${r}_3d`, this.drawFrontView(280, 320, roleParams))
       this.slotCanvases.set(`back_${r}_3d`, this.drawBackView(280, 320, roleParams))
       this.slotCanvases.set(`bottom_${r}_3d`, this.drawBottomView(280, 1024, roleParams))
+      this.slotCanvases.set(`ac_unit_${r}_3d`, this.drawAcUnitView(240, 360, roleParams))
+      this.slotCanvases.set(`ac_unit_side_${r}_3d`, this.drawAcUnitSideView(240, 60, roleParams))
 
       // 2D 图纸专用分车型纵向贴图 (严格数学仿射旋转映射自 3D Master 贴图，100% 物理与视觉一致)
       this.slotCanvases.set(`side_left_${r}`, this.rotateAndMapSide(leftMaster, 'left'))
@@ -129,6 +131,8 @@ export class TextureBaker {
       this.slotCanvases.set(`front_${r}`, this.drawFrontView(380, 440, roleParams))
       this.slotCanvases.set(`back_${r}`, this.drawBackView(380, 440, roleParams))
       this.slotCanvases.set(`bottom_${r}`, this.drawBottomView(380, 1600, roleParams))
+      this.slotCanvases.set(`ac_unit_${r}`, this.drawAcUnitView(240, 360, roleParams))
+      this.slotCanvases.set(`ac_unit_side_${r}`, this.drawAcUnitSideView(240, 60, roleParams))
     }
 
     // 默认回退 3D 贴图
@@ -141,6 +145,8 @@ export class TextureBaker {
     this.slotCanvases.set('front_3d', this.drawFrontView(280, 320, params))
     this.slotCanvases.set('back_3d', this.drawBackView(280, 320, params))
     this.slotCanvases.set('bottom_3d', this.drawBottomView(280, 1024, params))
+    this.slotCanvases.set('ac_unit_3d', this.drawAcUnitView(240, 360, params))
+    this.slotCanvases.set('ac_unit_side_3d', this.drawAcUnitSideView(240, 60, params))
 
     // 2. 2D 图纸通用回退贴图 (严格数学仿射映射)
     this.slotCanvases.set('side_left', this.rotateAndMapSide(defaultLeftMaster, 'left'))
@@ -152,6 +158,8 @@ export class TextureBaker {
     this.slotCanvases.set('nose_chin', this.drawNoseChinView(380, 120, params))
     this.slotCanvases.set('back', this.drawBackView(380, 440, params))
     this.slotCanvases.set('bottom', this.drawBottomView(380, 1600, params))
+    this.slotCanvases.set('ac_unit', this.drawAcUnitView(240, 360, params))
+    this.slotCanvases.set('ac_unit_side', this.drawAcUnitSideView(240, 60, params))
 
     // 3. 车厢连接件与铰接风挡专用贴图 (T-Coupler & Bellows Gangway)
     const couplerCanvas2D = this.drawCouplerView(380, 260)
@@ -5442,37 +5450,28 @@ export class TextureBaker {
       ctx.stroke()
     }
 
-    // 1. 前后端物理连接插槽与磁铁位 (仅保留纯净几何开槽线与磁铁定位圈，无繁杂文字)
-    const drawCouplerSlotAndMagnet = (slotY: number, magnetY: number) => {
-      // ✂ 裁切暗槽实线与端部限位刻度
+    // 1. 前后端物理连接插槽 (精准 9mm 开口宽度，与 18mm 工字扣头形成 4.5mm 单侧卡位防脱)
+    const drawCouplerSlot = (slotY: number) => {
+      // ✂ 裁切暗槽实线 (w * 0.38 至 w * 0.62，相当于 9.1mm 开槽)
       ctx.strokeStyle = '#dc2626'
       ctx.lineWidth = 2.5
       ctx.beginPath()
-      ctx.moveTo(w * 0.30, slotY)
-      ctx.lineTo(w * 0.70, slotY)
+      ctx.moveTo(w * 0.38, slotY)
+      ctx.lineTo(w * 0.62, slotY)
       ctx.stroke()
 
       // 插槽端部垂直限位标线
       ctx.lineWidth = 1.5
       ctx.beginPath()
-      ctx.moveTo(w * 0.30, slotY - 4)
-      ctx.lineTo(w * 0.30, slotY + 4)
-      ctx.moveTo(w * 0.70, slotY - 4)
-      ctx.lineTo(w * 0.70, slotY + 4)
+      ctx.moveTo(w * 0.38, slotY - 4)
+      ctx.lineTo(w * 0.38, slotY + 4)
+      ctx.moveTo(w * 0.62, slotY - 4)
+      ctx.lineTo(w * 0.62, slotY + 4)
       ctx.stroke()
-
-      // [ 🧲 磁铁粘贴位 ] 极简虚线圆圈
-      ctx.strokeStyle = '#2563eb'
-      ctx.lineWidth = 1.5
-      ctx.setLineDash([4, 4])
-      ctx.beginPath()
-      ctx.arc(w * 0.5, magnetY, 13, 0, Math.PI * 2)
-      ctx.stroke()
-      ctx.setLineDash([])
     }
 
-    drawCouplerSlotAndMagnet(h * 0.05, h * 0.11)
-    drawCouplerSlotAndMagnet(h * 0.95, h * 0.89)
+    drawCouplerSlot(h * 0.05)
+    drawCouplerSlot(h * 0.95)
 
     return canvas
   }
@@ -5545,6 +5544,118 @@ export class TextureBaker {
     ctx.font = 'bold 10px sans-serif'
     ctx.textAlign = 'center'
     ctx.fillText('BELLOWS GANGWAY 折棚', w * 0.5, h * 0.5)
+
+    return canvas
+  }
+
+  /**
+   * 绘制车顶空调机组/气动导流罩专属真实贴图 (双排气风扇网罩 + 侧边散热格栅百叶窗)
+   */
+  private drawAcUnitView(w: number, h: number, params: any): HTMLCanvasElement {
+    const canvas = document.createElement('canvas')
+    canvas.width = w
+    canvas.height = h
+    const ctx = canvas.getContext('2d')!
+    const { theme, category, consistId, roofColor } = params
+
+    const style = this.resolveLiveryStyle(theme, category, consistId)
+    const isCR400 = style.startsWith('cr400-') || style.startsWith('crh')
+    const isFuxingRed = style === 'cr400-fuxing-red'
+
+    // 1. 空调外壳高质感基底 (复兴号浅银白/科技浅灰，普通列车浅灰金属)
+    const baseColor = roofColor || (isFuxingRed ? '#e2e8f0' : (isCR400 ? '#f8fafc' : '#f1f5f9'))
+    ctx.fillStyle = baseColor
+    ctx.fillRect(0, 0, w, h)
+
+    // 2. 气动流线边框与倒角微倒影
+    ctx.strokeStyle = '#cbd5e1'
+    ctx.lineWidth = 2
+    ctx.strokeRect(2, 2, w - 4, h - 4)
+
+    // 3. 顶部中央双联大功率排风扇防护圆孔网罩 (Twin Cooling Fans)
+    const fanRadius = Math.min(w * 0.32, h * 0.18)
+    const fan1Y = h * 0.32
+    const fan2Y = h * 0.68
+    const fanX = w * 0.50
+
+    const drawFan = (cy: number) => {
+      // 散热凹坑底色
+      ctx.fillStyle = '#1e293b'
+      ctx.beginPath()
+      ctx.arc(fanX, cy, fanRadius, 0, Math.PI * 2)
+      ctx.fill()
+
+      // 涡轮风扇金属轮毂
+      ctx.fillStyle = '#475569'
+      ctx.beginPath()
+      ctx.arc(fanX, cy, fanRadius * 0.28, 0, Math.PI * 2)
+      ctx.fill()
+
+      // 旋转叶片 (4 叶片)
+      ctx.strokeStyle = '#94a3b8'
+      ctx.lineWidth = 2
+      for (let a = 0; a < Math.PI * 2; a += Math.PI / 2) {
+        ctx.beginPath()
+        ctx.moveTo(fanX, cy)
+        ctx.lineTo(fanX + Math.cos(a) * (fanRadius - 2), cy + Math.sin(a) * (fanRadius - 2))
+        ctx.stroke()
+      }
+
+      // 不锈钢防鸟安全防护双重金属网格圈
+      ctx.strokeStyle = '#64748b'
+      ctx.lineWidth = 1.2
+      ctx.beginPath()
+      ctx.arc(fanX, cy, fanRadius, 0, Math.PI * 2)
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.arc(fanX, cy, fanRadius * 0.65, 0, Math.PI * 2)
+      ctx.stroke()
+    }
+
+    drawFan(fan1Y)
+    drawFan(fan2Y)
+
+    // 4. 前后两端气动导流百叶窗散热槽 (Louvers)
+    ctx.fillStyle = '#334155'
+    const louverW = w * 0.64
+    const louverX = (w - louverW) / 2
+    for (let y = h * 0.08; y < h * 0.18; y += 4) {
+      ctx.fillRect(louverX, y, louverW, 1.8)
+    }
+    for (let y = h * 0.82; y < h * 0.92; y += 4) {
+      ctx.fillRect(louverX, y, louverW, 1.8)
+    }
+
+    // 5. 检修安全铭牌小标
+    ctx.fillStyle = '#64748b'
+    ctx.fillRect(w * 0.35, h * 0.48, w * 0.30, 3)
+
+    return canvas
+  }
+
+  /**
+   * 绘制车顶空调机组/气动导流罩纯净金属侧壁贴图 (无风扇、无格栅，保持纯色金属留白)
+   */
+  private drawAcUnitSideView(w: number, h: number, params: any): HTMLCanvasElement {
+    const canvas = document.createElement('canvas')
+    canvas.width = w
+    canvas.height = h
+    const ctx = canvas.getContext('2d')!
+    const { theme, category, consistId, roofColor } = params
+
+    const style = this.resolveLiveryStyle(theme, category, consistId)
+    const isCR400 = style.startsWith('cr400-') || style.startsWith('crh')
+    const isFuxingRed = style === 'cr400-fuxing-red'
+
+    // 纯净金属底漆 (复兴号浅银白/科技浅灰，普通列车浅灰金属)
+    const baseColor = roofColor || (isFuxingRed ? '#e2e8f0' : (isCR400 ? '#f8fafc' : '#f1f5f9'))
+    ctx.fillStyle = baseColor
+    ctx.fillRect(0, 0, w, h)
+
+    // 边缘极轻微微倒影与折角暗线
+    ctx.strokeStyle = '#cbd5e1'
+    ctx.lineWidth = 1
+    ctx.strokeRect(0.5, 0.5, w - 1, h - 1)
 
     return canvas
   }

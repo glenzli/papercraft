@@ -351,7 +351,7 @@ export const cr400HeadSchema: PapercraftModelSchema = {
     {
       id: "ac_unit_cr400",
       name: "车顶流线导流罩",
-      slotName: "roof",
+      slotName: "ac_unit",
       vertices3D: [
         [-10, 2.5, 18], [10, 2.5, 18], [10, 2.5, -18], [-10, 2.5, -18],
         [-10, -2.5, 18], [10, -2.5, 18], [10, -2.5, -18], [-10, -2.5, -18]
@@ -369,7 +369,7 @@ export const cr400HeadSchema: PapercraftModelSchema = {
         [0, 1], [1, 1], [1, 0], [0, 0]
       ],
       position3D: [0, 44.5, -20],
-      layout2D: { x: 172, y: 68, width: 24, height: 36 }
+      layout2D: { x: 172, y: 68, width: 20, height: 36 }
     }
   ]
 }
@@ -600,7 +600,7 @@ export const cr400MiddleSchema: PapercraftModelSchema = {
     {
       id: "ac_unit_cr400_mid",
       name: "气动受电弓导流罩",
-      slotName: "roof",
+      slotName: "ac_unit",
       vertices3D: [
         [-10, 2.5, 18], [10, 2.5, 18], [10, 2.5, -18], [-10, 2.5, -18],
         [-10, -2.5, 18], [10, -2.5, 18], [10, -2.5, -18], [-10, -2.5, -18]
@@ -618,7 +618,7 @@ export const cr400MiddleSchema: PapercraftModelSchema = {
         [0, 1], [1, 1], [1, 0], [0, 0]
       ],
       position3D: [0, 44.5, 0],
-      layout2D: { x: 172, y: 30, width: 24, height: 36 }
+      layout2D: { x: 172, y: 30, width: 20, height: 36 }
     }
   ]
 }

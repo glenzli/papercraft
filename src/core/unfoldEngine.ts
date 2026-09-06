@@ -293,15 +293,15 @@ function generateCandidateCornerSlots(w: number, h: number): { x: number; y: num
     A4_WIDTH_MM - A4_MARGIN_MM - w - 10
   ]
 
-  // 1. 左侧自上而下逐级步进扫描 (步长 4mm，确保冷气组、导流罩与连接件等多个配件可紧凑叠放于左侧空白区)
-  for (let y = 22; y <= A4_HEIGHT_MM - A4_MARGIN_MM - h - 2; y += 4) {
+  // 1. 左侧自上而下逐级步进扫描 (步长 4mm，起始 y=14，在紧凑页眉下方且可充分利用上方角落空间)
+  for (let y = 14; y <= A4_HEIGHT_MM - A4_MARGIN_MM - h - 2; y += 4) {
     for (const x of xLeftList) {
       slots.push({ x, y })
     }
   }
 
   // 2. 右侧自上而下逐级步进扫描
-  for (let y = 22; y <= A4_HEIGHT_MM - A4_MARGIN_MM - h - 2; y += 4) {
+  for (let y = 14; y <= A4_HEIGHT_MM - A4_MARGIN_MM - h - 2; y += 4) {
     for (const x of xRightList) {
       slots.push({ x, y })
     }
@@ -375,10 +375,10 @@ export function packConsistToA4Pages(cars: ConsistCarItem[]): ConsistPageLayout[
           const candidates = generateCandidateCornerSlots(accW, accH)
 
           for (const cand of candidates) {
-            // 1. 检查是否在 A4 安全打印区内 (留出 10mm 页面外边距与 22mm 页眉间距)
+            // 1. 检查是否在 A4 安全打印区内 (留出 10mm 页面外边距与 14mm 紧凑页眉间距)
             if (
               cand.x < A4_MARGIN_MM ||
-              cand.y < 22 ||
+              cand.y < 14 ||
               cand.x + accW > A4_WIDTH_MM - A4_MARGIN_MM ||
               cand.y + accH > A4_HEIGHT_MM - A4_MARGIN_MM
             ) {

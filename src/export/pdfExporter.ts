@@ -171,6 +171,12 @@ export function renderConsistPageToCanvas(
           }
         }
 
+        const isFlippedV = face.id === 'back' || (face.textureSlot === 'back' && face.id.includes('back'))
+        if (isFlippedV) {
+          ctx.translate(0, minY + maxY)
+          ctx.scale(1, -1)
+        }
+
         ctx.drawImage(slotCanvas, sx, sy, sw, sh, minX, minY, faceW, faceH)
         ctx.restore()
       } else {
@@ -270,6 +276,23 @@ export function renderConsistPageToCanvas(
           ctx.lineWidth = 3
           ctx.setLineDash([])
           ctx.stroke()
+        }
+      }
+
+      // 5.4 绘制配件安装位参考提示框：极简素雅细虚线框，不遮挡车顶贴图
+      if (face.mountingGuides) {
+        for (const guide of face.mountingGuides) {
+          const gx = guide.x * mmToPx + offsetX
+          const gy = guide.y * mmToPx + offsetY
+          const gw = guide.width * mmToPx
+          const gh = guide.height * mmToPx
+
+          ctx.save()
+          ctx.strokeStyle = '#94a3b8'
+          ctx.lineWidth = 1.2
+          ctx.setLineDash([5, 4])
+          ctx.strokeRect(gx, gy, gw, gh)
+          ctx.restore()
         }
       }
     }

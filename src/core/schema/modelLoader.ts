@@ -227,13 +227,17 @@ export function loadPapercraftFromSchema(schema: PapercraftModelSchema): Papercr
           const lx = d // 局部原点留出深度边距
           const ly = d
 
+          const isAcUnit = acc.slotName === 'ac_unit' || (acc.slotName === 'roof' && (acc.id.startsWith('ac_unit') || acc.name.includes('空调') || acc.name.includes('导流罩')))
+          const accSlot = isAcUnit ? 'ac_unit' : acc.slotName
+          const sideSlot = isAcUnit ? 'ac_unit_side' : accSlot
+
           const faces: UnfoldedFace[] = []
 
           // 2.1 顶面 (Top / Main Face)
           faces.push({
             id: `${acc.id}_top`,
             name: `${acc.name} 顶盖`,
-            textureSlot: acc.slotName,
+            textureSlot: accSlot,
             polygon2D: [
               { x: lx, y: ly },
               { x: lx + w, y: ly },
@@ -254,7 +258,7 @@ export function loadPapercraftFromSchema(schema: PapercraftModelSchema): Papercr
           faces.push({
             id: `${acc.id}_north`,
             name: `${acc.name} 后侧`,
-            textureSlot: acc.slotName,
+            textureSlot: sideSlot,
             polygon2D: [
               { x: lx, y: ly - d },
               { x: lx + w, y: ly - d },
@@ -286,7 +290,7 @@ export function loadPapercraftFromSchema(schema: PapercraftModelSchema): Papercr
           faces.push({
             id: `${acc.id}_south`,
             name: `${acc.name} 前侧`,
-            textureSlot: acc.slotName,
+            textureSlot: sideSlot,
             polygon2D: [
               { x: lx, y: ly + h },
               { x: lx + w, y: ly + h },
@@ -318,7 +322,7 @@ export function loadPapercraftFromSchema(schema: PapercraftModelSchema): Papercr
           faces.push({
             id: `${acc.id}_west`,
             name: `${acc.name} 左侧`,
-            textureSlot: acc.slotName,
+            textureSlot: sideSlot,
             polygon2D: [
               { x: lx - d, y: ly },
               { x: lx, y: ly },
@@ -375,7 +379,7 @@ export function loadPapercraftFromSchema(schema: PapercraftModelSchema): Papercr
           faces.push({
             id: `${acc.id}_east`,
             name: `${acc.name} 右侧`,
-            textureSlot: acc.slotName,
+            textureSlot: sideSlot,
             polygon2D: [
               { x: lx + w, y: ly },
               { x: lx + w + d, y: ly },
@@ -427,6 +431,48 @@ export function loadPapercraftFromSchema(schema: PapercraftModelSchema): Papercr
               }
             ]
           })
+
+          // 2.C 若配件安装于车顶，自动在车身主体 roof 面注入虚线粘贴定位框
+          const isRoofMounted = isAcUnit || (acc.position3D && acc.position3D[1] > 35)
+          if (isRoofMounted) {
+            const bodyPart = unfoldedParts.find(p => !p.isAccessory)
+            const roofFace = bodyPart?.faces.find(f => f.id === 'roof')
+            if (roofFace) {
+              if (!roofFace.mountingGuides) {
+                roofFace.mountingGuides = []
+              }
+
+              let rMinX = Infinity, rMaxX = -Infinity, rMinY = Infinity
+              roofFace.polygon2D.forEach(p => {
+                if (p.x < rMinX) rMinX = p.x
+                if (p.x > rMaxX) rMaxX = p.x
+                if (p.y < rMinY) rMinY = p.y
+              })
+
+              const roofSchemaFace = schema.parts.flatMap(p => p.faces).find(f => f.id === 'roof')
+              let minZ = -80
+              if (roofSchemaFace && roofSchemaFace.vertices3D && roofSchemaFace.vertices3D.length > 0) {
+                minZ = Math.min(...roofSchemaFace.vertices3D.map(v => v[2]))
+              }
+
+              const accX = acc.position3D ? acc.position3D[0] : 0
+              const accZ = acc.position3D ? acc.position3D[2] : 0
+
+              const guideCenterX = (rMinX + rMaxX) / 2 + accX
+              const guideCenterY = rMinY + (accZ - minZ)
+              const gw = acc.layout2D?.width || 20
+              const gh = acc.layout2D?.height || 36
+
+              roofFace.mountingGuides.push({
+                id: `guide_${acc.id}`,
+                label: '空调粘贴区 T',
+                x: guideCenterX - gw / 2,
+                y: guideCenterY - gh / 2,
+                width: gw,
+                height: gh
+              })
+            }
+          }
 
           unfoldedParts.push({
             id: acc.id,

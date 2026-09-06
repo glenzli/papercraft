@@ -343,6 +343,9 @@ export const NetViewer2D: React.FC<NetViewer2DProps> = ({
                     const roleSuffix = car.carType === 'middle' ? `middle_${car.carIndex}` : car.carType
                     const slotUrl = baker.getSlotDataURL(`${face.textureSlot}_${roleSuffix}`) || baker.getSlotDataURL(`${face.textureSlot}_${car.carType}`) || baker.getSlotDataURL(face.textureSlot)
 
+                    const isFlippedV = face.id === 'back' || (face.textureSlot === 'back' && face.id.includes('back'))
+                    const transformStr = isFlippedV ? `translate(0, ${minY + maxY}) scale(1, -1)` : undefined
+
                     return (
                       <g key={face.id}>
                         {showTextures && face.textureSlot && slotUrl && (
@@ -352,15 +355,17 @@ export const NetViewer2D: React.FC<NetViewer2DProps> = ({
                                 <polygon points={ptsStr} />
                               </clipPath>
                             </defs>
-                            <image
-                              href={slotUrl}
-                              x={imgX}
-                              y={imgY}
-                              width={imgW}
-                              height={imgH}
-                              preserveAspectRatio="none"
-                              clipPath={`url(#clip-${face.id}-${pIdx})`}
-                            />
+                            <g clipPath={`url(#clip-${face.id}-${pIdx})`}>
+                              <image
+                                href={slotUrl}
+                                x={imgX}
+                                y={imgY}
+                                width={imgW}
+                                height={imgH}
+                                preserveAspectRatio="none"
+                                transform={transformStr}
+                              />
+                            </g>
                           </>
                         )}
 
@@ -419,6 +424,21 @@ export const NetViewer2D: React.FC<NetViewer2DProps> = ({
                               />
                             )
                           })}
+
+                        {/* 配件安装位指引：极简素雅细虚线框，不遮挡车顶贴图 */}
+                        {face.mountingGuides?.map((guide: any) => (
+                          <rect
+                            key={guide.id}
+                            x={guide.x}
+                            y={guide.y}
+                            width={guide.width}
+                            height={guide.height}
+                            fill="none"
+                            stroke="#94a3b8"
+                            strokeWidth="0.25"
+                            strokeDasharray="1.5, 1.2"
+                          />
+                        ))}
                       </g>
                     )
                   })}
