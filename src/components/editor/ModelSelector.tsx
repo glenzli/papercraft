@@ -53,6 +53,10 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
 
   // 计算整车/整列总长度 (mm)
   const totalLengthMm = cars.reduce((sum, car) => sum + car.modelData.dimensions.length + 8, 0) - 8
+  const pieces = cars.reduce((n, car) => n + car.modelData.partsCount, 0)
+  const strips = cars.reduce((n, car) => n + car.modelData.generateUnfoldedParts().filter(p => p.kind === 'join-strip').length, 0)
+  const warnings = cars.flatMap(car => (car.modelData.paperModel?.diagnostics || []).filter(d => d.severity === 'warning').map(d => `${car.carIndex + 1} · ${d.message}`))
+
 
   const getCategoryLabel = (category: string) => {
     switch (category) {
@@ -285,6 +289,11 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
             <span className="font-mono font-medium">{t('models.pagesUnit', { count: cars.length })}</span>
           </div>
         </div>
+      </div>
+
+      <div className="text-[10px] opacity-70 leading-relaxed">
+        {isZh ? `${pieces} 个裁剪部件${strips ? `，含 ${strips} 条接缝连接条` : ''}。同一车厢内按接缝编号配对。` : `${pieces} cut pieces${strips ? `, including ${strips} joining strips` : ''}. Match seam numbers within each car.`}
+        {warnings.length > 0 && <details className="mt-1 text-amber-600"><summary>{isZh ? `制作提示 (${warnings.length})` : `Assembly notes (${warnings.length})`}</summary>{warnings.map((warning,i)=><div key={i}>{warning}</div>)}</details>}
       </div>
 
       {/* 3. 导出当前模型按钮 */}

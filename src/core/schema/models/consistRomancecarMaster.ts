@@ -3,6 +3,10 @@
 import { TrainModelConsist } from '../consistSchema'
 import { PapercraftModelSchema } from '../papercraftSchema'
 
+// Both side canvases place the nose at u=0. Project onto the longitudinal/height
+// plane so a straight window edge remains straight across every mesh triangle.
+const sideUV = (z:number,y:number):[number,number] => [(84-z)/164,y/46]
+
 // 1. GSE 先头展望车 (双层阶梯断层全景展望车 · 大师高级版)
 export const romancecarHeadMasterSchema: PapercraftModelSchema = {
   version: "2.0",
@@ -255,15 +259,7 @@ export const romancecarHeadMasterSchema: PapercraftModelSchema = {
             [86 - 42, 56]
           ],
           uvCoords: [
-            [1.0, 1.0],
-            [0.50, 1.0],
-            [0.45, 1.0],
-            [0.28, 1.0],
-            [0.21, 0.85],
-            [0.15, 0.60],
-            [0.02, 0.32],
-            [0.0, 0.0],
-            [1.0, 0.0]
+            sideUV(-80,42), sideUV(10,42), sideUV(18,46), sideUV(50,46), sideUV(60,38), sideUV(60,26), sideUV(82,14), sideUV(84,0), sideUV(-80,0)
           ],
           indices: [
             0, 1, 8,
@@ -334,15 +330,7 @@ export const romancecarHeadMasterSchema: PapercraftModelSchema = {
             [124, 146]
           ],
           uvCoords: [
-            [0.0, 1.0],
-            [0.0, 0.0],
-            [1.0, 0.0],
-            [0.98, 0.32],
-            [0.85, 0.60],
-            [0.79, 0.85],
-            [0.72, 1.0],
-            [0.55, 1.0],
-            [0.50, 1.0]
+            sideUV(-80,42), sideUV(-80,0), sideUV(84,0), sideUV(82,14), sideUV(60,26), sideUV(60,38), sideUV(50,46), sideUV(18,46), sideUV(10,42)
           ],
           indices: [
             0, 1, 8,

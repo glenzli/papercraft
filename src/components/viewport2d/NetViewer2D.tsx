@@ -1,8 +1,10 @@
+import { getPrintMarks, lineStyle, shortPartTitle } from '../../core/paper/printMarks'
+import { AffineTextureProjector } from '../../core/unfolder/AffineTextureProjector'
 // 2D 展开图与工程排版预览器 (双语支持、无顶栏堆叠、右上方浮动微型工具胶囊、大幅放大与平移)
 import React, { useState, useRef, useEffect } from 'react'
 import { ConsistCarItem } from '../../core/models/consistManager'
 import { TextureBaker } from '../../texture/textureBaker'
-import { packConsistToA4Pages, A4_WIDTH_MM, A4_HEIGHT_MM, generateTabPoints, ConsistPageLayout, ConsistPartPlacement } from '../../core/unfoldEngine'
+import { packConsistToA4Pages, A4_WIDTH_MM, A4_HEIGHT_MM, getTabPolygon, ConsistPageLayout, ConsistPartPlacement } from '../../core/unfoldEngine'
 import { ZoomIn, ZoomOut, Maximize2, Scissors, Compass, Move } from 'lucide-react'
 import { useI18n } from '../../i18n'
 
@@ -283,16 +285,19 @@ export const NetViewer2D: React.FC<NetViewer2DProps> = ({
               const car = placement.car
               const offsetX = placement.x
               const offsetY = placement.y
-              const title = placement.displayName || part.name
+              const title = shortPartTitle(part,car.carIndex)
+              const marks = getPrintMarks(part,showCreases,showTabs)
 
               return (
                 <g key={`${part.id}_${pIdx}`} transform={`translate(${offsetX}, ${offsetY})`}>
-                  {activePage.isAccessoryPage && (
+                  {(
                     <text
                       x={(part.bounds.minX || 0) + part.bounds.width / 2}
-                      y={(part.bounds.minY || 0) - 4}
+                      y={(part.bounds.minY || 0) - 1.5}
                       textAnchor="middle"
-                      fontSize="2.6"
+                      fontSize="2"
+                      textLength={Math.max(12,Math.min(part.bounds.width,title.length*1.5))}
+                      lengthAdjust="spacingAndGlyphs"
                       fontWeight="bold"
                       fill="#475569"
                     >
@@ -303,65 +308,28 @@ export const NetViewer2D: React.FC<NetViewer2DProps> = ({
                   {part.faces.map((face: any) => {
                     const ptsStr = face.polygon2D.map((p: any) => `${p.x},${p.y}`).join(' ')
 
-                    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
-                    face.polygon2D.forEach((p: any) => {
-                      if (p.x < minX) minX = p.x
-                      if (p.y < minY) minY = p.y
-                      if (p.x > maxX) maxX = p.x
-                      if (p.y > maxY) maxY = p.y
-                    })
-                    const faceW = maxX - minX
-                    const faceH = maxY - minY
-                    let imgX = minX
-                    let imgY = minY
-                    let imgW = faceW
-                    let imgH = faceH
-
-                    if (face.uvCoords && face.uvCoords.length > 0) {
-                      let minU = Infinity, minV = Infinity, maxU = -Infinity, maxV = -Infinity
-                      face.uvCoords.forEach((uv: any) => {
-                        const u = uv.x !== undefined ? uv.x : uv[0]
-                        const v = uv.y !== undefined ? uv.y : uv[1]
-                        if (u < minU) minU = u
-                        if (v < minV) minV = v
-                        if (u > maxU) maxU = u
-                        if (v > maxV) maxV = v
-                      })
-
-                      const du = maxU - minU
-                      const dv = maxV - minV
-                      if (du > 0.02 && dv > 0.02) {
-                        const wScale = faceW / du
-                        const hScale = faceH / dv
-                        imgX = minX - minU * wScale
-                        imgY = minY - (1 - maxV) * hScale
-                        imgW = wScale
-                        imgH = hScale
-                      }
-                    }
-
-                    const roleSuffix = car.carType === 'middle' ? `middle_${car.carIndex}` : car.carType
-                    const slotUrl = baker.getSlotDataURL(`${face.textureSlot}_${roleSuffix}`) || baker.getSlotDataURL(`${face.textureSlot}_${car.carType}`) || baker.getSlotDataURL(face.textureSlot)
-
-                    const isFlippedV = face.id === 'back' || (face.textureSlot === 'back' && face.id.includes('back'))
-                    const transformStr = isFlippedV ? `translate(0, ${minY + maxY}) scale(1, -1)` : undefined
+                    const slotUrl = baker.getSurfaceDataURL(face.textureSlot, car.carType, car.carIndex)
+                    const affine = face.polygon2D.length === 3 && face.uvCoords.length === 3
+                      ? AffineTextureProjector.computeAffineMatrix(face.polygon2D[0], face.polygon2D[1], face.polygon2D[2], face.uvCoords[0], face.uvCoords[1], face.uvCoords[2], 1, 1)
+                      : null
+                    const transformStr = affine ? `matrix(${affine.a} ${affine.b} ${affine.c} ${affine.d} ${affine.e} ${affine.f})` : undefined
 
                     return (
                       <g key={face.id}>
-                        {showTextures && face.textureSlot && slotUrl && (
+                        {showTextures && face.textureSlot && slotUrl && affine && (
                           <>
                             <defs>
-                              <clipPath id={`clip-${face.id}-${pIdx}`}>
+                              <clipPath id={`clip-${currentPageIndex}-${pIdx}-${face.id.replace(/[^a-zA-Z0-9_-]/g, "_")}`}>
                                 <polygon points={ptsStr} />
                               </clipPath>
                             </defs>
-                            <g clipPath={`url(#clip-${face.id}-${pIdx})`}>
+                            <g clipPath={`url(#clip-${currentPageIndex}-${pIdx}-${face.id.replace(/[^a-zA-Z0-9_-]/g, "_")})`}>
                               <image
                                 href={slotUrl}
-                                x={imgX}
-                                y={imgY}
-                                width={imgW}
-                                height={imgH}
+                                x={0}
+                                y={0}
+                                width={1}
+                                height={1}
                                 preserveAspectRatio="none"
                                 transform={transformStr}
                               />
@@ -371,57 +339,21 @@ export const NetViewer2D: React.FC<NetViewer2DProps> = ({
 
                         <polygon
                           points={ptsStr}
-                          fill={showTextures ? 'transparent' : '#f8fafc'}
-                          stroke={showTextures ? 'none' : '#cbd5e1'}
+                          fill={showTextures ? 'none' : '#f8fafc'}
+                          stroke="none"
                           strokeWidth="0.1"
                         />
 
                         {showTabs &&
                           face.glueTabs.map((tab: any) => {
                             if (!tab || !tab.p1 || !tab.p2) return null
-                            const tabPts = generateTabPoints(tab.p1, tab.p2, tab.tabWidth, tab.angle, placement.part.faces)
+                            const tabPts = getTabPolygon(tab, placement.part.faces)
                             if (!tabPts || tabPts.length < 4) return null
                             const tabPtsStr = tabPts.map((p: any) => `${p.x},${p.y}`).join(' ')
-                            const cx = (tabPts[1].x + tabPts[2].x) / 2
-                            const cy = (tabPts[1].y + tabPts[2].y) / 2
-
                             return (
                               <g key={tab.id}>
-                                <polygon points={tabPtsStr} fill="url(#tab-stripe)" stroke="#94a3b8" strokeWidth="0.25" />
-                                <text x={cx} y={cy + 1} fontSize="2.4" fontWeight="bold" fill="#475569" textAnchor="middle">
-                                  {tab.label}
-                                </text>
+                                <polygon points={tabPtsStr} fill="url(#tab-stripe)" />
                               </g>
-                            )
-                          })}
-
-                        {showCreases &&
-                          face.creases.map((crease: any, cIdx: number) => {
-                            let strokeColor = '#0f172a'
-                            let strokeWidth = '0.35'
-                            let strokeDasharray = 'none'
-
-                            if (crease.type === 'mountain') {
-                              strokeColor = '#dc2626'
-                              strokeWidth = '0.25'
-                              strokeDasharray = '2, 1.5'
-                            } else if (crease.type === 'valley') {
-                              strokeColor = '#0284c7'
-                              strokeWidth = '0.25'
-                              strokeDasharray = '3, 1, 1, 1'
-                            }
-
-                            return (
-                              <line
-                                key={cIdx}
-                                x1={crease.p1.x}
-                                y1={crease.p1.y}
-                                x2={crease.p2.x}
-                                y2={crease.p2.y}
-                                stroke={strokeColor}
-                                strokeWidth={strokeWidth}
-                                strokeDasharray={strokeDasharray}
-                              />
                             )
                           })}
 
@@ -442,6 +374,11 @@ export const NetViewer2D: React.FC<NetViewer2DProps> = ({
                       </g>
                     )
                   })}
+                  {marks.lines.map((line,i)=>{
+                    const style=lineStyle(line.type)
+                    return <line key={`line-${i}`} x1={line.p1.x} y1={line.p1.y} x2={line.p2.x} y2={line.p2.y} stroke={style.color} strokeWidth={style.width} strokeDasharray={style.dash.join(' ')} />
+                  })}
+                  {marks.labels.map((label,i)=><text key={`label-${i}`} x={label.point.x} y={label.point.y} transform={`rotate(${label.angle} ${label.point.x} ${label.point.y})`} textAnchor="middle" dominantBaseline="central" fontSize={label.size} fill="#334155" paintOrder="stroke" stroke="white" strokeWidth="0.5">{label.text}</text>)}
                 </g>
               )
             })}
@@ -465,7 +402,7 @@ export const NetViewer2D: React.FC<NetViewer2DProps> = ({
             {t('viewer2D.statusNavHint')}
           </span>
         </div>
-        <div className="font-mono text-[10px] opacity-70">A4 (210×297mm) · Page {currentCarIndex + 1}/{cars.length}</div>
+        <div className="font-mono text-[10px] opacity-70">A4 (210×297mm) · Page {currentPageIndex + 1}/{consistPages.length}</div>
       </div>
     </div>
   )

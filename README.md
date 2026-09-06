@@ -19,14 +19,14 @@ Papercraft Studio 是一个用于列车与车辆纸模型设计、涂装定制�
 - **3D 预览与编组**：在 3D 视图中浏览和旋转车辆，支持增减中间车厢数量，并预览车钩与贯通道连挂效果。
 - **预设车型与涂装**：内置高铁（复兴号/和谐号/新干线）、干线货运（东风4B/EF510等）、双节巨龙公交、双层客车与经典有轨电车等车型及基础涂装。
 - **涂装与文字定制**：支持调整主色、副色、点缀色和车顶颜色，可按需添加车次与线路铭牌。
-- **2D 展开与排版**：自动将 3D 面片展开为带粘贴边、山折/谷折线的 2D 展开图，并将车身与配件排布在 A4 页面内。
-- **图纸导出**：支持导出用于手工裁剪制作的 A4 PDF 图纸（彩色或空白白模）。
+- **2D 展开与排版**：3D、展开和贴图共用同一份面片与 UV。复杂表面可拆成多个无重叠纸片，按编号粘合；所有纸片与粘合翼按实际毫米尺寸分页到 A4。
+- **图纸导出**：A4 PDF 使用位图贴图和矢量剪折线、接缝编号，附 50 mm 校准标尺。打印时选择“100% / 实际大小”。
 - **简易纸质连接件**：提供免额外五金配件的纸质插扣与折棚图纸，用于组装后车厢之间的活动连接。
 - **文件导入与导出**：支持以 `.papercraft`（ZIP 格式）导入导出包含模型定义与涂装的车辆包。
 
 ### 当前边界
 
-- 模型主要采用适合初学和亲子手工的箱形简化几何，未追求高精度的复杂曲面复原。
+- 模型由平面纸片组成，复杂车头保留折面近似。展开搜索不保证最少切口；纸厚、粘贴顺序和连接强度仍需打印试装。
 - 2D 排版目前针对标准 A4 纸张优化，暂未对其他纸张尺寸做自动分页适配。
 - 贴图基于 Canvas 2D 程序化绘制，暂不支持任意外部贴图的手动 UV 绘制与烘焙。
 
@@ -38,6 +38,9 @@ npm install
 
 # 启动本地开发服务
 npm run dev
+
+# 几何、接缝、UV 与分页回归检查
+npm test
 
 # 构建生产产物
 npm run build
@@ -67,14 +70,14 @@ It allows users to inspect 3D vehicle consists, adjust basic liveries, and gener
 - **3D Preview & Consist Assembly**: View and orbit vehicles in 3D, adjust middle car counts, and inspect inter-car couplers and gangways.
 - **Built-in Models & Liveries**: Includes high-speed trains, freight locomotives, articulated buses, double-decker coaches, and streetcars with preset liveries.
 - **Color & Text Customization**: Customize primary, secondary, accent, and roof colors, with optional custom route and train numbering.
-- **2D Net Layout & Packing**: Automatically flattens 3D faces into 2D cut patterns with mountain/valley crease lines, glue tabs, and accessory nesting on A4 sheets.
-- **PDF Export**: Export print-ready A4 PDF sheets (full color or blank coloring templates) for physical crafting.
+- **2D Net Layout & Packing**: 3D, nets and textures share the same triangles and corner UVs. Complex surfaces can split into non-overlapping pieces with numbered seams; every piece and tab is paginated at its actual millimetre scale.
+- **PDF Export**: A4 sheets combine raster artwork with vector construction lines and seam numbers. Print at 100% / Actual size and check the included 50 mm ruler.
 - **Paper Couplers**: Simple cut-out paper drawbars and folded bellows for joining assembled cars without extra hardware.
 - **File Import & Export**: Import and export `.papercraft` ZIP packages containing model geometries and theme definitions.
 
 ### Current Boundaries
 
-- Geometries are intentionally simplified into box-fold primitives suitable for easy assembly and family crafting, rather than fine-scale curved fidelity.
+- Surfaces use planar paper facets. The search does not guarantee the fewest cuts; paper thickness, assembly order and joint strength still need physical trials.
 - Net layout and pagination are currently optimized for standard A4 paper.
 - Textures are procedurally generated via 2D Canvas and do not currently support arbitrary external UV texture painting.
 
@@ -101,3 +104,5 @@ npm run build
 ### License
 
 MIT License.
+
+展开流程、资产约束与验证范围 / Geometry pipeline, asset contracts and validation: [geometry-pipeline.md](docs/geometry-pipeline.md).

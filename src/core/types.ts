@@ -23,6 +23,9 @@ export interface GlueTab {
   angle: number // 倒角角度 (一般 45 度)
   targetPartId: string // 粘贴的目标零件 ID
   targetEdgeIndex: number // 目标零件的对应边
+  targetFaceId?: string
+  seamId?: string
+  polygon2D?: Point2D[] // 已验证的舌片轮廓，显示与排版不得再次推测方向
 }
 
 export interface CreaseLine {
@@ -30,6 +33,8 @@ export interface CreaseLine {
   p1: Point2D
   p2: Point2D
   label?: string
+  seamId?: string
+  edgeId?: string
 }
 
 export interface MountingGuide {
@@ -50,12 +55,18 @@ export interface UnfoldedFace {
   glueTabs: GlueTab[]
   textureSlot: string // 对应的纹理面名称
   mountingGuides?: MountingGuide[] // 配件安装/粘合位参考提示框
+  vertices3D?: Point3D[] // 与 polygon2D、uvCoords 逐点对应的物理面 (mm)
+  sourceFaceId?: string
+  textureSpace?: 'surface' | 'legacy-net'
+  parentFaceId?: string
 }
 
 export interface UnfoldedPart {
   id: string
   name: string // 如 "车身主体", "车头立体组件", "车顶空调机"
   isAccessory?: boolean // 是否为外加立体配件 (true 则进入配件专页，false 为独立车身主体展开)
+  sourcePartId?: string
+  kind?: 'surface' | 'join-strip'
   faces: UnfoldedFace[]
   bounds: {
     minX: number
@@ -88,6 +99,7 @@ export interface PapercraftModelData {
     width: number // mm
     height: number // mm
   }
+  paperModel?: import('./paper/types').PaperModel
   // 3D 构造函数或数据生成器
   create3DParts: () => {
     id: string

@@ -20,6 +20,7 @@ export interface BakeOptions {
 export class TextureBaker {
   private texture: THREE.CanvasTexture | null = null
   private slotCanvases: Map<string, HTMLCanvasElement> = new Map()
+  private dataUrls = new WeakMap<HTMLCanvasElement, string>()
   private static kittyImage: HTMLImageElement | null = null
   private static kittyImageLoading: boolean = false
 
@@ -75,15 +76,37 @@ export class TextureBaker {
   public getSlotDataURL(slotName: string): string {
     const canvas = this.slotCanvases.get(slotName)
     if (canvas) {
-      return canvas.toDataURL('image/png')
+      return this.canvasDataURL(canvas)
     }
     return ''
+  }
+
+  private canvasDataURL(canvas: HTMLCanvasElement): string {
+    let url = this.dataUrls.get(canvas)
+    if (!url) { url = canvas.toDataURL('image/png'); this.dataUrls.set(canvas, url) }
+    return url
+  }
+
+  /** Shared material lookup for 3D, net preview and export. */
+  public getSurfaceCanvas(slot: string, carType: string, carIndex: number): HTMLCanvasElement | null {
+    const role = carType === 'middle' ? `middle_${carIndex}` : carType
+    return this.getSlotCanvas(`${slot}_${role}_3d`) || this.getSlotCanvas(`${slot}_${carType}_3d`) ||
+      this.getSlotCanvas(`${slot}_3d`) || this.getSlotCanvas(slot)
+  }
+
+  public getSurfaceDataURL(slot: string, carType: string, carIndex: number): string {
+    const canvas = this.getSurfaceCanvas(slot, carType, carIndex)
+    return canvas ? this.canvasDataURL(canvas) : ''
   }
 
   /**
    * 烘焙所有分面的独立高分辨率贴图 (自适应车型、车头、车厢、煤水车)
    */
   public bake(options: BakeOptions): void {
+    this.slotCanvases.clear()
+    this.dataUrls = new WeakMap()
+    this.texture?.dispose()
+    this.texture = null
     const { theme, category = 'commuter', consistId, carType = 'head', customColors, customText, useCustomColors } = options
 
     const primaryColor = useCustomColors && customColors ? customColors.primary : theme.colors.primary
@@ -183,11 +206,13 @@ export class TextureBaker {
     front?: HTMLCanvasElement
     back?: HTMLCanvasElement
   }) {
+    this.dataUrls = new WeakMap()
+    this.texture?.dispose()
     this.texture = null
 
     if (canvases.side_left) {
       this.slotCanvases.set('side_left_3d', canvases.side_left)
-      for (const r of ['head', 'middle', 'tail']) {
+      for (const r of ['head', 'middle', 'middle_1', 'middle_2', 'tail', 'tender']) {
         this.slotCanvases.set(`side_left_${r}_3d`, canvases.side_left)
         this.slotCanvases.set(`side_left_${r}`, this.rotateAndMapSide(canvases.side_left, 'left'))
       }
@@ -196,7 +221,7 @@ export class TextureBaker {
 
     if (canvases.side_right) {
       this.slotCanvases.set('side_right_3d', canvases.side_right)
-      for (const r of ['head', 'middle', 'tail']) {
+      for (const r of ['head', 'middle', 'middle_1', 'middle_2', 'tail', 'tender']) {
         this.slotCanvases.set(`side_right_${r}_3d`, canvases.side_right)
         this.slotCanvases.set(`side_right_${r}`, this.rotateAndMapSide(canvases.side_right, 'right'))
       }
@@ -205,7 +230,7 @@ export class TextureBaker {
 
     if (canvases.roof) {
       this.slotCanvases.set('roof_3d', canvases.roof)
-      for (const r of ['head', 'middle', 'tail']) {
+      for (const r of ['head', 'middle', 'middle_1', 'middle_2', 'tail', 'tender']) {
         this.slotCanvases.set(`roof_${r}_3d`, canvases.roof)
         this.slotCanvases.set(`roof_${r}`, canvases.roof)
       }
@@ -214,7 +239,7 @@ export class TextureBaker {
 
     if (canvases.front) {
       this.slotCanvases.set('front_3d', canvases.front)
-      for (const r of ['head', 'middle', 'tail']) {
+      for (const r of ['head', 'middle', 'middle_1', 'middle_2', 'tail', 'tender']) {
         this.slotCanvases.set(`front_${r}_3d`, canvases.front)
       }
       this.slotCanvases.set('front', canvases.front)
@@ -222,7 +247,7 @@ export class TextureBaker {
 
     if (canvases.back) {
       this.slotCanvases.set('back_3d', canvases.back)
-      for (const r of ['head', 'middle', 'tail']) {
+      for (const r of ['head', 'middle', 'middle_1', 'middle_2', 'tail', 'tender']) {
         this.slotCanvases.set(`back_${r}_3d`, canvases.back)
       }
       this.slotCanvases.set('back', canvases.back)

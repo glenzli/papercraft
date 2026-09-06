@@ -1,373 +1,123 @@
-// 300 DPI 印刷级高保真 A4 多页 PDF 导出器 (原生 Canvas 渲染，中英双语支持，100% 杜绝中文乱码，支持整列编组与配件专页一键导出)
 import { jsPDF } from 'jspdf'
-import { ConsistCarItem } from '../core/models/consistManager'
-import { packConsistToA4Pages, A4_WIDTH_MM, A4_HEIGHT_MM, generateTabPoints, ConsistPageLayout } from '../core/unfoldEngine'
-import { TextureBaker } from '../texture/textureBaker'
+import type { ConsistCarItem } from '../core/models/consistManager'
+import { packConsistToA4Pages, A4_WIDTH_MM, A4_HEIGHT_MM, type ConsistPageLayout } from '../core/unfoldEngine'
+import { AffineTextureProjector } from '../core/unfolder/AffineTextureProjector'
+import { getPrintMarks, lineStyle, shortPartTitle } from '../core/paper/printMarks'
+import type { TextureBaker } from '../texture/textureBaker'
 
 export interface ExportConsistPdfOptions {
-  consistName: string
-  cars: ConsistCarItem[]
-  baker: TextureBaker
-  isBlankTemplate?: boolean
-  locale?: 'zh-CN' | 'en-US'
+  consistName:string
+  cars:ConsistCarItem[]
+  baker:TextureBaker
+  isBlankTemplate?:boolean
+  locale?:'zh-CN'|'en-US'
 }
 
-/**
- * 将单个 A4 展开图纸页面高保真光栅化为 300 DPI 超清 Canvas (宽 2480px, 高 3508px)
- */
-export function renderConsistPageToCanvas(
-  page: ConsistPageLayout,
-  consistName: string,
-  totalPages: number,
-  baker: TextureBaker,
-  isBlankTemplate: boolean = false,
-  locale: 'zh-CN' | 'en-US' = 'zh-CN'
-): HTMLCanvasElement {
-  // 300 DPI 下的标准 A4 像素尺寸 (210mm x 297mm)
-  const canvasW = 2480
-  const canvasH = 3508
-  const mmToPx = canvasW / A4_WIDTH_MM // 约 11.8095 px/mm
+const font = '-apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif'
 
-  const isEn = locale === 'en-US'
-  const textCut = isEn ? 'Cut' : '剪切'
-  const textMountain = isEn ? 'Mountain' : '山折'
-  const textValley = isEn ? 'Valley' : '谷折'
-
-  const canvas = document.createElement('canvas')
-  canvas.width = canvasW
-  canvas.height = canvasH
-  const ctx = canvas.getContext('2d')!
-
-  // 1. 纯白印刷底色
-  ctx.fillStyle = '#ffffff'
-  ctx.fillRect(0, 0, canvasW, canvasH)
-
-  // 2. 单行紧凑页眉：车厢标题 + 页码 + 剪折图例 (极度节约纵向空间)
-  const titleX = 10 * mmToPx
-  const headerY = 10 * mmToPx
-
-  const displayTitle = `${consistName} · ${page.pageTitle}`
-  const displaySubTitle = `(P. ${page.pageIndex + 1} / ${totalPages})`
-
-  ctx.fillStyle = '#0f172a'
-  ctx.font = 'bold 32px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif'
-  ctx.fillText(displayTitle, titleX, headerY)
-
-  const titleWidth = ctx.measureText(displayTitle).width
-  ctx.fillStyle = '#64748b'
-  ctx.font = 'normal 22px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif'
-  ctx.fillText(displaySubTitle, titleX + titleWidth + 14, headerY)
-
-  // 3. 右侧对齐剪折图例说明
-  const legendX = canvasW - (isEn ? 95 : 82) * mmToPx
-  const legendY = headerY - 6
-  ctx.font = '500 20px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif'
-
-  // 实线 (剪切)
-  ctx.strokeStyle = '#0f172a'
-  ctx.lineWidth = 3
+/** Raster art/captions at 300 DPI. PDF adds the same construction marks as vectors. */
+export function renderConsistPageToCanvas(page:ConsistPageLayout,consistName:string,totalPages:number,baker:TextureBaker,isBlankTemplate=false,locale:'zh-CN'|'en-US'='zh-CN',includeMarks=true):HTMLCanvasElement {
+  const canvas=document.createElement('canvas')
+  canvas.width=2480;canvas.height=3508
+  const ctx=canvas.getContext('2d')!,scale=canvas.width/A4_WIDTH_MM,isEn=locale==='en-US'
+  ctx.fillStyle='white';ctx.fillRect(0,0,canvas.width,canvas.height)
+  ctx.scale(scale,canvas.height/A4_HEIGHT_MM)
+  ctx.fillStyle='#0f172a';ctx.font=`bold 2.5px ${font}`
+  ctx.fillText(`${consistName} · ${page.car?.carNumberText || page.pageTitle}`,10,8,167)
+  ctx.textAlign='right';ctx.fillText(`${page.pageIndex+1} / ${totalPages}`,200,8);ctx.textAlign='left'
+  const legend=[['cut',isEn?'Cut':'剪切'],['mountain',isEn?'Mountain':'山折'],['valley',isEn?'Valley':'谷折']] as const
+  legend.forEach(([type,label],i)=>{
+    const x=10+i*30,style=lineStyle(type)
+    ctx.strokeStyle=style.color;ctx.lineWidth=style.width;ctx.setLineDash(style.dash)
+    ctx.beginPath();ctx.moveTo(x,12);ctx.lineTo(x+7,12);ctx.stroke()
+    ctx.fillStyle=style.color;ctx.font=`2px ${font}`;ctx.fillText(label,x+9,12.7)
+  })
   ctx.setLineDash([])
-  ctx.beginPath()
-  ctx.moveTo(legendX, legendY)
-  ctx.lineTo(legendX + 16 * mmToPx, legendY)
-  ctx.stroke()
-  ctx.fillStyle = '#334155'
-  ctx.fillText(textCut, legendX + 18 * mmToPx, legendY + 6)
-
-  // 红色虚线 (山折)
-  const mountainX = legendX + (isEn ? 38 : 34) * mmToPx
-  ctx.strokeStyle = '#dc2626'
-  ctx.lineWidth = 2.5
-  ctx.setLineDash([12, 8])
-  ctx.beginPath()
-  ctx.moveTo(mountainX, legendY)
-  ctx.lineTo(mountainX + 16 * mmToPx, legendY)
-  ctx.stroke()
-  ctx.fillStyle = '#dc2626'
-  ctx.fillText(textMountain, mountainX + 18 * mmToPx, legendY + 6)
-
-  // 蓝色点划线 (谷折)
-  const valleyX = mountainX + (isEn ? 44 : 38) * mmToPx
-  ctx.strokeStyle = '#0284c7'
-  ctx.lineWidth = 2.5
-  ctx.setLineDash([18, 8, 6, 8])
-  ctx.beginPath()
-  ctx.moveTo(valleyX, legendY)
-  ctx.lineTo(valleyX + 16 * mmToPx, legendY)
-  ctx.stroke()
-  ctx.fillStyle = '#0284c7'
-  ctx.fillText(textValley, valleyX + 18 * mmToPx, legendY + 6)
-
-  ctx.setLineDash([]) // 重置虚线
-
-  // 4. 绘制当前页包含的所有零件
-  for (const placement of page.placements) {
-    const part = placement.part
-    const car = placement.car
-    const offsetX = placement.x * mmToPx
-    const offsetY = placement.y * mmToPx
-    const title = placement.displayName || part.name
-
-    // 仅在纯配件专页上方绘制零件标示，车身主页内嵌配件保持纯净无文字重叠
-    if (page.isAccessoryPage) {
-      const partCenterX = offsetX + ((part.bounds.minX || 0) + part.bounds.width / 2) * mmToPx
-      const partLabelY = offsetY + ((part.bounds.minY || 0) - 4) * mmToPx
-      ctx.fillStyle = '#475569'
-      ctx.font = 'bold 24px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif'
-      ctx.textAlign = 'center'
-      ctx.fillText(title, partCenterX, partLabelY)
-    }
-
-    for (const face of part.faces) {
-      const poly = face.polygon2D.map(p => ({
-        x: p.x * mmToPx + offsetX,
-        y: p.y * mmToPx + offsetY
-      }))
-
-      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
-      for (const p of poly) {
-        if (p.x < minX) minX = p.x
-        if (p.y < minY) minY = p.y
-        if (p.x > maxX) maxX = p.x
-        if (p.y > maxY) maxY = p.y
+  for(const placement of page.placements) {
+    const {part,car}=placement
+    ctx.save();ctx.translate(placement.x,placement.y)
+    ctx.fillStyle='#475569';ctx.font=`2px ${font}`;ctx.textAlign='center'
+    ctx.fillText(shortPartTitle(part,car.carIndex),part.bounds.minX+part.bounds.width/2,part.bounds.minY-1.5,Math.max(12,part.bounds.width))
+    for(const face of part.faces) {
+      const p=face.polygon2D,source=baker.getSurfaceCanvas(face.textureSlot,car.carType,car.carIndex)
+      if(!isBlankTemplate&&source&&p.length===3&&face.uvCoords.length===3) {
+        AffineTextureProjector.renderTriangleToCanvas(ctx,source,p[0],p[1],p[2],face.uvCoords[0],face.uvCoords[1],face.uvCoords[2])
       }
-
-      // 5.1 贴图光栅化填充 或 填色白模线框底色
-      const slot = face.textureSlot
-      const roleSuffix = car.carType === 'middle' ? `middle_${car.carIndex}` : car.carType
-      const slotCanvas = slot ? (baker.getSlotCanvas(`${slot}_${roleSuffix}`) || baker.getSlotCanvas(`${slot}_${car.carType}`) || baker.getSlotCanvas(slot)) : null
-      if (!isBlankTemplate && slotCanvas && slot) {
-        ctx.save()
-        ctx.beginPath()
-        ctx.moveTo(poly[0].x, poly[0].y)
-        for (let i = 1; i < poly.length; i++) {
-          ctx.lineTo(poly[i].x, poly[i].y)
-        }
-        ctx.closePath()
-        ctx.clip()
-
-        const faceW = maxX - minX
-        const faceH = maxY - minY
-        let sx = 0, sy = 0, sw = slotCanvas.width, sh = slotCanvas.height
-
-        if (face.uvCoords && face.uvCoords.length > 0) {
-          let minU = Infinity, minV = Infinity, maxU = -Infinity, maxV = -Infinity
-          face.uvCoords.forEach((uv: any) => {
-            const u = uv.x !== undefined ? uv.x : uv[0]
-            const v = uv.y !== undefined ? uv.y : uv[1]
-            if (u < minU) minU = u
-            if (v < minV) minV = v
-            if (u > maxU) maxU = u
-            if (v > maxV) maxV = v
-          })
-
-          const du = maxU - minU
-          const dv = maxV - minV
-          if (du > 0.02 && dv > 0.02) {
-            sx = minU * slotCanvas.width
-            sy = (1 - maxV) * slotCanvas.height
-            sw = du * slotCanvas.width
-            sh = dv * slotCanvas.height
-          }
-        }
-
-        const isFlippedV = face.id === 'back' || (face.textureSlot === 'back' && face.id.includes('back'))
-        if (isFlippedV) {
-          ctx.translate(0, minY + maxY)
-          ctx.scale(1, -1)
-        }
-
-        ctx.drawImage(slotCanvas, sx, sy, sw, sh, minX, minY, faceW, faceH)
-        ctx.restore()
-      } else {
-        // 填色模版 / 纯白面：纯白底色 + 精致灰度轮廓
-        ctx.fillStyle = '#ffffff'
-        ctx.beginPath()
-        ctx.moveTo(poly[0].x, poly[0].y)
-        for (let i = 1; i < poly.length; i++) {
-          ctx.lineTo(poly[i].x, poly[i].y)
-        }
-        ctx.closePath()
-        ctx.fill()
-
-        if (isBlankTemplate) {
-          ctx.strokeStyle = '#94a3b8'
-          ctx.lineWidth = 1.5
-          ctx.stroke()
-        }
-      }
-
-      // 5.2 粘合翼 (Tabs)
-      for (const tab of face.glueTabs) {
-        if (!tab || !tab.p1 || !tab.p2) continue
-
-        const tabPts = generateTabPoints(tab.p1, tab.p2, tab.tabWidth, tab.angle, placement.part.faces)
-        if (!tabPts || tabPts.length < 4) continue
-
-        const pts = tabPts.map(p => ({ x: p.x * mmToPx + offsetX, y: p.y * mmToPx + offsetY }))
-
-        ctx.save()
-        ctx.beginPath()
-        ctx.moveTo(pts[0].x, pts[0].y)
-        for (let i = 1; i < pts.length; i++) {
-          ctx.lineTo(pts[i].x, pts[i].y)
-        }
-        ctx.closePath()
-
-        ctx.fillStyle = '#f1f5f9'
-        ctx.fill()
-        ctx.strokeStyle = '#94a3b8'
-        ctx.lineWidth = 2.5
-        ctx.stroke()
-
-        // 绘制斜条纹
-        ctx.clip()
-        ctx.strokeStyle = '#cbd5e1'
-        ctx.lineWidth = 2
-        for (let sx = -canvasW; sx < canvasW * 2; sx += 14) {
-          ctx.beginPath()
-          ctx.moveTo(sx, 0)
-          ctx.lineTo(sx + canvasH, canvasH)
-          ctx.stroke()
-        }
-        ctx.restore()
-
-        // 绘制标号 A1, B1 等
-        if (tab.label) {
-          const cx = (pts[1].x + pts[2].x) / 2
-          const cy = (pts[1].y + pts[2].y) / 2
-
-          ctx.fillStyle = '#475569'
-          ctx.font = 'bold 20px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
-          ctx.textAlign = 'center'
-          ctx.textBaseline = 'middle'
-          ctx.fillText(tab.label, cx, cy)
-        }
-      }
-
-      // 5.3 绘制折线与剪切线
-      for (const crease of face.creases) {
-        if (!crease || !crease.p1 || !crease.p2) continue
-
-        const p1x = crease.p1.x * mmToPx + offsetX
-        const p1y = crease.p1.y * mmToPx + offsetY
-        const p2x = crease.p2.x * mmToPx + offsetX
-        const p2y = crease.p2.y * mmToPx + offsetY
-
-        ctx.beginPath()
-        ctx.moveTo(p1x, p1y)
-        ctx.lineTo(p2x, p2y)
-
-        if (crease.type === 'mountain') {
-          // 山折线：红色虚线
-          ctx.strokeStyle = '#ef4444'
-          ctx.lineWidth = 2.5
-          ctx.setLineDash([8, 8])
-          ctx.stroke()
-        } else if (crease.type === 'valley') {
-          // 谷折线：蓝色虚线
-          ctx.strokeStyle = '#3b82f6'
-          ctx.lineWidth = 2.5
-          ctx.setLineDash([4, 4])
-          ctx.stroke()
-        } else {
-          // 剪切线：深黑实线
-          ctx.strokeStyle = '#0f172a'
-          ctx.lineWidth = 3
-          ctx.setLineDash([])
-          ctx.stroke()
-        }
-      }
-
-      // 5.4 绘制配件安装位参考提示框：极简素雅细虚线框，不遮挡车顶贴图
-      if (face.mountingGuides) {
-        for (const guide of face.mountingGuides) {
-          const gx = guide.x * mmToPx + offsetX
-          const gy = guide.y * mmToPx + offsetY
-          const gw = guide.width * mmToPx
-          const gh = guide.height * mmToPx
-
-          ctx.save()
-          ctx.strokeStyle = '#94a3b8'
-          ctx.lineWidth = 1.2
-          ctx.setLineDash([5, 4])
-          ctx.strokeRect(gx, gy, gw, gh)
-          ctx.restore()
-        }
+      for(const tab of face.glueTabs) {
+        const poly=tab.polygon2D!
+        ctx.beginPath();ctx.moveTo(poly[0].x,poly[0].y);poly.slice(1).forEach(p=>ctx.lineTo(p.x,p.y));ctx.closePath()
+        ctx.fillStyle='#f1f5f9';ctx.fill()
       }
     }
+    if(includeMarks) {
+      const marks=getPrintMarks(part)
+      for(const line of marks.lines) {
+        const style=lineStyle(line.type)
+        ctx.strokeStyle=style.color;ctx.lineWidth=style.width;ctx.setLineDash(style.dash)
+        ctx.beginPath();ctx.moveTo(line.p1.x,line.p1.y);ctx.lineTo(line.p2.x,line.p2.y);ctx.stroke()
+      }
+      ctx.setLineDash([])
+      for(const label of marks.labels) {
+        ctx.save();ctx.translate(label.point.x,label.point.y);ctx.rotate(label.angle*Math.PI/180)
+        ctx.font=`bold ${label.size}px ${font}`;ctx.textAlign='center';ctx.textBaseline='middle'
+        ctx.strokeStyle='white';ctx.lineWidth=.5;ctx.strokeText(label.text,0,0)
+        ctx.fillStyle='#334155';ctx.fillText(label.text,0,0);ctx.restore()
+      }
+    }
+    ctx.restore()
   }
-
-  // 6. 页脚页码
-  ctx.setLineDash([])
-  ctx.fillStyle = '#94a3b8'
-  ctx.font = '500 22px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif'
-  ctx.textAlign = 'left'
-  ctx.fillText(`Papercraft Studio · P. ${page.pageIndex + 1} / ${totalPages}`, titleX, canvasH - 16 * mmToPx)
-
+  ctx.setLineDash([]);ctx.fillStyle='#64748b';ctx.font=`1.9px ${font}`;ctx.textAlign='left'
+  ctx.fillText(isEn?'Match seam numbers within the same car; strips join from inside.':'同一车厢内按编号配对；连接条从内侧粘贴。',10,286)
+  ctx.fillText(isEn?'Print at 100% / Actual size. Check the 50 mm ruler.':'打印选择 100% / 实际大小，并核对 50 mm 标尺。',10,290)
+  ctx.strokeStyle='#0f172a';ctx.lineWidth=.2
+  ctx.beginPath();ctx.moveTo(145,287);ctx.lineTo(195,287);ctx.moveTo(145,285);ctx.lineTo(145,289);ctx.moveTo(195,285);ctx.lineTo(195,289);ctx.stroke()
+  ctx.textAlign='center';ctx.fillText('50 mm',170,291)
   return canvas
 }
 
-/**
- * 导出整列火车的完整多页 A4 PDF (支持组装图纸与填色模版)
- */
-export async function exportConsistToPdf(options: ExportConsistPdfOptions): Promise<void> {
-  const { consistName, cars, baker, isBlankTemplate = false, locale = 'zh-CN' } = options
-
-  const consistPages = packConsistToA4Pages(cars)
-
-  const doc = new jsPDF({
-    orientation: 'portrait',
-    unit: 'mm',
-    format: 'a4'
-  })
-
-  for (let pIdx = 0; pIdx < consistPages.length; pIdx++) {
-    if (pIdx > 0) {
-      doc.addPage('a4', 'portrait')
+/** Explicit millimetre vector lines, folds and pair numbers, with no tab-base cut line. */
+export function drawPageVectors(doc:jsPDF,page:ConsistPageLayout) {
+  for(const {part,x,y} of page.placements) {
+    const marks=getPrintMarks(part)
+    for(const line of marks.lines) {
+      const style=lineStyle(line.type)
+      doc.setDrawColor(style.color);doc.setLineWidth(style.width);doc.setLineDashPattern(style.dash,0)
+      doc.line(x+line.p1.x,y+line.p1.y,x+line.p2.x,y+line.p2.y)
     }
-
-    const page = consistPages[pIdx]
-    const canvas = renderConsistPageToCanvas(
-      page,
-      consistName,
-      consistPages.length,
-      baker,
-      isBlankTemplate,
-      locale
-    )
-
-    const imgDataUrl = canvas.toDataURL('image/jpeg', 0.95)
-    doc.addImage(imgDataUrl, 'JPEG', 0, 0, A4_WIDTH_MM, A4_HEIGHT_MM, undefined, 'FAST')
+    doc.setLineDashPattern([],0);doc.setFont('helvetica','bold');doc.setTextColor('#334155')
+    for(const label of marks.labels) {
+      doc.setFontSize(label.size*72/25.4)
+      const options={align:'center' as const,baseline:'middle' as const,angle:-label.angle}
+      doc.setDrawColor('#ffffff');doc.setLineWidth(.5)
+      doc.text(label.text,x+label.point.x,y+label.point.y,{...options,renderingMode:'stroke'})
+      doc.text(label.text,x+label.point.x,y+label.point.y,options)
+    }
   }
-
-  const isEn = locale === 'en-US'
-  const suffix = isBlankTemplate
-    ? (isEn ? 'Coloring-Template' : '填色模版')
-    : (isEn ? 'Assembly-Sheets' : '全套组装图纸')
-  doc.save(`${consistName}-${suffix}.pdf`)
+  doc.setLineDashPattern([],0)
 }
 
-/**
- * 导出单页 300 DPI 超清 PNG 图像 (可直接用于 AI 垫图或打印)
- */
-export function exportConsistPageToPng(options: {
-  page: ConsistPageLayout
-  consistName: string
-  totalPages: number
-  baker: TextureBaker
-  isBlankTemplate?: boolean
-  locale?: 'zh-CN' | 'en-US'
-}): void {
-  const { page, consistName, totalPages, baker, isBlankTemplate = false, locale = 'zh-CN' } = options
-  const canvas = renderConsistPageToCanvas(page, consistName, totalPages, baker, isBlankTemplate, locale)
-  const imgUrl = canvas.toDataURL('image/png')
-  const link = document.createElement('a')
-  const isEn = locale === 'en-US'
-  const suffix = isBlankTemplate
-    ? (isEn ? 'Coloring-Template' : '填色模版')
-    : (isEn ? 'Sheet' : '图纸')
-  link.download = `${consistName}-${page.pageTitle}-${suffix}.png`
-  link.href = imgUrl
-  link.click()
+export async function createConsistPdf(options:ExportConsistPdfOptions):Promise<jsPDF> {
+  const {consistName,cars,baker,isBlankTemplate=false,locale='zh-CN'}=options
+  const pages=packConsistToA4Pages(cars),doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'})
+  for(const [i,page] of pages.entries()) {
+    if(i)doc.addPage('a4','portrait')
+    const canvas=renderConsistPageToCanvas(page,consistName,pages.length,baker,isBlankTemplate,locale,false)
+    doc.addImage(canvas,'PNG',0,0,A4_WIDTH_MM,A4_HEIGHT_MM,undefined,'FAST')
+    drawPageVectors(doc,page)
+    canvas.width=canvas.height=1
+  }
+  return doc
+}
+
+export async function exportConsistToPdf(options:ExportConsistPdfOptions):Promise<void> {
+  const doc=await createConsistPdf(options),isEn=options.locale==='en-US'
+  const suffix=options.isBlankTemplate?(isEn?'Coloring-Template':'填色模版'):(isEn?'Assembly-Sheets':'全套组装图纸')
+  doc.save(`${options.consistName}-${suffix}.pdf`)
+}
+
+export function exportConsistPageToPng(options:{page:ConsistPageLayout;consistName:string;totalPages:number;baker:TextureBaker;isBlankTemplate?:boolean;locale?:'zh-CN'|'en-US'}):void {
+  const {page,consistName,totalPages,baker,isBlankTemplate=false,locale='zh-CN'}=options
+  const canvas=renderConsistPageToCanvas(page,consistName,totalPages,baker,isBlankTemplate,locale),link=document.createElement('a')
+  link.download=`${consistName}-P${page.pageIndex+1}-${isBlankTemplate?'Coloring':'Assembly'}.png`
+  link.href=canvas.toDataURL('image/png');link.click()
 }

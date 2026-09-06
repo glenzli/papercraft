@@ -199,6 +199,12 @@ export const d51SteamSchema: PapercraftModelSchema = {
             }
           ]
         },
+        // Connect the boiler top to the raised cab roof with an actual printable wall.
+        {
+          id: 'cab_front_step', name: '驾驶舱前壁', slotName: 'back',
+          vertices3D: [[-19,40,-25],[19,40,-25],[19,48,-25],[-19,48,-25]],
+          vertices2D: [], uvCoords: [[0,0],[1,0],[1,1],[0,1]], indices: [0,1,2,0,2,3]
+        },
         // 5. 乘务驾驶舱顶盖 (Cab Roof: 连在右侧身后段驾驶室外沿, 宽38, 长55)
         {
           id: 'cab_roof',

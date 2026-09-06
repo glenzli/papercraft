@@ -1,3 +1,4 @@
+import { packConsistToA4Pages } from '../unfoldEngine'
 // 动态模型资产仓库与加载器 (Model Repository & Dynamic ZIP/JSON Loader)
 import { TrainModelConsist } from '../schema/consistSchema'
 import {
@@ -8,7 +9,7 @@ import {
   parsePapercraftZipPackage,
   PAPERCRAFT_SPEC_VERSION
 } from '../schema/papercraftFormat'
-import { CONSIST_REGISTRY } from './consistManager'
+import { CONSIST_REGISTRY, buildTrainConsistCars } from './consistManager'
 import { PRESET_THEMES } from '../../texture/presetThemes'
 import { TextureTheme } from '../../texture/types'
 
@@ -132,6 +133,7 @@ export class ModelRepository {
       const zipRes = await parsePapercraftZipPackage(buffer)
       if (zipRes.success && zipRes.consist) {
         const consist = zipRes.consist
+        packConsistToA4Pages(buildTrainConsistCars(consist, 1))
         this.loadedConsists.set(consist.id, consist)
 
         if (zipRes.bundledThemes && zipRes.bundledThemes.length > 0) {
@@ -156,6 +158,7 @@ export class ModelRepository {
       }
 
       const consist = packageToTrainConsist(pkg)
+      packConsistToA4Pages(buildTrainConsistCars(consist, 1))
       this.loadedConsists.set(consist.id, consist)
       this.customPackages.set(consist.id, pkg)
 
@@ -186,7 +189,8 @@ export class ModelRepository {
       const zipRes = await parsePapercraftZipPackage(buffer)
       if (zipRes.success && zipRes.consist) {
         const consist = zipRes.consist
-        this.loadedConsists.set(consist.id, consist)
+        packConsistToA4Pages(buildTrainConsistCars(consist, 1))
+      this.loadedConsists.set(consist.id, consist)
         if (zipRes.bundledThemes) {
           this.registerDynamicLiveries(consist.id, zipRes.bundledThemes)
         }
@@ -203,6 +207,7 @@ export class ModelRepository {
       }
 
       const consist = packageToTrainConsist(pkg)
+      packConsistToA4Pages(buildTrainConsistCars(consist, 1))
       this.loadedConsists.set(consist.id, consist)
       return { success: true, consist }
     } catch (e: any) {

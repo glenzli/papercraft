@@ -279,7 +279,7 @@ export const shinkansen300HeadSchema: PapercraftModelSchema = {
           id: "bottom",
           name: "底盘",
           slotName: "bottom",
-          vertices3D: [[-19, 0, -75], [-19, 0, 78], [19, 0, 78], [19, 0, -75]],
+          vertices3D: [[-19, 0, -75], [-18, 0, 78], [18, 0, 78], [19, 0, -75]],
           vertices2D: [
             [86 - 42, 56],
             [86 - 42, 56 + 160],

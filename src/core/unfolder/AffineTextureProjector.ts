@@ -1,4 +1,4 @@
-import * as THREE from 'three'
+import type { Point2D } from '../types'
 
 export interface AffineMatrix2D {
   a: number
@@ -17,12 +17,12 @@ export class AffineTextureProjector {
    * 求解从源 Canvas 像素坐标 (u*W, (1-v)*H) 到目标 2D 展开多边形 (x, y) 的唯一 2D 仿射变换矩阵
    */
   public static computeAffineMatrix(
-    p0: THREE.Vector2,
-    p1: THREE.Vector2,
-    p2: THREE.Vector2,
-    uv0: THREE.Vector2,
-    uv1: THREE.Vector2,
-    uv2: THREE.Vector2,
+    p0: Point2D,
+    p1: Point2D,
+    p2: Point2D,
+    uv0: Point2D,
+    uv1: Point2D,
+    uv2: Point2D,
     texWidth: number,
     texHeight: number
   ): AffineMatrix2D | null {
@@ -63,12 +63,12 @@ export class AffineTextureProjector {
   public static renderTriangleToCanvas(
     ctx: CanvasRenderingContext2D,
     sourceCanvas: HTMLCanvasElement,
-    p0: THREE.Vector2,
-    p1: THREE.Vector2,
-    p2: THREE.Vector2,
-    uv0: THREE.Vector2,
-    uv1: THREE.Vector2,
-    uv2: THREE.Vector2
+    p0: Point2D,
+    p1: Point2D,
+    p2: Point2D,
+    uv0: Point2D,
+    uv1: Point2D,
+    uv2: Point2D
   ) {
     const mat = this.computeAffineMatrix(p0, p1, p2, uv0, uv1, uv2, sourceCanvas.width, sourceCanvas.height)
     if (!mat) return
@@ -96,8 +96,8 @@ export class AffineTextureProjector {
   public static renderPolygonToCanvas(
     ctx: CanvasRenderingContext2D,
     sourceCanvas: HTMLCanvasElement,
-    vertices2D: THREE.Vector2[],
-    uvCoords: THREE.Vector2[]
+    vertices2D: Point2D[],
+    uvCoords: Point2D[]
   ) {
     if (vertices2D.length < 3 || uvCoords.length < 3) return
 

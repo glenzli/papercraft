@@ -32,8 +32,7 @@ export class ParametricTrainMeshFactory {
 
     // 注册顶点
     for (let i = 0; i < vertices.length; i++) {
-      // @ts-ignore
-      unfolder['vertices'].push({ id: i, position: vertices[i], uv: uvs[i] })
+      unfolder.addVertex(vertices[i], uvs[i])
     }
 
     // 6 个面 (车顶作为根面 0)
@@ -44,8 +43,6 @@ export class ParametricTrainMeshFactory {
     unfolder.addFace([2, 6, 7, 3], 'back', '车尾连接壁')     // 4: 车尾
     unfolder.addFace([4, 7, 6, 5], 'bottom', '车身底盘')     // 5: 底盘
 
-    // @ts-ignore
-    unfolder.calculateDihedralAngles()
     return unfolder
   }
 
@@ -90,8 +87,7 @@ export class ParametricTrainMeshFactory {
     ]
 
     for (let i = 0; i < vertices.length; i++) {
-      // @ts-ignore
-      unfolder['vertices'].push({ id: i, position: vertices[i], uv: uvs[i] })
+      unfolder.addVertex(vertices[i], uvs[i])
     }
 
     // 1. 平顶车顶
@@ -109,8 +105,6 @@ export class ParametricTrainMeshFactory {
     // 7. 车身底盘
     unfolder.addFace([6, 9, 8, 7], 'bottom', '车身底盘')
 
-    // @ts-ignore
-    unfolder.calculateDihedralAngles()
     return unfolder
   }
 
@@ -151,8 +145,7 @@ export class ParametricTrainMeshFactory {
     ]
 
     for (let i = 0; i < vertices.length; i++) {
-      // @ts-ignore
-      unfolder['vertices'].push({ id: i, position: vertices[i], uv: uvs[i] })
+      unfolder.addVertex(vertices[i], uvs[i])
     }
 
     // 车身基础 5 面
@@ -170,8 +163,6 @@ export class ParametricTrainMeshFactory {
     unfolder.addFace([1, 10, 8], 'front', '右上侧腮')    // 5. 右上侧腮
     unfolder.addFace([10, 5, 8], 'front', '右下侧腮')    // 6. 右下侧腮
 
-    // @ts-ignore
-    unfolder.calculateDihedralAngles()
     return unfolder
   }
 }

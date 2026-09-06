@@ -25,6 +25,21 @@ export const cr400HeadMasterSchema: PapercraftModelSchema = {
     {
       id: "cr400-master-head-body",
       name: "车身主体展开",
+      // Keep the complete windshield and each nose panel together. These cuts retain
+      // the same physical edge pairs, 3D geometry and UVs as the assembled body.
+      unfoldRegions: [
+        { id: 'body', name: '车身与底盘 / Body and chassis', faces: [
+          { faceId: 'roof', triangles: [0,1,2,3] },
+          { faceId: 'side_left', triangles: [0,1,2,3,4,5] },
+          { faceId: 'side_right', triangles: [0,1,2,3,4,5] },
+          { faceId: 'back' }, { faceId: 'bottom' }
+        ] },
+        { id: 'windshield', name: '驾驶舱风挡 / Windshield', faces: [{ faceId: 'roof', triangles: [4,5,6,7] }] },
+        { id: 'nose-top', name: '车鼻上面 / Upper nose', faces: [{ faceId: 'roof', triangles: [8,9,10,11] }] },
+        { id: 'nose-left', name: '车鼻左前颊 / Left cheek', faces: [{ faceId: 'side_left', triangles: [6,7,8,9,10] }] },
+        { id: 'nose-right', name: '车鼻右前颊 / Right cheek', faces: [{ faceId: 'side_right', triangles: [6,7,8,9,10] }] },
+        { id: 'nose-lip', name: '车鼻下唇 / Lower lip', faces: [{ faceId: 'front' }] }
+      ],
       faces: [
         // 1. 车顶与微曲长鼻 (9 顶点闭合外周长多边形，中央设立体破风山折脊线与左右导流面)
         {
@@ -357,14 +372,9 @@ export const cr400HeadMasterSchema: PapercraftModelSchema = {
             [-19, 12, -90],
             [-19, 35, -90]
           ],
-          vertices2D: [
-            [91, 18],
-            [119, 18],
-            [119, 56],
-            [91, 56]
-          ],
-          uvCoords: [[0, 1], [1, 1], [1, 0], [0, 0]],
-          indices: [0, 1, 2, 0, 2, 3],
+          vertices2D: [],
+          uvCoords: [[5/38, 1], [33/38, 1], [1, 35/42], [1, 12/42], [33/38, 0], [5/38, 0], [0, 12/42], [0, 35/42]],
+          indices: [0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5, 0, 5, 6, 0, 6, 7],
           creases: [
             { type: "cut", p1: { x: 91, y: 18 }, p2: { x: 119, y: 18 } },
             { type: "cut", p1: { x: 91, y: 18 }, p2: { x: 91, y: 56 } },
@@ -388,20 +398,11 @@ export const cr400HeadMasterSchema: PapercraftModelSchema = {
           id: "bottom",
           name: "车底底盘 (含连接插槽)",
           slotName: "bottom",
-          vertices3D: [
-            [-14, 0, 90],
-            [14, 0, 90],
-            [14, 0, -90],
-            [-14, 0, -90]
-          ],
-          vertices2D: [
-            [47, 248],
-            [19, 248],
-            [19, 56],
-            [47, 56]
-          ],
-          uvCoords: [[0, 0], [1, 0], [1, 1], [0, 1]],
-          indices: [0, 1, 2, 0, 2, 3],
+          vertices3D: [[-14,0,-90], [14,0,-90], [14,0,20], [10,0,90], [-10,0,90], [-14,0,20]],
+          vertices2D: [],
+          uvCoords: [[0,1], [1,1], [1,70/180], [24/28,0], [4/28,0], [0,70/180]],
+          indices: [0,1,2, 0,2,3, 0,3,4, 0,4,5],
+          cuts3D: [[[-4.5,0,-80], [4.5,0,-80]], [[-4.5,0,80], [4.5,0,80]]],
           creases: [
             { type: "cut", p1: { x: 19, y: 56 }, p2: { x: 19, y: 248 } },
             { type: "cut", p1: { x: 19, y: 248 }, p2: { x: 47, y: 248 } },
@@ -669,20 +670,10 @@ export const cr400MiddleMasterSchema: PapercraftModelSchema = {
           id: "front",
           name: "前端连接壁",
           slotName: "front",
-          vertices3D: [
-            [-14, 42, 80],
-            [14, 42, 80],
-            [14, 0, 80],
-            [-14, 0, 80]
-          ],
-          vertices2D: [
-            [91, 30],
-            [119, 30],
-            [119, 68],
-            [91, 68]
-          ],
-          uvCoords: [[0, 1], [1, 1], [1, 0], [0, 0]],
-          indices: [0, 1, 2, 0, 2, 3],
+          vertices3D: [[-14,42,80], [14,42,80], [19,35,80], [19,12,80], [14,0,80], [-14,0,80], [-19,12,80], [-19,35,80]],
+          vertices2D: [],
+          uvCoords: [[5/38,1], [33/38,1], [1,35/42], [1,12/42], [33/38,0], [5/38,0], [0,12/42], [0,35/42]],
+          indices: [0,1,2, 0,2,3, 0,3,4, 0,4,5, 0,5,6, 0,6,7],
           creases: [
             { type: "cut", p1: { x: 91, y: 30 }, p2: { x: 119, y: 30 } },
             { type: "cut", p1: { x: 91, y: 30 }, p2: { x: 91, y: 68 } },
@@ -706,20 +697,10 @@ export const cr400MiddleMasterSchema: PapercraftModelSchema = {
           id: "back",
           name: "后端连接壁",
           slotName: "back",
-          vertices3D: [
-            [14, 42, -80],
-            [-14, 42, -80],
-            [-14, 0, -80],
-            [14, 0, -80]
-          ],
-          vertices2D: [
-            [119, 266],
-            [91, 266],
-            [91, 228],
-            [119, 228]
-          ],
-          uvCoords: [[0, 1], [1, 1], [1, 0], [0, 0]],
-          indices: [0, 1, 2, 0, 2, 3],
+          vertices3D: [[-14,42,-80], [14,42,-80], [19,35,-80], [19,12,-80], [14,0,-80], [-14,0,-80], [-19,12,-80], [-19,35,-80]],
+          vertices2D: [],
+          uvCoords: [[5/38,1], [33/38,1], [1,35/42], [1,12/42], [33/38,0], [5/38,0], [0,12/42], [0,35/42]],
+          indices: [0,1,2, 0,2,3, 0,3,4, 0,4,5, 0,5,6, 0,6,7],
           creases: [
             { type: "cut", p1: { x: 91, y: 266 }, p2: { x: 119, y: 266 } },
             { type: "cut", p1: { x: 91, y: 228 }, p2: { x: 91, y: 266 } },

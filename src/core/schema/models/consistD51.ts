@@ -184,7 +184,7 @@ const d51TenderSchema: PapercraftModelSchema = {
           id: 'back',
           name: '煤车后端',
           slotName: 'back',
-          vertices3D: [[19, 38, -50], [-19, 38, -50], [19, 0, -50], [-19, 0, -50]],
+          vertices3D: [[19, 38, -50], [-19, 38, -50], [-19, 0, -50], [19, 0, -50]],
           vertices2D: [
             [124, 56],
             [86, 56],
@@ -362,7 +362,7 @@ const d51CoachSchema: PapercraftModelSchema = {
           id: 'front',
           name: '前贯通门',
           slotName: 'back',
-          vertices3D: [[-19, 44, 75], [19, 44, 75], [-19, 0, 75], [19, 0, 75]],
+          vertices3D: [[-19, 44, 75], [19, 44, 75], [19, 0, 75], [-19, 0, 75]],
           vertices2D: [
             [86, 206],
             [124, 206],
@@ -380,7 +380,7 @@ const d51CoachSchema: PapercraftModelSchema = {
           id: 'back',
           name: '后贯通门',
           slotName: 'back',
-          vertices3D: [[19, 44, -75], [-19, 44, -75], [19, 0, -75], [-19, 0, -75]],
+          vertices3D: [[19, 44, -75], [-19, 44, -75], [-19, 0, -75], [19, 0, -75]],
           vertices2D: [
             [124, 56],
             [86, 56],
