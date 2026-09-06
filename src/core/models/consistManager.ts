@@ -7,6 +7,8 @@ import { e5TrainConsist } from '../schema/models/consistE5'
 import { cr400TrainConsist } from '../schema/models/consistCR400'
 import { shinkansen300TrainConsist } from '../schema/models/consistShinkansen300'
 import { romancecarTrainConsist } from '../schema/models/consistRomancecar'
+import { romancecarTrainConsistMaster } from '../schema/models/consistRomancecarMaster'
+import { cr400TrainConsistMaster } from '../schema/models/consistCR400Master'
 import { d51TrainConsist } from '../schema/models/consistD51'
 import { consistCityBus } from '../schema/models/consistCityBus'
 import { consistArticulatedBus } from '../schema/models/consistArticulatedBus'
@@ -19,6 +21,8 @@ import { couplerDrawbarAccessory, bellowsGangwayAccessory } from '../schema/acce
 import { PapercraftModelData } from '../types'
 
 export const CONSIST_REGISTRY: TrainModelConsist[] = [
+  cr400TrainConsistMaster,   // ★ 中国高铁 CR400 复兴号 (八面流线车身 + 刀锋破风长鼻 · 旗舰大师版)
+  romancecarTrainConsistMaster, // ★ 小田急 70000形 Romancecar GSE (阶梯全景双层展望席 · 大师版)
   cr400TrainConsist,
   consistDF4BFreight,        // 东风 4B 经典重载货运列车
   consistCityBus,            // 都市低地板公交车

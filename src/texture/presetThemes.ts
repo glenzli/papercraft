@@ -1047,7 +1047,7 @@ export const PRESET_THEMES: TextureTheme[] = [
     category: 'bullet',
     liveryStyle: 'cr400-fuxing-red',
     compatibleCategories: [],
-    targetConsistIds: ['cr400-fuxing-consist'],
+    targetConsistIds: ['cr400-fuxing-consist', 'cr400-master-consist'],
     description: '中国标准动车组旗舰 CR400AF：低风阻科技银灰底色、犀利如炬的凤眼大灯与凌厉动感的经典中国红飘带。',
     descriptionEn: 'China EMU flagship in tech silver gray, phoenix eye headlights, and flowing China red ribbon.',
     colors: {
@@ -1072,7 +1072,7 @@ export const PRESET_THEMES: TextureTheme[] = [
     category: 'bullet',
     liveryStyle: 'cr400-fuxing-gold',
     compatibleCategories: [],
-    targetConsistIds: ['cr400-fuxing-consist'],
+    targetConsistIds: ['cr400-fuxing-consist', 'cr400-master-consist'],
     description: '中国标准动车组 CR400BF：高雅象牙白底色，前脸环绕金色飞翼与纯黑前罩，全景车窗带配金黄动感腰线。',
     descriptionEn: 'China EMU in ivory white, golden wings face, and panoramic black-and-gold window stripe.',
     colors: {
@@ -1097,7 +1097,7 @@ export const PRESET_THEMES: TextureTheme[] = [
     category: 'bullet',
     liveryStyle: 'crh380a-hexie',
     compatibleCategories: [],
-    targetConsistIds: ['cr400-fuxing-consist'],
+    targetConsistIds: ['cr400-fuxing-consist', 'cr400-master-consist'],
     description: '中国高铁代表作 CRH380A：经典纯白车身，窗下贯穿科技海蓝双飞翼动感腰带与和谐号前照灯。',
     descriptionEn: 'Classic China high-speed train in pure white with dual tech blue flying wing stripes.',
     colors: {
@@ -1122,7 +1122,7 @@ export const PRESET_THEMES: TextureTheme[] = [
     category: 'bullet',
     liveryStyle: 'crh2-hexie-classic',
     compatibleCategories: [],
-    targetConsistIds: ['cr400-fuxing-consist'],
+    targetConsistIds: ['cr400-fuxing-consist', 'cr400-master-consist'],
     description: '早期经典大白动车组 CRH2：纯净白身贯穿单道沉稳深蓝腰带，开创中国高铁动车时代。',
     descriptionEn: 'Early generation high-speed EMU in pure white with a single deep navy blue stripe.',
     colors: {
@@ -1251,7 +1251,7 @@ export const PRESET_THEMES: TextureTheme[] = [
     category: 'bullet',
     liveryStyle: 'romancecar-gse-red',
     compatibleCategories: [],
-    targetConsistIds: ['odakyu-romancecar-gse-consist'],
+    targetConsistIds: ['odakyu-romancecar-gse-consist', 'romancecar-gse-master-consist'],
     description: '箱根观光旗舰浪漫特快 GSE 70000形：专属玫瑰朱红 (Rose Vermillion) 豪华底漆、深灰全景车顶与金色腰线。',
     descriptionEn: 'Hakone flagship Romancecar GSE 70000 with Rose Vermillion luxury finish and gold stripe.',
     colors: {
@@ -1276,7 +1276,7 @@ export const PRESET_THEMES: TextureTheme[] = [
     category: 'bullet',
     liveryStyle: 'romancecar-vse-white',
     compatibleCategories: [],
-    targetConsistIds: ['odakyu-romancecar-gse-consist'],
+    targetConsistIds: ['odakyu-romancecar-gse-consist', 'romancecar-gse-master-consist'],
     description: '白色浪漫特快传奇 VSE 50000形：如丝绸般的高雅珍珠白车身，配两道经典的橙金细腰带。',
     descriptionEn: 'Legendary White Romancecar VSE 50000 in silk pearl white with dual orange-gold pinstripes.',
     colors: {
