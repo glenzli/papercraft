@@ -2956,13 +2956,21 @@ export class TextureBaker {
           ctx.fillStyle = '#1c1f24'
           ctx.fillRect(w * 0.36, h * 0.46, w * 0.28, h * 0.10)
 
-          // 后部微型低轮廓散热扇
+          // 后部微型低轮廓散热扇 (纵横比自适应纠偏，消除展开与3D贴图缩放导致的椭圆畸变，确保正圆)
+          const physW = 38
+          const physH = 140
+          const aspectCorrection = (physH / physW) / (h / w)
+          const smallFanRx = w * 0.24
+          const smallFanRy = smallFanRx / aspectCorrection
+
           ctx.fillStyle = '#1c1f24'
           ctx.beginPath()
-          ctx.arc(w * 0.50, h * 0.72, w * 0.24, 0, Math.PI * 2)
+          ctx.ellipse(w * 0.50, h * 0.72, smallFanRx, smallFanRy, 0, 0, Math.PI * 2)
           ctx.fill()
           ctx.strokeStyle = '#5a6678'
           ctx.lineWidth = 1.5
+          ctx.beginPath()
+          ctx.ellipse(w * 0.50, h * 0.72, smallFanRx, smallFanRy, 0, 0, Math.PI * 2)
           ctx.stroke()
 
         } else {
@@ -2970,27 +2978,33 @@ export class TextureBaker {
           ctx.fillStyle = '#2e3844'
           ctx.fillRect(0, 0, w, h)
 
-          // 清爽低反差双冷却风扇 (微凸金属圈 + 4 片大桨叶，无刺眼黑网)
+          // 清爽低反差双冷却风扇 (微凸金属圈 + 4 片大桨叶，纵横比精准对齐，确保2D展开图与3D视图中均为100%绝对正圆)
+          const physW = 38
+          const physH = 140
+          const aspectCorrection = (physH / physW) / (h / w)
+          const fanRx = w * 0.32
+          const fanRy = fanRx / aspectCorrection
+
           const drawGentleFan = (cy: number) => {
             // 浅凹坑
             ctx.fillStyle = '#1e2630'
             ctx.beginPath()
-            ctx.arc(w * 0.5, cy, w * 0.32, 0, Math.PI * 2)
+            ctx.ellipse(w * 0.5, cy, fanRx, fanRy, 0, 0, Math.PI * 2)
             ctx.fill()
             // 4 片简洁叶片
             ctx.strokeStyle = '#4a5768'
             ctx.lineWidth = 2
             for (let a = 0; a < Math.PI; a += Math.PI / 2) {
               ctx.beginPath()
-              ctx.moveTo(w * 0.5 + Math.cos(a) * w * 0.28, cy + Math.sin(a) * w * 0.28)
-              ctx.lineTo(w * 0.5 - Math.cos(a) * w * 0.28, cy - Math.sin(a) * w * 0.28)
+              ctx.moveTo(w * 0.5 + Math.cos(a) * (fanRx * 0.88), cy + Math.sin(a) * (fanRy * 0.88))
+              ctx.lineTo(w * 0.5 - Math.cos(a) * (fanRx * 0.88), cy - Math.sin(a) * (fanRy * 0.88))
               ctx.stroke()
             }
             // 柔和金属外圈
             ctx.strokeStyle = '#64748b'
             ctx.lineWidth = 1.5
             ctx.beginPath()
-            ctx.arc(w * 0.5, cy, w * 0.32, 0, Math.PI * 2)
+            ctx.ellipse(w * 0.5, cy, fanRx, fanRy, 0, 0, Math.PI * 2)
             ctx.stroke()
           }
           drawGentleFan(h * 0.28)
@@ -5562,6 +5576,11 @@ export class TextureBaker {
     const isCR400 = style.startsWith('cr400-') || style.startsWith('crh')
     const isFuxingRed = style === 'cr400-fuxing-red'
 
+    // 计算物理展宽与展长比率，消除 UV 缩放导致的椭圆畸变，确保 2D 图纸与 3D 渲染中 100% 绝对正圆
+    const physW = isCR400 ? 20 : 24
+    const physH = isCR400 ? 36 : (style === 'shinkansen-e5' ? 38 : 36)
+    const aspectCorrection = (physH / physW) / (h / w)
+
     // 1. 空调外壳高质感基底 (复兴号浅银白/科技浅灰，普通列车浅灰金属)
     const baseColor = roofColor || (isFuxingRed ? '#e2e8f0' : (isCR400 ? '#f8fafc' : '#f1f5f9'))
     ctx.fillStyle = baseColor
@@ -5573,22 +5592,23 @@ export class TextureBaker {
     ctx.strokeRect(2, 2, w - 4, h - 4)
 
     // 3. 顶部中央双联大功率排风扇防护圆孔网罩 (Twin Cooling Fans)
-    const fanRadius = Math.min(w * 0.32, h * 0.18)
-    const fan1Y = h * 0.32
-    const fan2Y = h * 0.68
+    const fanRadiusX = Math.min(w * 0.32, (h * 0.17) * aspectCorrection)
+    const fanRadiusY = fanRadiusX / aspectCorrection
+    const fan1Y = h * 0.31
+    const fan2Y = h * 0.69
     const fanX = w * 0.50
 
     const drawFan = (cy: number) => {
       // 散热凹坑底色
       ctx.fillStyle = '#1e293b'
       ctx.beginPath()
-      ctx.arc(fanX, cy, fanRadius, 0, Math.PI * 2)
+      ctx.ellipse(fanX, cy, fanRadiusX, fanRadiusY, 0, 0, Math.PI * 2)
       ctx.fill()
 
       // 涡轮风扇金属轮毂
       ctx.fillStyle = '#475569'
       ctx.beginPath()
-      ctx.arc(fanX, cy, fanRadius * 0.28, 0, Math.PI * 2)
+      ctx.ellipse(fanX, cy, fanRadiusX * 0.28, fanRadiusY * 0.28, 0, 0, Math.PI * 2)
       ctx.fill()
 
       // 旋转叶片 (4 叶片)
@@ -5597,7 +5617,7 @@ export class TextureBaker {
       for (let a = 0; a < Math.PI * 2; a += Math.PI / 2) {
         ctx.beginPath()
         ctx.moveTo(fanX, cy)
-        ctx.lineTo(fanX + Math.cos(a) * (fanRadius - 2), cy + Math.sin(a) * (fanRadius - 2))
+        ctx.lineTo(fanX + Math.cos(a) * (fanRadiusX - 2), cy + Math.sin(a) * (fanRadiusY - 2))
         ctx.stroke()
       }
 
@@ -5605,10 +5625,10 @@ export class TextureBaker {
       ctx.strokeStyle = '#64748b'
       ctx.lineWidth = 1.2
       ctx.beginPath()
-      ctx.arc(fanX, cy, fanRadius, 0, Math.PI * 2)
+      ctx.ellipse(fanX, cy, fanRadiusX, fanRadiusY, 0, 0, Math.PI * 2)
       ctx.stroke()
       ctx.beginPath()
-      ctx.arc(fanX, cy, fanRadius * 0.65, 0, Math.PI * 2)
+      ctx.ellipse(fanX, cy, fanRadiusX * 0.65, fanRadiusY * 0.65, 0, 0, Math.PI * 2)
       ctx.stroke()
     }
 
