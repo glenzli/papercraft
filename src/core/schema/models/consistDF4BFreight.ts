@@ -650,11 +650,11 @@ const coalGondolaSchema: PapercraftModelSchema = {
 
 export const consistDF4BFreight: TrainModelConsist = {
   id: 'df4b-freight-consist',
-  name: '铁路重载干线货运列车',
-  nameEn: 'Heavy-Haul Freight Train (DF4B & JR Freight)',
+  name: "东风4B 货运列车",
+  nameEn: "DF4B freight train",
   category: 'commuter',
-  description: '经典大功率重载干线货运列车，可自由切换中国铁路东风 4B 或日本 JR 货物红雷/桃太郎机车，牵引集装箱与敞车。',
-  descriptionEn: 'Heavy-haul freight trainset featuring China Railway DF4B & Japan JR Freight Red Thunder / Momotaro locomotives.',
+  description: "内燃机车与货车编组，可选多种货运配色。",
+  descriptionEn: "Diesel locomotive and freight cars with several freight-inspired liveries.",
   difficulty: 'medium',
   recommendedAge: '6-12 岁',
   estimatedTimePerCar: '15 分钟',

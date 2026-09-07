@@ -19,6 +19,8 @@ export interface ModelManifestItem {
   nameEn?: string
   category: string
   difficulty: string
+  description?: string
+  descriptionEn?: string
   fileName?: string
   isCustom?: boolean
   pkg?: PapercraftPackage
@@ -42,36 +44,17 @@ export class ModelRepository {
    * 获取所有可用模型列表清单
    */
   public getManifest(): ModelManifestItem[] {
-    const list: ModelManifestItem[] = []
-
-    // 预置模型
-    CONSIST_REGISTRY.forEach(c => {
-      list.push({
-        id: c.id,
-        name: c.name,
-        nameEn: c.nameEn,
-        category: c.category,
-        difficulty: c.difficulty,
-        isCustom: false
-      })
-    })
-
-    // 自定义导入的模型
-    this.loadedConsists.forEach((consist, id) => {
-      if (!list.some(item => item.id === id)) {
-        list.push({
-          id: consist.id,
-          name: consist.name,
-          nameEn: consist.nameEn,
-          category: consist.category,
-          difficulty: consist.difficulty,
-          isCustom: true,
-          hasBundledLiveries: (this.dynamicLiveries.get(id)?.length || 0) > 0
-        })
-      }
-    })
-
-    return list
+    return [...this.loadedConsists.values()].map(consist => ({
+      id: consist.id,
+      name: consist.name,
+      nameEn: consist.nameEn,
+      category: consist.category,
+      difficulty: consist.difficulty,
+      description: consist.description,
+      descriptionEn: consist.descriptionEn,
+      isCustom: !CONSIST_REGISTRY.includes(consist),
+      hasBundledLiveries: (this.dynamicLiveries.get(consist.id)?.length || 0) > 0
+    }))
   }
 
   /**
@@ -88,9 +71,9 @@ export class ModelRepository {
     if (!themes || themes.length === 0) return
     const existing = this.dynamicLiveries.get(consistId) || []
     themes.forEach(th => {
-      if (!existing.some(item => item.id === th.id)) {
-        existing.push(th)
-      }
+      const index=existing.findIndex(item=>item.id===th.id)
+      if(index>=0)existing[index]=th
+      else existing.push(th)
     })
     this.dynamicLiveries.set(consistId, existing)
   }
@@ -110,9 +93,9 @@ export class ModelRepository {
     const dynamic = this.getDynamicLiveries(consistId)
     const combined = [...preset]
     dynamic.forEach(d => {
-      if (!combined.some(c => c.id === d.id)) {
-        combined.push(d)
-      }
+      const index=combined.findIndex(c=>c.id===d.id)
+      if(index>=0)combined[index]=d
+      else combined.push(d)
     })
     return combined
   }

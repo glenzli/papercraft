@@ -212,11 +212,11 @@ const doubleDeckerBusSchema: PapercraftModelSchema = {
 
 export const consistDoubleDeckerBus: TrainModelConsist = {
   id: 'double-decker-bus-consist',
-  name: '经典双层公路客车',
-  nameEn: 'Classic Double-Decker Bus',
+  name: "双层公交车",
+  nameEn: "Double-decker bus",
   category: 'bus',
-  description: '风靡全球的经典双层客车，拥有开阔的二楼观景视野与伦敦/香港九巴传奇涂装。',
-  descriptionEn: 'Iconic double-decker city bus with panoramic 2nd-floor observation windows and authentic tri-axle chassis.',
+  description: "双层车体，可选红色、金色与观光配色。",
+  descriptionEn: "Double-deck body with red, gold and sightseeing liveries.",
   difficulty: 'easy',
   recommendedAge: '6-12 岁',
   estimatedTimePerCar: '15 分钟',

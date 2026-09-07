@@ -632,14 +632,14 @@ export const romancecarTailSchema: PapercraftModelSchema = {
 
 export const romancecarTrainConsist: TrainModelConsist = {
   id: "odakyu-romancecar-gse-consist",
-  name: "小田急 70000形 (浪漫特快 GSE)",
-  nameEn: "Odakyu Series 70000 GSE Romancecar",
+  name: "小田急 GSE 70000形 · 基础版",
+  nameEn: "Odakyu GSE 70000 · Basic",
   category: "shinkansen",
   difficulty: "medium",
   recommendedAge: "7-14 岁",
   estimatedTimePerCar: "15-20 分钟",
-  description: "箱根名物小田急浪漫特快 GSE 70000形，高位全景驾驶席与玫瑰朱红豪华涂装。",
-  descriptionEn: "Hakone luxury tourist express with elevated panoramic cockpit and vermillion livery.",
+  description: "简化展望车头，可选GSE朱红与VSE白色风格配色。",
+  descriptionEn: "Simplified observation cab with GSE red and VSE-inspired white liveries.",
   defaultThemeId: "romancecar-gse-red",
   carDefinitions: {
     head: {

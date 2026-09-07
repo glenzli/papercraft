@@ -18,6 +18,9 @@ Papercraft Studio 是一个用于列车与车辆纸模型设计、涂装定制�
 
 - **3D 预览与编组**：在 3D 视图中浏览和旋转车辆，支持增减中间车厢数量，并预览车钩与贯通道连挂效果。
 - **预设车型与涂装**：内置高铁（复兴号/和谐号/新干线）、干线货运（东风4B/EF510等）、双节巨龙公交、双层客车与经典有轨电车等车型及基础涂装。
+- **精细版纸模**：Haruka 281 与南海 Rapi:t 50000 提供独立的多折面车体、驾驶室和前脸制作分区；原基础版继续保留。标准三节编组各用 3 张 A4，详见[制作说明](docs/professional-trains.md)。
+- **模型库**：支持名称搜索、类别与难度筛选，基础版和精细版并列展示；筛选不会切换当前模型。
+- **涂装选择**：按当前模型列出兼容涂装，并将预设、调色与文字、上传贴图区分为三个入口。在本次页面会话内，切换模型保留各自的涂装、编组与已应用贴图。
 - **涂装与文字定制**：支持调整主色、副色、点缀色和车顶颜色，可按需添加车次与线路铭牌。
 - **2D 展开与排版**：3D、展开和贴图共用同一份面片与 UV。复杂表面可拆成多个无重叠纸片，按编号粘合；所有纸片与粘合翼按实际毫米尺寸分页到 A4。
 - **图纸导出**：A4 PDF 使用位图贴图和矢量剪折线、接缝编号，附 50 mm 校准标尺。打印时选择“100% / 实际大小”。
@@ -69,6 +72,9 @@ It allows users to inspect 3D vehicle consists, adjust basic liveries, and gener
 
 - **3D Preview & Consist Assembly**: View and orbit vehicles in 3D, adjust middle car counts, and inspect inter-car couplers and gangways.
 - **Built-in Models & Liveries**: Includes high-speed trains, freight locomotives, articulated buses, double-decker coaches, and streetcars with preset liveries.
+- **Detailed Models**: Haruka 281 and Nankai Rapi:t 50000 add faceted bodies and authored cab/nose panels alongside the existing simpler versions. Each default three-car consist uses three A4 sheets; see the [assembly notes](docs/professional-trains.md).
+- **Model Library**: Search by name and filter by category or difficulty. Basic and detailed variants appear together; filtering does not change the selected model.
+- **Livery Selection**: Compatible liveries, color/text controls and uploaded artwork have separate tabs. Each model keeps its livery, consist count and applied artwork while switching within the current page session.
 - **Color & Text Customization**: Customize primary, secondary, accent, and roof colors, with optional custom route and train numbering.
 - **2D Net Layout & Packing**: 3D, nets and textures share the same triangles and corner UVs. Complex surfaces can split into non-overlapping pieces with numbered seams; every piece and tab is paginated at its actual millimetre scale.
 - **PDF Export**: A4 sheets combine raster artwork with vector construction lines and seam numbers. Print at 100% / Actual size and check the included 50 mm ruler.

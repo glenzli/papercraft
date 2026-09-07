@@ -1,9 +1,11 @@
 // 涂装设计面板 (支持车型专属预设、贴图总模版导出与自定义贴图导入、高对比度文字与自由调色、多语言)
 import React, { useState, useRef } from 'react'
 import { TextureTheme, CustomTextConfig } from '../../texture/types'
+import { matchesCatalogQuery } from '../../core/models/catalog'
 import { TrainModelConsist } from '../../core/schema/consistSchema'
 import {
   downloadLiveryFile,
+  isLiveryCompatible,
   loadLiveryFromFile,
   convertThemeToLiverySchema,
   convertLiverySchemaToTheme
@@ -27,7 +29,9 @@ import {
   Eye,
   RotateCcw,
   Sliders,
-  Move
+  Move,
+  Search,
+  X
 } from 'lucide-react'
 import { useI18n } from '../../i18n'
 
@@ -50,7 +54,8 @@ interface TextureEditorProps {
   onUseCustomColorsChange: (val: boolean) => void
   themeMode?: 'light' | 'dark'
   baker?: TextureBaker
-  onCustomTextureApplied?: () => void
+  customTexture?: ProcessedCustomTexture['canvases'] | null
+  onCustomTextureChange: (texture:ProcessedCustomTexture['canvases']|null)=>void
 }
 
 export const TextureEditor: React.FC<TextureEditorProps> = ({
@@ -67,10 +72,12 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
   onUseCustomColorsChange,
   themeMode = 'dark',
   baker,
-  onCustomTextureApplied
+  customTexture,
+  onCustomTextureChange
 }) => {
   const { t, isZh } = useI18n()
-  const [activeTab, setActiveTab] = useState<'preset' | 'customize'>('preset')
+  const [activeTab, setActiveTab] = useState<'preset' | 'customize' | 'artwork'>('preset')
+  const [liveryQuery,setLiveryQuery] = useState('')
   const [importError, setImportError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const imageInputRef = useRef<HTMLInputElement>(null)
@@ -80,12 +87,13 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
   const [rawImage, setRawImage] = useState<HTMLImageElement | null>(null)
   const [overlayStructure, setOverlayStructure] = useState<boolean>(true)
   const [isProcessingImage, setIsProcessingImage] = useState<boolean>(false)
-  const [hasAppliedCustom, setHasAppliedCustom] = useState<boolean>(false)
+  const hasAppliedCustom = !!customTexture
 
   const isLight = themeMode === 'light'
 
   // 获取当前车型的全量涂装列表 (官方预设 + 动态导入的附属涂装)
-  const displayThemes = modelRepository.getAllLiveriesForConsist(currentConsistId)
+  const availableThemes = modelRepository.getAllLiveriesForConsist(currentConsistId)
+  const displayThemes = availableThemes.filter(theme=>matchesCatalogQuery(liveryQuery,[theme.name,theme.nameEn,theme.description,theme.descriptionEn,theme.id]))
 
   const getCategoryLabel = (category: string) => {
     switch (category) {
@@ -125,6 +133,7 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
   const handleImportLiveryFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+    e.target.value = ''
     setImportError(null)
 
     const res = await loadLiveryFromFile(file)
@@ -136,12 +145,9 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
     const livery = res.livery
 
     // 严格车型兼容校验
-    const isCategoryMatch = livery.targetCategory === 'all' || livery.targetCategory === currentConsistCategory
-    const isConsistMatch = !livery.targetConsistIds || livery.targetConsistIds.includes(currentConsistId)
-
-    if (!isCategoryMatch && !isConsistMatch) {
+    if (!isLiveryCompatible(livery,currentConsistId,currentConsistCategory)) {
       setImportError(t('texture.liveryMismatchError', {
-        target: getCategoryLabel(livery.targetCategory),
+        target: livery.targetConsistIds?.length ? livery.targetConsistIds.map(id=>modelRepository.getConsist(id)?.name||id).join(', ') : getCategoryLabel(livery.targetCategory),
         current: getCategoryLabel(currentConsistCategory)
       }))
       return
@@ -219,18 +225,14 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
   // 应用切片贴图到当前列车
   const handleApplyCustomTexture = () => {
     if (!importedTexture || !baker) return
-    baker.applyCustomTextureCanvases(importedTexture.canvases)
-    setHasAppliedCustom(true)
-    onCustomTextureApplied?.()
+    onCustomTextureChange(importedTexture.canvases)
   }
 
   // 重置回预设涂装
   const handleResetToPreset = () => {
     setImportedTexture(null)
     setRawImage(null)
-    setHasAppliedCustom(false)
-    onThemeChange(currentTheme)
-    onCustomTextureApplied?.()
+    onCustomTextureChange(null)
   }
 
   return (
@@ -268,7 +270,7 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
           }`}
         >
           <Palette className="w-3.5 h-3.5" />
-          <span>{t('sidebar.tabLivery')}</span>
+          <span>{isZh?'预设涂装':'Presets'}</span>
         </button>
         <button
           onClick={() => setActiveTab('customize')}
@@ -281,8 +283,9 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
           }`}
         >
           <Type className="w-3.5 h-3.5" />
-          <span>{t('sidebar.tabTextAndColor')}</span>
+          <span>{isZh?'调色与文字':'Customize'}</span>
         </button>
+        <button onClick={()=>setActiveTab('artwork')} className={`flex-1 py-1.5 rounded-lg font-medium flex items-center justify-center gap-1 text-xs ${activeTab==='artwork'?(isLight?'bg-white shadow-sm':'bg-zinc-800'):'opacity-60 hover:opacity-100'}`}><ImageIcon className="w-3.5 h-3.5"/>{isZh?'贴图':'Artwork'}</button>
       </div>
 
       {/* 导入错误警告框 */}
@@ -295,7 +298,7 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
       )}
 
       {/* 选项卡内容 */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-4">
+      <div className="flex-1 p-1 pt-3 space-y-4">
         {/* Tab 1: 涂装 (整合预设涂装、模版下载与贴图上传) */}
         {activeTab === 'preset' && (
           <div className="space-y-4">
@@ -304,13 +307,13 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
               <div className="flex items-center justify-between gap-1 flex-wrap pb-0.5">
                 <div className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-700 dark:text-zinc-300">
                   <Palette className="w-3.5 h-3.5 text-sky-500" />
-                  <span>{t('texture.exclusiveLiveries', { count: displayThemes.length })}</span>
+                  <span>{isZh?`可用涂装 (${availableThemes.length})`:`Available liveries (${availableThemes.length})`}</span>
                 </div>
 
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    title="导入 .papercraft-livery 涂装文件"
+                    title={isZh?'导入 .papercraft-livery 涂装文件':'Import a .papercraft-livery file'}
                     className={`px-2 py-0.5 rounded border text-[10px] font-medium flex items-center gap-1 ${
                       isLight ? 'bg-zinc-100 hover:bg-zinc-200 border-zinc-200 text-zinc-700' : 'bg-zinc-800 hover:bg-zinc-700 border-zinc-700 text-zinc-300'
                     }`}
@@ -320,7 +323,7 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
                   </button>
                   <button
                     onClick={handleExportLivery}
-                    title="导出当前涂装为 .papercraft-livery 文件"
+                    title={isZh?'导出当前涂装为 .papercraft-livery 文件':'Export the current livery'}
                     className={`px-2 py-0.5 rounded border text-[10px] font-medium flex items-center gap-1 ${
                       isLight ? 'bg-zinc-100 hover:bg-zinc-200 border-zinc-200 text-zinc-700' : 'bg-zinc-800 hover:bg-zinc-700 border-zinc-700 text-zinc-300'
                     }`}
@@ -331,54 +334,34 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-2">
-                {displayThemes.map(theme => {
-                  const isSelected = currentTheme.id === theme.id
-                  const themeName = isZh ? theme.name : (theme.nameEn || theme.name)
-                  const themeDesc = isZh ? theme.description : (theme.descriptionEn || theme.description)
-
-                  return (
-                    <div
-                      key={theme.id}
-                      onClick={() => {
-                        setImportError(null)
-                        onThemeChange(theme)
-                        onUseCustomColorsChange(false)
-                      }}
-                      className={`p-2.5 rounded-xl border transition-all ${
-                        isSelected
-                          ? isLight
-                            ? 'bg-zinc-100 border-zinc-900 ring-1 ring-zinc-900 shadow-xs cursor-pointer'
-                            : 'bg-zinc-800 border-zinc-400 ring-1 ring-zinc-400 shadow-xs cursor-pointer'
-                          : isLight
-                            ? 'bg-white border-zinc-200 hover:bg-zinc-50 cursor-pointer'
-                            : 'bg-zinc-900/60 border-zinc-800 hover:bg-zinc-800 cursor-pointer'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="font-semibold text-xs">{themeName}</span>
-                          <span className="text-[9px] px-1 py-0.2 rounded bg-indigo-500/15 text-indigo-500 dark:text-indigo-400 font-medium">
-                            {t('texture.exclusiveBadge')}
-                          </span>
-                        </div>
-                        {isSelected && <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />}
-                      </div>
-                      <p className="text-[10px] opacity-60 mb-2 leading-relaxed">{themeDesc}</p>
-                      <div className="flex items-center gap-1">
-                        <div className="h-2.5 flex-1 rounded border border-black/10" style={{ backgroundColor: theme.colors.primary }} />
-                        <div className="h-2.5 flex-1 rounded border border-black/10" style={{ backgroundColor: theme.colors.secondary }} />
-                        <div className="h-2.5 flex-1 rounded border border-black/10" style={{ backgroundColor: theme.colors.accent }} />
-                        <div className="h-2.5 flex-1 rounded border border-black/10" style={{ backgroundColor: theme.colors.roof }} />
-                      </div>
-                    </div>
-                  )
+              <div className={`p-3 rounded-xl border ${isLight?'bg-sky-50/60 border-sky-100':'bg-sky-950/20 border-sky-900/50'}`}>
+                <div className="text-[10px] opacity-60 mb-1">{isZh?'当前涂装':'Current livery'}{useCustomColors?(isZh?' · 已调色':' · Custom colors'):''}{hasAppliedCustom?(isZh?' · 已应用贴图':' · Artwork applied'):''}</div>
+                <div className="font-semibold text-sm">{isZh?currentTheme.name:currentTheme.nameEn||currentTheme.name}</div>
+                <p className="text-[11px] leading-5 opacity-60 mt-1">{isZh?currentTheme.description:currentTheme.descriptionEn||currentTheme.description}</p>
+                {hasAppliedCustom&&<button onClick={handleResetToPreset} className="text-sky-600 dark:text-sky-400 text-xs underline mt-2">{isZh?'移除上传贴图':'Remove uploaded artwork'}</button>}
+              </div>
+              {(useCustomColors||hasAppliedCustom)&&<p className="text-[11px] opacity-60">{isZh?'选择预设会替换当前调色与上传贴图。':'Selecting a preset replaces custom colors and uploaded artwork.'}</p>}
+              {availableThemes.length>4&&<label className={`flex items-center gap-2 px-2 py-2 rounded-lg border ${isLight?'border-zinc-200':'border-zinc-700'}`}><Search className="w-3.5 h-3.5 opacity-50"/><input value={liveryQuery} onChange={e=>setLiveryQuery(e.target.value)} className="w-full outline-none bg-transparent text-xs" aria-label={isZh?'搜索涂装':'Search liveries'} placeholder={isZh?'搜索名称或颜色':'Search name or color'}/>{liveryQuery&&<button onClick={()=>setLiveryQuery('')} aria-label={isZh?'清除涂装搜索':'Clear livery search'}><X className="w-3 h-3"/></button>}</label>}
+              <div className="grid grid-cols-2 gap-2 max-h-[420px] overflow-y-auto p-0.5">
+                {displayThemes.map(theme=>{
+                  const selected=currentTheme.id===theme.id
+                  return <button key={theme.id} onClick={()=>{setImportError(null);onThemeChange(theme)}} aria-pressed={selected} className={`p-2 rounded-xl border text-left transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-500 ${selected?'border-sky-500 bg-sky-500/10':isLight?'border-zinc-200 hover:border-zinc-400':'border-zinc-700 hover:border-zinc-500'}`}>
+                    <span className="flex h-6 rounded-md overflow-hidden border border-black/10 mb-2" aria-hidden="true">{[theme.colors.primary,theme.colors.secondary,theme.colors.accent,theme.colors.roof].map((color,i)=><span key={i} className={i===0?'flex-[3]':'flex-1'} style={{backgroundColor:color}}/>)}</span>
+                    <span className="flex justify-between items-start gap-1"><span className="font-medium text-[11px] leading-4">{isZh?theme.name:theme.nameEn||theme.name}</span>{selected&&<Check className="w-3.5 h-3.5 shrink-0 text-sky-600"/>}</span>
+                  </button>
                 })}
               </div>
+              {!displayThemes.length&&<div className="text-center text-xs opacity-60 py-4">{isZh?'没有符合条件的涂装':'No matching liveries'}{liveryQuery&&<button onClick={()=>setLiveryQuery('')} className="block mx-auto mt-2 underline">{isZh?'清除搜索':'Clear search'}</button>}</div>}
+              <p className="text-[10px] opacity-50 leading-4">{isZh?'涂装只改变颜色与图案。模型形体保持不变。':'Liveries change colors and artwork; the model geometry stays the same.'}</p>
             </div>
+          </div>
+        )}
 
+        {activeTab === 'artwork' && (
+          <div className="space-y-4">
+            {hasAppliedCustom&&<div className="p-3 rounded-lg bg-sky-500/10 text-xs"><span>{isZh?'当前模型已应用上传贴图。':'Uploaded artwork is applied to this model.'}</span><button onClick={handleResetToPreset} className="block mt-2 underline">{isZh?'移除上传贴图':'Remove uploaded artwork'}</button></div>}
             {/* 2. 贴图设计模版与上传专区 */}
-            <div className={`pt-3 border-t ${isLight ? 'border-zinc-200' : 'border-zinc-800'} space-y-3`}>
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-700 dark:text-zinc-300">
                   <ImageIcon className="w-3.5 h-3.5 text-indigo-500" />
@@ -405,7 +388,8 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
               </div>
 
               {/* 上传拖拽点击区 */}
-              <div
+              <button
+                type="button"
                 onClick={() => imageInputRef.current?.click()}
                 onDragOver={e => e.preventDefault()}
                 onDrop={e => {
@@ -413,7 +397,7 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
                   const file = e.dataTransfer.files?.[0]
                   if (file) handleImageFileSelected(file)
                 }}
-                className={`p-4 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-2 cursor-pointer transition-all ${
+                className={`w-full p-4 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-2 cursor-pointer transition-all ${
                   isLight
                     ? 'border-zinc-300 hover:border-zinc-500 bg-zinc-50/50 hover:bg-zinc-50'
                     : 'border-zinc-700 hover:border-zinc-500 bg-zinc-950/30 hover:bg-zinc-950/60'
@@ -428,7 +412,7 @@ export const TextureEditor: React.FC<TextureEditorProps> = ({
                   </div>
                   <div className="text-[10px] opacity-50 mt-0.5">{t('texture.dropzoneHint')}</div>
                 </div>
-              </div>
+              </button>
 
               {/* 切片结果展示与控制 */}
               {importedTexture && (

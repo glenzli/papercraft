@@ -1,3 +1,5 @@
+import { haruka281ProConsist } from '../schema/models/pro/haruka281'
+import { rapit50000ProConsist } from '../schema/models/pro/rapit50000'
 // 载具与多节车厢编组管理器 (Consist & Vehicle Manager)
 import { TrainModelConsist } from '../schema/consistSchema'
 import { e235TrainConsist } from '../schema/models/consistE235'
@@ -23,6 +25,8 @@ import { PapercraftModelData } from '../types'
 export const CONSIST_REGISTRY: TrainModelConsist[] = [
   cr400TrainConsistMaster,   // ★ 中国高铁 CR400 复兴号 (八面流线车身 + 刀锋破风长鼻 · 旗舰大师版)
   romancecarTrainConsistMaster, // ★ 小田急 70000形 Romancecar GSE (阶梯全景双层展望席 · 大师版)
+  haruka281ProConsist,
+  rapit50000ProConsist,
   cr400TrainConsist,
   consistDF4BFreight,        // 东风 4B 经典重载货运列车
   consistCityBus,            // 都市低地板公交车

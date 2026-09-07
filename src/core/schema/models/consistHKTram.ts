@@ -248,11 +248,11 @@ const hkTramBodySchema: PapercraftModelSchema = {
 
 export const consistHKTram: TrainModelConsist = {
   id: 'hk-tram-consist',
-  name: '香港双层叮叮车',
-  nameEn: 'Hong Kong Double-Decker Tram (Ding Ding)',
+  name: "香港双层电车",
+  nameEn: "Hong Kong double-decker tram",
   category: 'commuter',
-  description: '东方之珠百年传奇双层有轨电车，拥有独一无二的高耸复古车身比例与全景二楼观光视窗。',
-  descriptionEn: 'Iconic Hong Kong double-decker street tramway with authentic 2-story windows and trolley pole.',
+  description: "窄体双层有轨电车，可选绿、红绿或蓝色涂装。",
+  descriptionEn: "Narrow double-deck tram with green, red/green or blue liveries.",
   difficulty: 'easy',
   recommendedAge: '6-12 岁',
   estimatedTimePerCar: '15 分钟',

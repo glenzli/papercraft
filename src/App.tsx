@@ -3,12 +3,12 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Header } from './components/layout/Header'
 import { Scene3D } from './components/viewport3d/Scene3D'
 import { NetViewer2D } from './components/viewport2d/NetViewer2D'
+import { ModelLibrary } from './components/editor/ModelLibrary'
 import { ModelSelector } from './components/editor/ModelSelector'
 import { TextureEditor } from './components/editor/TextureEditor'
 import { AssemblyGuide } from './components/editor/AssemblyGuide'
 import { TextureBaker } from './texture/textureBaker'
-import { PRESET_THEMES } from './texture/presetThemes'
-import { TextureTheme, CustomTextConfig } from './texture/types'
+import { useModelDrafts } from './components/editor/useModelDrafts'
 import {
   CONSIST_REGISTRY,
   buildTrainConsistCars,
@@ -21,22 +21,15 @@ import confetti from 'canvas-confetti'
 import { Layers, Palette } from 'lucide-react'
 import { useI18n } from './i18n'
 
-function getInitialThemeForConsist(consist: TrainModelConsist): TextureTheme {
-  if (consist.defaultThemeId) {
-    const found = PRESET_THEMES.find(t => t.id === consist.defaultThemeId)
-    if (found) return found
-  }
-  const matched = PRESET_THEMES.find(t => t.targetConsistIds?.includes(consist.id))
-  return matched || PRESET_THEMES[0]
-}
-
 export function App() {
   const { locale, t, isZh } = useI18n()
 
   // 1. 动态模型资产清单与当前编组
   const [modelManifest, setModelManifest] = useState<ModelManifestItem[]>(() => modelRepository.getManifest())
   const [currentConsist, setCurrentConsist] = useState<TrainModelConsist>(CONSIST_REGISTRY[0])
-  const [middleCarCount, setMiddleCarCount] = useState(1)
+  const {draft,update: updateDraft,selectTheme,reset: resetDraft} = useModelDrafts(currentConsist)
+  const {theme:currentTheme,colors:customColors,useCustomColors,text:customText,middleCarCount,texture:customTexture} = draft
+  const setMiddleCarCount = (count:number) => updateDraft('middleCarCount',Math.max(0,Math.min(currentConsist.assembly?.maxMiddleCars??5,count)))
   const [focusedCarIndex, setFocusedCarIndex] = useState<number>(-1)
   const [current2dPageIndex, setCurrent2dPageIndex] = useState<number>(0)
 
@@ -50,34 +43,12 @@ export function App() {
   const [sidebarTab, setSidebarTab] = useState<'models' | 'texture'>('models')
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
 
-  // 4. 涂装与纹理定制状态 (初始严格匹配当前车型的专属涂装)
-  const [currentTheme, setCurrentTheme] = useState<TextureTheme>(() => getInitialThemeForConsist(CONSIST_REGISTRY[0]))
-  const [customColors, setCustomColors] = useState(() => {
-    const initialTheme = getInitialThemeForConsist(CONSIST_REGISTRY[0])
-    return {
-      primary: initialTheme.colors.primary,
-      secondary: initialTheme.colors.secondary,
-      accent: initialTheme.colors.accent,
-      roof: initialTheme.colors.roof
-    }
-  })
-  const [useCustomColors, setUseCustomColors] = useState(false)
-  const [customText, setCustomText] = useState<CustomTextConfig>({
-    enabled: false,
-    kidName: "ALEX'S EXPRESS",
-    trainNumber: 'EXP-88',
-    destination: '新宿·东京',
-    textColor: '#ffffff',
-    bgColor: '#0f172a',
-    offsetX: 0,
-    offsetY: 0
-  })
-
   // 5. 纹理烘焙器
   const baker = useMemo(() => new TextureBaker(1024), [])
   const [bakeTick, setBakeTick] = useState(0)
 
   // 6. UI 弹窗与导出状态
+  const [isModelLibraryOpen, setIsModelLibraryOpen] = useState(false)
   const [isGuideOpen, setIsGuideOpen] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
 
@@ -139,8 +110,9 @@ export function App() {
       customText,
       useCustomColors
     })
+    if(customTexture) baker.applyCustomTextureCanvases(customTexture)
     setBakeTick(t => t + 1)
-  }, [baker, currentTheme, currentConsist.category, currentConsist.id, customColors, customText, useCustomColors])
+  }, [baker, currentTheme, currentConsist.category, currentConsist.id, customColors, customText, useCustomColors, customTexture])
 
   useEffect(() => {
     rebake()
@@ -153,25 +125,6 @@ export function App() {
       setCurrentConsist(found)
       setFocusedCarIndex(-1)
       setCurrent2dPageIndex(0)
-
-      // 优先匹配车型的 defaultThemeId，或匹配该车型的可用涂装
-      const availableThemes = modelRepository.getAllLiveriesForConsist(found.id)
-      let targetTheme: TextureTheme | undefined
-      if (found.defaultThemeId) {
-        targetTheme = availableThemes.find(th => th.id === found.defaultThemeId)
-      }
-      if (!targetTheme) {
-        targetTheme = availableThemes[0] || PRESET_THEMES[0]
-      }
-
-      setUseCustomColors(false)
-      setCurrentTheme(targetTheme)
-      setCustomColors({
-        primary: targetTheme.colors.primary,
-        secondary: targetTheme.colors.secondary,
-        accent: targetTheme.colors.accent,
-        roof: targetTheme.colors.roof
-      })
     }
   }
 
@@ -184,20 +137,7 @@ export function App() {
       setFocusedCarIndex(-1)
       setCurrent2dPageIndex(0)
 
-      // 优先使用新模型自带的默认涂装或附属涂装
-      const availableThemes = modelRepository.getAllLiveriesForConsist(res.consist.id)
-      let targetTheme = (res.consist.defaultThemeId && availableThemes.find(th => th.id === res.consist!.defaultThemeId))
-        || availableThemes[0]
-        || PRESET_THEMES[0]
-
-      setUseCustomColors(false)
-      setCurrentTheme(targetTheme)
-      setCustomColors({
-        primary: targetTheme.colors.primary,
-        secondary: targetTheme.colors.secondary,
-        accent: targetTheme.colors.accent,
-        roof: targetTheme.colors.roof
-      })
+      resetDraft(res.consist.id)
 
       confetti({
         particleCount: 100,
@@ -246,10 +186,7 @@ export function App() {
       {/* 顶部单行极简导航栏 */}
       <Header
         currentConsist={currentConsist}
-        modelManifest={modelManifest}
-        onSelectConsistById={handleSelectConsistById}
-        onImportFile={handleImportFile}
-        onExportPackage={handleExportPackage}
+        onOpenModelLibrary={() => setIsModelLibraryOpen(true)}
         cars={cars}
         current2dPageIndex={current2dPageIndex}
         onSelect2dPageIndex={setCurrent2dPageIndex}
@@ -359,8 +296,7 @@ export function App() {
                 <ModelSelector
                   currentConsist={currentConsist}
                   modelManifest={modelManifest}
-                  onSelectConsistById={handleSelectConsistById}
-                  onImportFile={handleImportFile}
+                  onOpenLibrary={() => setIsModelLibraryOpen(true)}
                   onExportPackage={handleExportPackage}
                   middleCarCount={middleCarCount}
                   onMiddleCarCountChange={setMiddleCarCount}
@@ -370,37 +306,22 @@ export function App() {
               )}
 
               {sidebarTab === 'texture' && (
-                <TextureEditor
+                <TextureEditor key={currentConsist.id}
                   currentConsist={currentConsist}
                   currentConsistId={currentConsist.id}
                   currentConsistCategory={currentConsist.category}
                   currentTheme={currentTheme}
-                  onThemeChange={t => {
-                    setCurrentTheme(t)
-                    setUseCustomColors(false)
-                    setCustomColors({
-                      primary: t.colors.primary,
-                      secondary: t.colors.secondary,
-                      accent: t.colors.accent,
-                      roof: t.colors.roof
-                    })
-                  }}
+                  onThemeChange={selectTheme}
                   customColors={customColors}
-                  onCustomColorsChange={setCustomColors}
+                  onCustomColorsChange={colors => updateDraft('colors',colors)}
                   useCustomColors={useCustomColors}
-                  onUseCustomColorsChange={setUseCustomColors}
+                  onUseCustomColorsChange={value => updateDraft('useCustomColors',value)}
                   customText={customText}
-                  onCustomTextChange={setCustomText}
+                  onCustomTextChange={text => updateDraft('text',text)}
                   themeMode={themeMode}
                   baker={baker}
-                  onCustomTextureApplied={() => {
-                    setBakeTick(prev => prev + 1)
-                    confetti({
-                      particleCount: 80,
-                      spread: 60,
-                      origin: { y: 0.6 }
-                    })
-                  }}
+                  customTexture={customTexture}
+                  onCustomTextureChange={texture => updateDraft('texture',texture)}
                 />
               )}
             </div>
@@ -408,6 +329,7 @@ export function App() {
         )}
       </div>
 
+      <ModelLibrary open={isModelLibraryOpen} onClose={() => setIsModelLibraryOpen(false)} models={modelManifest} selectedId={currentConsist.id} onSelect={handleSelectConsistById} onImport={handleImportFile} themeMode={themeMode}/>
       {/* 组装指南弹窗 */}
       <AssemblyGuide isOpen={isGuideOpen} onClose={() => setIsGuideOpen(false)} />
     </div>

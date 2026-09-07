@@ -473,11 +473,11 @@ const tramMiddleSchema: PapercraftModelSchema = {
 
 export const consistTram: TrainModelConsist = {
   id: 'tram-consist',
-  name: '镰仓江之电 300形 (江ノ電)',
-  nameEn: 'Kamakura Enoden 300 Series (Streetcar Tram)',
+  name: "江之电 300形",
+  nameEn: "Enoden 300",
   category: 'commuter',
-  description: '湘南海岸传奇有轨电车，经典 2 两连结编组，标配车顶立体金属受电弓与「鎌倉 ⇋ 藤沢」行先木板。',
-  descriptionEn: 'Iconic Shonan coast 2-car coupled heritage tramway featuring roof-mounted pantograph.',
+  description: "两节编组与车顶受电弓，可选江之电及其他电车风格配色。",
+  descriptionEn: "Two-car consist with a roof pantograph and tram-inspired liveries.",
   difficulty: 'medium',
   recommendedAge: '6-12 岁',
   estimatedTimePerCar: '15 分钟',

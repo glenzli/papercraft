@@ -1,8 +1,7 @@
 // 顶部全局单行导航栏 (整合车型切换、动态 .papercraft 资产导入导出、车厢分页、双语切换与全局导出)
-import React, { useRef } from 'react'
+import React from 'react'
 import { TrainModelConsist } from '../../core/schema/consistSchema'
 import { ConsistCarItem } from '../../core/models/consistManager'
-import { ModelManifestItem } from '../../core/models/modelRepository'
 import {
   Printer,
   HelpCircle,
@@ -13,8 +12,6 @@ import {
   Moon,
   PanelRightClose,
   PanelRightOpen,
-  FolderOpen,
-  Download,
   FileSpreadsheet,
   Languages
 } from 'lucide-react'
@@ -23,10 +20,7 @@ import { useI18n } from '../../i18n'
 
 interface HeaderProps {
   currentConsist: TrainModelConsist
-  modelManifest: ModelManifestItem[]
-  onSelectConsistById: (id: string) => void
-  onImportFile: (file: File) => void
-  onExportPackage: () => void
+  onOpenModelLibrary: () => void
   cars: ConsistCarItem[]
   current2dPageIndex: number
   onSelect2dPageIndex: (idx: number) => void
@@ -43,10 +37,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({
   currentConsist,
-  modelManifest,
-  onSelectConsistById,
-  onImportFile,
-  onExportPackage,
+  onOpenModelLibrary,
   cars,
   current2dPageIndex,
   onSelect2dPageIndex,
@@ -62,7 +53,6 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const { locale, setLocale, t, isZh } = useI18n()
   const isLight = themeMode === 'light'
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const pageLayout = packConsistToA4Pages(cars)
 
   const toggleLanguage = () => {
@@ -79,19 +69,6 @@ export const Header: React.FC<HeaderProps> = ({
           : 'bg-zinc-900/95 border-zinc-800 text-zinc-100'
       } backdrop-blur-md`}
     >
-      {/* 隐藏的 .papercraft 文件上传 input */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept=".papercraft,.json"
-        onChange={e => {
-          const file = e.target.files?.[0]
-          if (file) onImportFile(file)
-          e.target.value = ''
-        }}
-        className="hidden"
-      />
-
       {/* 左侧: Logo 与车型切换 */}
       <div className="flex items-center gap-2">
         <div className="flex items-center gap-1.5 font-bold tracking-tight text-xs">
@@ -103,76 +80,9 @@ export const Header: React.FC<HeaderProps> = ({
           <span className="hidden sm:inline">{t('common.appTitle')}</span>
         </div>
 
-        {/* 车型选择下拉气泡 */}
-        <div className="relative group">
-          <button
-            className={`flex items-center gap-1 px-2 py-1 rounded-md border text-xs font-medium transition-all ${
-              isLight
-                ? 'bg-zinc-100 hover:bg-zinc-200/80 text-zinc-800 border-zinc-200'
-                : 'bg-zinc-800 hover:bg-zinc-700/80 text-zinc-200 border-zinc-700'
-            }`}
-          >
-            <span className="truncate max-w-[120px] sm:max-w-[160px]">{currentDisplayName}</span>
-            <ChevronDown className="w-3 h-3 opacity-60 group-hover:rotate-180 transition-transform" />
-          </button>
-
-          {/* 下拉列表 */}
-          <div
-            className={`absolute top-full left-0 mt-1 w-64 rounded-xl border shadow-xl p-1.5 hidden group-hover:block z-50 transition-all ${
-              isLight ? 'bg-white border-zinc-200' : 'bg-zinc-900 border-zinc-800'
-            }`}
-          >
-            <div className="px-2 py-1 text-[10px] font-semibold opacity-50 uppercase tracking-wider">
-              {t('header.builtInTrains')}
-            </div>
-            <div className="max-h-60 overflow-y-auto space-y-0.5">
-              {modelManifest.map(m => {
-                const isSelected = m.id === currentConsist.id
-                const mName = isZh ? m.name : (m.nameEn || m.name)
-                return (
-                  <button
-                    key={m.id}
-                    onClick={() => onSelectConsistById(m.id)}
-                    className={`w-full text-left px-2.5 py-1.5 rounded-lg flex items-center justify-between text-xs transition-colors ${
-                      isSelected
-                        ? isLight ? 'bg-zinc-100 font-semibold text-zinc-900' : 'bg-zinc-800 font-semibold text-white'
-                        : isLight ? 'hover:bg-zinc-50 text-zinc-700' : 'hover:bg-zinc-800/60 text-zinc-300'
-                    }`}
-                  >
-                    <div>
-                      <div>{mName}</div>
-                      <div className="text-[10px] opacity-50">{m.category.toUpperCase()} · {m.difficulty.toUpperCase()}</div>
-                    </div>
-                    {isSelected && <span className="text-sky-500 text-xs">●</span>}
-                  </button>
-                )
-              })}
-            </div>
-
-            {/* 导入 / 导出动作 */}
-            <div className={`mt-1.5 pt-1.5 border-t ${isLight ? 'border-zinc-100' : 'border-zinc-800'} space-y-1`}>
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                className={`w-full px-2.5 py-1 rounded-lg flex items-center gap-1.5 text-xs cursor-pointer transition-colors ${
-                  isLight ? 'hover:bg-zinc-50 text-zinc-700' : 'hover:bg-zinc-800/60 text-zinc-300'
-                }`}
-              >
-                <FolderOpen className="w-3.5 h-3.5 opacity-70" />
-                <span>{t('header.importPapercraftAsset')}</span>
-              </div>
-
-              <button
-                onClick={onExportPackage}
-                className={`w-full text-left px-2.5 py-1 rounded-lg flex items-center gap-1.5 text-xs transition-colors ${
-                  isLight ? 'hover:bg-zinc-50 text-zinc-700' : 'hover:bg-zinc-800/60 text-zinc-300'
-                }`}
-              >
-                <Download className="w-3.5 h-3.5 opacity-70" />
-                <span>{t('header.exportCurrentPapercraft')}</span>
-              </button>
-            </div>
-          </div>
-        </div>
+        <button onClick={onOpenModelLibrary} aria-haspopup="dialog" className={`flex items-center gap-2 px-2 py-1 rounded-md border text-xs font-medium ${isLight?'bg-zinc-100 hover:bg-zinc-200 border-zinc-200':'bg-zinc-800 hover:bg-zinc-700 border-zinc-700'}`} title={isZh?'打开模型库':'Open model library'}>
+          <span className="truncate max-w-[120px] sm:max-w-[180px]">{currentDisplayName}</span><ChevronDown className="w-3 h-3 opacity-60"/>
+        </button>
       </div>
 
       {/* 中间: 视口模式与快速换页 */}
@@ -223,10 +133,9 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* 2D 分页快捷标签 (仅在 2D 或分屏模式下高亮展示) */}
         {viewMode !== '3d' && (
-          <div className="hidden md:flex items-center gap-1">
+          <div className="hidden lg:flex items-center gap-1 max-w-[240px] overflow-x-auto">
             {pageLayout.map((page, idx) => {
               const carText = page.car?.carNumberText || t('header.pageAccessory')
-              const shortText = carText.slice(0, 5)
               return (
                 <button
                   key={page.pageIndex}
@@ -242,7 +151,7 @@ export const Header: React.FC<HeaderProps> = ({
                   }`}
                   title={t('header.pageJumpTitle', { page: idx + 1, name: carText })}
                 >
-                  P{idx + 1}: {shortText}
+                  P{idx + 1}
                 </button>
               )
             })}

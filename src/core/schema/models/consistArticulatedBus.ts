@@ -443,11 +443,11 @@ const rearBusSchema: PapercraftModelSchema = {
 
 export const consistArticulatedBus: TrainModelConsist = {
   id: 'articulated-bus-consist',
-  name: '18米双节铰接巨龙公交车',
-  nameEn: '18m Articulated Transit Bus (Bendy Bus)',
+  name: "双节铰接公交车",
+  nameEn: "Articulated bus",
   category: 'bus',
-  description: '经典 18 米双节大容量中运量铰接客车，带黑色手风琴立体风挡与 3 组车轴。',
-  descriptionEn: 'Iconic 18m high-capacity articulated transit bus with flexible folding bellows and 3 axles.',
+  description: "前后车身通过纸质折棚连接。",
+  descriptionEn: "Front and rear sections joined by paper bellows.",
   difficulty: 'medium',
   recommendedAge: '6-12 岁',
   estimatedTimePerCar: '20 分钟',

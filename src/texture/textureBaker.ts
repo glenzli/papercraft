@@ -1,5 +1,6 @@
 // 纹理烘焙器 (支持通勤电车、新干线高速、大正复古蒸汽全车型真实拟真贴图)
 import * as THREE from 'three'
+import { bakeProfessionalTrainLivery } from './professionalTrainLivery'
 import { TextureTheme, CustomTextConfig, LiveryStyle } from './types'
 
 export interface BakeOptions {
@@ -107,6 +108,14 @@ export class TextureBaker {
     this.dataUrls = new WeakMap()
     this.texture?.dispose()
     this.texture = null
+    const professional = bakeProfessionalTrainLivery(options, {
+      side: (ctx,w,h,isLeft,middle) => {
+        this.drawHarukaFullSakuraLivery(ctx,w,h,isLeft,middle)
+        this.drawHelloKittyIllustration(ctx,w*(middle ? .30 : .16),h*(middle ? .75 : .57),middle ? .65 : 1.05,!isLeft)
+      },
+      front: (ctx,w,h) => this.drawHarukaFrontNoseSakura(ctx,w,h)
+    })
+    if (professional) { this.slotCanvases = professional; return }
     const { theme, category = 'commuter', consistId, carType = 'head', customColors, customText, useCustomColors } = options
 
     const primaryColor = useCustomColors && customColors ? customColors.primary : theme.colors.primary
@@ -1951,7 +1960,7 @@ export class TextureBaker {
         const doorY = h * 0.16
 
         const drawGSEDoor = (dx: number) => {
-          ctx.fillStyle = '#e11d48'
+          ctx.fillStyle = primaryColor
           ctx.fillRect(dx, doorY, doorW, doorH)
           ctx.fillStyle = '#1e293b'
           ctx.lineWidth = 1.5
@@ -2533,7 +2542,7 @@ export class TextureBaker {
     canvas.width = w
     canvas.height = h
     const ctx = canvas.getContext('2d')!
-    const { roofColor, secondaryColor, theme, category, consistId } = params
+    const { primaryColor, roofColor, secondaryColor, theme, category, consistId } = params
 
     const style = this.resolveLiveryStyle(theme, category, consistId)
 
@@ -2694,12 +2703,12 @@ export class TextureBaker {
           ctx.fillStyle = '#1e3a8a'
           ctx.fillRect(0, h * 0.94 + 5, w, 3)
         }
-      } else if (style === 'romancecar-gse-red') {
+      } else if (style.startsWith('romancecar-')) {
         // === 🏔️ 小田急 GSE 浪漫特快车顶 (玫瑰朱红 + 2楼挑高全景风挡) ===
-        ctx.fillStyle = '#e11d48'
+        ctx.fillStyle = primaryColor
         ctx.fillRect(0, 0, w, h)
 
-        ctx.fillStyle = '#9f1239'
+        ctx.fillStyle = roofColor
         ctx.fillRect(w * 0.30, h * 0.10, w * 0.40, h * 0.55)
 
         const isMiddleCar = params.carType === 'middle'
@@ -2729,7 +2738,7 @@ export class TextureBaker {
         ctx.fillRect(0, 0, w, h)
         ctx.fillStyle = '#cbd5e1'
         ctx.fillRect(w * 0.35, h * 0.1, w * 0.3, h * 0.8)
-      } else if (style === 'shinkansen-haruka-kitty') {
+      } else if (style.startsWith('shinkansen-haruka-')) {
         // === 关空特急 Haruka 281系 车顶 (纯白 + 仅前端 12% 紧凑驾驶舱黑色风挡斜面) ===
         ctx.fillStyle = '#ffffff'
         ctx.fillRect(0, 0, w, h)
@@ -2772,10 +2781,10 @@ export class TextureBaker {
           ctx.lineTo(w * 0.54, winTop + winH * 0.35)
           ctx.stroke()
         }
-      } else if (style === 'shinkansen-nankai-rapit') {
-        ctx.fillStyle = '#0b1d3a'
+      } else if (style.startsWith('shinkansen-nankai-rapit')) {
+        ctx.fillStyle = roofColor
         ctx.fillRect(0, 0, w, h)
-        ctx.fillStyle = '#0f2b5c'
+        ctx.fillStyle = primaryColor
         ctx.fillRect(w * 0.30, h * 0.15, w * 0.40, h * 0.70)
       } else if (style === 'shinkansen-500-eva') {
         ctx.fillStyle = '#581c87'
@@ -3857,9 +3866,9 @@ export class TextureBaker {
         ctx.fillStyle = '#0f172a'
         ctx.fillRect(0, h * 0.40, w, h * 0.60)
 
-      } else if (style === 'shinkansen-nankai-rapit') {
+      } else if (style.startsWith('shinkansen-nankai-rapit')) {
         // === 南海 50000系 特急 Rapi:t (纯正午夜深蓝 + 银色中脊破风线 + 穹顶全景风挡 + 纯净金属装甲，无任何腰线) ===
-        ctx.fillStyle = '#0f2b5c' // 纯正午夜深蓝
+        ctx.fillStyle = primaryColor // 纯正午夜深蓝
         ctx.fillRect(0, 0, w, h)
 
         // 1. 穹顶圆弧驾驶舱前风挡 (大尺寸飞机式全景弧面玻璃)
@@ -3869,7 +3878,7 @@ export class TextureBaker {
         const winX = w * 0.08
 
         // 钛灰外圈金属加固密封法兰
-        ctx.fillStyle = '#64748b'
+        ctx.fillStyle = frameColor
         ctx.beginPath()
         ctx.arc(w * 0.5, winTop + winW * 0.46, winW * 0.52, Math.PI * 1.05, Math.PI * 1.95, false)
         ctx.lineTo(winX + winW, winTop + winH)
@@ -3887,7 +3896,7 @@ export class TextureBaker {
         ctx.fill()
 
         // 黑色单臂精细雨刮器
-        ctx.strokeStyle = '#64748b'
+        ctx.strokeStyle = frameColor
         ctx.lineWidth = 3
         ctx.beginPath()
         ctx.moveTo(w * 0.50, winTop + winH - 4)
@@ -3895,7 +3904,7 @@ export class TextureBaker {
         ctx.stroke()
 
         // 2. 标志性银色金属中脊垂直分割破风线 (贯穿车顶穹顶至尖鼻底部)
-        ctx.fillStyle = '#cbd5e1'
+        ctx.fillStyle = accentColor
         ctx.fillRect(w * 0.5 - 3, 0, 6, h * 0.85)
         ctx.fillStyle = '#ffffff'
         ctx.fillRect(w * 0.5 - 1, 0, 2, h * 0.85)
@@ -3906,14 +3915,14 @@ export class TextureBaker {
         ctx.arc(w * 0.18, h * 0.52, 4, 0, Math.PI * 2)
         ctx.arc(w * 0.82, h * 0.52, 4, 0, Math.PI * 2)
         ctx.fill()
-        ctx.fillStyle = '#cbd5e1'
+        ctx.fillStyle = accentColor
         ctx.beginPath()
         ctx.arc(w * 0.18, h * 0.52, 2, 0, Math.PI * 2)
         ctx.arc(w * 0.82, h * 0.52, 2, 0, Math.PI * 2)
         ctx.fill()
 
         // 装甲接缝铆钉点列
-        ctx.fillStyle = '#64748b'
+        ctx.fillStyle = frameColor
         for (let r = 0; r < 7; r++) {
           const rx = w * 0.22 + r * (w * 0.093)
           ctx.beginPath()
@@ -3933,7 +3942,7 @@ export class TextureBaker {
         ctx.fillRect(0, 0, w, h)
 
         // 1. 真实还原官方动漫插画：唯美 S 型微风樱吹雪风痕与自然落樱 (无俗气孤立花球)
-        this.drawHarukaFrontNoseSakura(ctx, w, h)
+        if(style !== 'shinkansen-haruka-classic') this.drawHarukaFrontNoseSakura(ctx, w, h)
 
         // 2. 双内嵌式透镜前照大灯
         const lightY = h * 0.77
@@ -4776,16 +4785,16 @@ export class TextureBaker {
     canvas.width = w
     canvas.height = h
     const ctx = canvas.getContext('2d')!
-    const { secondaryColor, windowColor, frameColor, theme, category, consistId } = params
+    const { primaryColor, secondaryColor, windowColor, frameColor, theme, category, consistId } = params
 
     const style = this.resolveLiveryStyle(theme, category, consistId)
 
     if (style === 'shinkansen-doctor-yellow') {
       ctx.fillStyle = '#facc15'
-    } else if (style === 'shinkansen-n700' || style === 'shinkansen-haruka-kitty') {
+    } else if (style === 'shinkansen-n700' || style.startsWith('shinkansen-haruka-')) {
       ctx.fillStyle = '#f8fafc'
-    } else if (style === 'shinkansen-nankai-rapit') {
-      ctx.fillStyle = '#0f2b5c'
+    } else if (style.startsWith('shinkansen-nankai-rapit')) {
+      ctx.fillStyle = primaryColor
     } else if (style === 'shinkansen-500-eva') {
       ctx.fillStyle = '#6b21a8'
     } else {
@@ -4796,7 +4805,7 @@ export class TextureBaker {
     // 深蓝/墨黑流线前挡风玻璃
     ctx.fillStyle = frameColor || '#1e293b'
     ctx.beginPath()
-    if (style === 'shinkansen-nankai-rapit') {
+    if (style.startsWith('shinkansen-nankai-rapit')) {
       // 南海 Rapi:t 机甲武士锐角眼罩风挡
       ctx.moveTo(w * 0.12, h * 0.18)
       ctx.lineTo(w * 0.88, h * 0.18)
@@ -4861,11 +4870,11 @@ export class TextureBaker {
       ctx.fillRect(0, h * 0.80, w, h * 0.20)
 
       // 飘落粉樱花瓣
-      this.drawNaturalSakuraPetal(ctx, w * 0.5, h * 0.5, 4.5, 0.4, 0.9)
+      if(style !== 'shinkansen-haruka-classic') this.drawNaturalSakuraPetal(ctx, w * 0.5, h * 0.5, 4.5, 0.4, 0.9)
 
-    } else if (style === 'shinkansen-nankai-rapit') {
+    } else if (style.startsWith('shinkansen-nankai-rapit')) {
       // === 南海特急 Rapi:t 机甲武士鼻锥 (纯正午夜深蓝 + 银色中脊破风线) ===
-      ctx.fillStyle = '#0f2b5c'
+      ctx.fillStyle = primaryColor
       ctx.fillRect(0, 0, w, h)
 
       // 银色中脊破风分割线

@@ -594,14 +594,14 @@ export const shinkansen300TailSchema: PapercraftModelSchema = {
 
 export const shinkansen300TrainConsist: TrainModelConsist = {
   id: "shinkansen300-hikarian-consist",
-  name: "新干线 300系 (白银希望号)",
-  nameEn: "Shinkansen 300 Series (Nozomi / Hikarian)",
+  name: "新干线 300系",
+  nameEn: "Shinkansen 300",
   category: "shinkansen",
   difficulty: "medium",
   recommendedAge: "6-12 岁",
   estimatedTimePerCar: "15-20 分钟",
-  description: "东海道新干线 300系，《铁胆火车侠》白银希望号与0系经典子弹头微流线车模。",
-  descriptionEn: "Tokaido Shinkansen Series 300 Nozomi and Hikarian Silver Express bullet train.",
+  description: "简化车头与车身，可选300系及其他列车风格配色。",
+  descriptionEn: "Simplified nose and body with Series 300 and other train-inspired liveries.",
   defaultThemeId: "shinkansen-300-nozomi",
   carDefinitions: {
     head: {

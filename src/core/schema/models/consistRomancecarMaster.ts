@@ -1,4 +1,4 @@
-// 小田急 70000形 GSE (浪漫特快 / 全景展望席特急列车) 大师高级版 (Master Edition)
+// 小田急 70000形 GSE (浪漫特快 / 全景展望席特急列车) 精细版 (Detailed)
 // 突破性外观几何结构：二楼高耸骑跨式飞行座舱 + 垂直深陷 12mm 阶梯断层中壁 + 一楼超大倾角全景落地展望席
 import { TrainModelConsist } from '../consistSchema'
 import { PapercraftModelSchema } from '../papercraftSchema'
@@ -7,18 +7,18 @@ import { PapercraftModelSchema } from '../papercraftSchema'
 // plane so a straight window edge remains straight across every mesh triangle.
 const sideUV = (z:number,y:number):[number,number] => [(84-z)/164,y/46]
 
-// 1. GSE 先头展望车 (双层阶梯断层全景展望车 · 大师高级版)
+// 1. GSE 先头展望车 (双层阶梯断层全景展望车 · 精细版)
 export const romancecarHeadMasterSchema: PapercraftModelSchema = {
   version: "2.0",
   id: "romancecar-head-master",
-  name: "小田急 GSE 70000形 (双层展望席 · 大师版)",
-  nameEn: "Odakyu GSE 70000 (Panoramic Lounge Master Ed.)",
+  name: "小田急 GSE 70000形 (双层展望席 · 精细版)",
+  nameEn: "Odakyu GSE 70000 (Detailed)",
   category: "shinkansen",
   difficulty: "hard",
   recommendedAge: "10-18 岁",
   estimatedTime: "30-40 分钟",
-  description: "小田急浪漫特快旗舰大师版，真·双层阶梯错层车头：二楼挑高飞行座舱、垂直下落断层壁与一楼大落地全景落地展望台。",
-  descriptionEn: "Master Edition Odakyu Romancecar GSE featuring an authentic stepped two-tier cab architecture with an elevated cockpit and recessed panoramic lounge.",
+  description: "小田急 GSE 精细版，带抬高驾驶室、阶梯过渡和前端展望窗。",
+  descriptionEn: "Detailed Odakyu GSE with a raised cab, stepped transition and front observation windows.",
   dimensions: {
     length: 160,
     width: 38,
@@ -464,14 +464,14 @@ import { romancecarMiddleSchema } from './consistRomancecar'
 // 3. 编组定义
 export const romancecarTrainConsistMaster: TrainModelConsist = {
   id: "romancecar-gse-master-consist",
-  name: "小田急 70000形 GSE (双层展望席 · 大师版)",
-  nameEn: "Odakyu GSE 70000 (Stepped Panoramic Lounge Master Ed.)",
+  name: "小田急 GSE 70000形 · 精细版",
+  nameEn: "Odakyu GSE 70000 · Detailed",
   category: "shinkansen",
   difficulty: "hard",
   recommendedAge: "10-18 岁",
   estimatedTimePerCar: "35 分钟",
-  description: "大师级双层立体阶梯展望特急列车。骑跨式二楼高位驾驶舱与深陷垂直断层壁，带来前所未有的全景大飘窗折纸体验。",
-  descriptionEn: "Master Edition observation express with stepped two-tier cockpit and panoramic observation lounge.",
+  description: "阶梯驾驶室、前部展望窗与分片车头。",
+  descriptionEn: "Stepped cab, front observation windows and sectional nose.",
   defaultThemeId: "romancecar-gse-red",
   assembly: {
     type: "consist",
@@ -482,8 +482,8 @@ export const romancecarTrainConsistMaster: TrainModelConsist = {
   carDefinitions: {
     head: {
       type: "head",
-      name: "先头展望车 (大师版)",
-      nameEn: "Observation Head Car (Master Ed.)",
+      name: "先头展望车 (精细版)",
+      nameEn: "Observation Head Car (Detailed)",
       description: "双层挑高飞行员座舱与全景大落地风挡",
       descriptionEn: "Two-tier stepped cab with elevated cockpit and observation lounge",
       schema: romancecarHeadMasterSchema
@@ -498,8 +498,8 @@ export const romancecarTrainConsistMaster: TrainModelConsist = {
     },
     tail: {
       type: "tail",
-      name: "车尾展望车 (大师版)",
-      nameEn: "Observation Tail Car (Master Ed.)",
+      name: "车尾展望车 (精细版)",
+      nameEn: "Observation Tail Car (Detailed)",
       description: "全景双层后展望席",
       descriptionEn: "Rear observation lounge car",
       schema: romancecarHeadMasterSchema

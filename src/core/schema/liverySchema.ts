@@ -147,3 +147,8 @@ export async function loadLiveryFromFile(file: File): Promise<{
     }
   }
 }
+
+/** Explicit model bindings take precedence over broad category compatibility. */
+export function isLiveryCompatible(livery:Pick<PapercraftLiverySchema,'targetConsistIds'|'targetCategory'>,consistId:string,category:string):boolean {
+  return livery.targetConsistIds?.length ? livery.targetConsistIds.includes(consistId) : livery.targetCategory==='all'||livery.targetCategory===category
+}

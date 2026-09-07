@@ -263,11 +263,11 @@ const cityBusSchema: PapercraftModelSchema = {
 
 export const consistCityBus: TrainModelConsist = {
   id: 'city-bus-consist',
-  name: '都市低地板双门公交车',
-  nameEn: 'City Low-Floor Transit Bus',
+  name: "城市双门公交车",
+  nameEn: "City transit bus",
   category: 'bus',
-  description: '经典都市无障碍低地板公交车，带前后车牌与车头 LED 线路牌、双开折叠客门与车顶空调。',
-  descriptionEn: 'Iconic city transit low-floor bus with front LED route display, license plates, and dual folding doors.',
+  description: "双门车体、线路牌与车顶空调。",
+  descriptionEn: "Two-door body, route displays and roof air conditioning.",
   difficulty: 'easy',
   recommendedAge: '5-10 岁',
   estimatedTimePerCar: '20 分钟',

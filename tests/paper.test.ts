@@ -130,6 +130,42 @@ for(const consist of CONSIST_REGISTRY) {
     assert.ok(output.includes(' m\n')&&output.includes(' l\n'),'PDF contains vector paths')
     assert.ok(output.includes('(1.1)'),'PDF contains seam number text')
   }
+  if(consist.id==='haruka-281-pro-consist'||consist.id==='rapit-50000-pro-consist') {
+    const haruka=consist.id==='haruka-281-pro-consist'
+    assert.equal(pages.length,3,'A default professional consist fits on three complete sheets')
+    if(!haruka) {
+      const nose=cars[0].modelData.paperModel!.surfaces[0].vertices.filter(v=>Math.abs(v.y-17)<1e-5)
+      const centre=nose.find(v=>Math.abs(v.x)<1e-5)!,side=nose.find(v=>Math.abs(v.x-13)<1e-5)!
+      assert.ok(centre.z-side.z>=5,'Rapi:t nose has a physical central projection')
+    }
+    for(const car of cars) {
+      const paper=car.modelData.paperModel!,body=paper.surfaces[0]
+      assert.ok(body.edges.every(e=>e.faces.length===2),'Professional body is physically closed')
+      assert.ok(!paper.diagnostics.some(d=>d.severity!=='info'),'No small-join or topology warnings')
+      const panels=paper.parts.filter(p=>p.sourcePartId===body.id&&p.kind==='surface')
+      for(const region of car.schema.parts[0].unfoldRegions!) {
+        const expected=body.triangles.filter(t=>t.unfoldRegion?.id===region.id).map(t=>t.id).sort()
+        const panel=panels.find(p=>p.faces.some(f=>expected.includes(f.id)))!
+        assert.deepEqual(panel.faces.map(f=>f.id).sort(),expected,`${region.id}: complete construction panel`)
+        assert.ok(panel.faces.length>=4,'No isolated triangles in the professional body')
+      }
+      assert.ok(paper.parts.filter(p=>p.kind==='join-strip').length<=(haruka?0:2),'Bounded, usable joining strips')
+      const {length,height}=car.schema.dimensions,maxZ=car.carType==='middle'?90:94
+      for(const triangle of body.triangles.filter(t=>t.textureSlot.startsWith('side_'))) {
+        for(const weights of [[1,0,0],[0,1,0],[0,0,1],[.2,.3,.5]]) {
+          const z=triangle.vertices.reduce((s,v,i)=>s+weights[i]*v.z,0)
+          const y=triangle.vertices.reduce((s,v,i)=>s+weights[i]*v.y,0)
+          near(triangle.uvs.reduce((s,v,i)=>s+weights[i]*v.x,0),(maxZ-z)/length)
+          near(triangle.uvs.reduce((s,v,i)=>s+weights[i]*v.y,0),y/height)
+        }
+      }
+      // Sloped shoulders participate in the side projection: the high cab windows must not disappear.
+      assert.ok(body.triangles.some(t=>t.textureSlot.startsWith('side_')&&t.vertices.some(v=>v.y>30)))
+      const roundTrip=compilePaperModel(JSON.parse(JSON.stringify(car.schema)))
+      assert.deepEqual(roundTrip.surfaces,paper.surfaces,'Serializable schema preserves physical surfaces and UVs')
+      assert.deepEqual(roundTrip.parts,paper.parts,'Serializable construction regions preserve print panels')
+    }
+  }
   if(consist.id==='romancecar-gse-master-consist') {
     for(const car of [cars[0],cars[cars.length-1]]) {
       const sides=car.modelData.paperModel!.surfaces[0].triangles.filter(t=>t.sourceFaceId==='side_left'||t.sourceFaceId==='side_right')

@@ -1,21 +1,21 @@
-// 中国标准动车组 CR400 复兴号 (八面多面体气动流线车身 + 刀锋破风长鼻 · 旗舰大师版)
+// 中国标准动车组 CR400 复兴号 (八面多面体气动流线车身 + 刀锋破风长鼻 · 精细版)
 // 突破性几何结构：真实八面低风阻流线车身截面 (车顶平顶 + 20°上导流斜肩 + 垂直车窗腰部 + 18°下导流裙板内折)
 // 配合四面立体微曲雕塑车鼻 (中央刀锋破风脊线 + 左右气动分风斜面 + 鹰眼流线前颊)
 import { TrainModelConsist } from '../consistSchema'
 import { PapercraftModelSchema } from '../papercraftSchema'
 
-// 1. CR400 旗舰大师版 先头车
+// 1. CR400 精细版 先头车
 export const cr400HeadMasterSchema: PapercraftModelSchema = {
   version: "2.0",
   id: "cr400-head-master",
-  name: "CR400 复兴号 (八面流线 · 旗舰大师版)",
-  nameEn: "CR400 Fuxing (Octagonal Aero Master Ed.)",
+  name: "CR400 复兴号 (八面流线 · 精细版)",
+  nameEn: "CR400 Fuxing (Detailed)",
   category: "shinkansen",
   difficulty: "hard",
   recommendedAge: "10-18 岁",
   estimatedTime: "35-45 分钟",
-  description: "复兴号旗舰大师版：真实八面体低风阻微曲断面（车顶上折角+下裙板内敛折角），中央刀锋破风脊线长鼻锥。",
-  descriptionEn: "Master Edition CR400 featuring an authentic 8-facet tumblehome body cross-section and razor-spine aerodynamic needle nose.",
+  description: "复兴号精细版：八折面车体、内收下裙和带中央折脊的长鼻车头。",
+  descriptionEn: "Detailed CR400 with an eight-facet body, inset lower skirt and a long nose with a central fold ridge.",
   dimensions: {
     length: 180,
     width: 38,
@@ -483,18 +483,18 @@ export const cr400HeadMasterSchema: PapercraftModelSchema = {
   ]
 }
 
-// 2. CR400 旗舰大师版 中间客车 (全贯通八面体低阻力车身)
+// 2. CR400 精细版 中间客车 (全贯通八面体低阻力车身)
 export const cr400MiddleMasterSchema: PapercraftModelSchema = {
   version: "2.0",
   id: "cr400-middle-master",
-  name: "CR400 复兴号 (八面流线客车 · 旗舰大师版)",
-  nameEn: "CR400 Fuxing Middle (Octagonal Aero Master Ed.)",
+  name: "CR400 复兴号 (八面流线客车 · 精细版)",
+  nameEn: "CR400 Fuxing Middle (Detailed)",
   category: "shinkansen",
   difficulty: "hard",
   recommendedAge: "10-18 岁",
   estimatedTime: "30-40 分钟",
-  description: "复兴号旗舰大师版中间客车：连续贯通式八面体微曲车身断面，单臂高速受电弓与双空调机组。",
-  descriptionEn: "Master Edition CR400 coach featuring matching 8-facet tumblehome body geometry and high-speed pantograph.",
+  description: "复兴号精细版中间客车：连续贯通式八面体微曲车身断面，单臂高速受电弓与双空调机组。",
+  descriptionEn: "Detailed CR400 coach with a matching eight-facet body and roof equipment.",
   dimensions: {
     length: 160,
     width: 38,
@@ -815,14 +815,14 @@ export const cr400MiddleMasterSchema: PapercraftModelSchema = {
 // 3. 完整编组定义 (先头车 + 中间客车 + 尾车)
 export const cr400TrainConsistMaster: TrainModelConsist = {
   id: "cr400-master-consist",
-  name: "CR400 复兴号 (旗舰大师版 · 八面流线)",
-  nameEn: "CR400 Fuxing (Master Ed. Octagonal Aero)",
+  name: "CR400 复兴号 · 精细版",
+  nameEn: "CR400 Fuxing · Detailed",
   category: "shinkansen",
   difficulty: "hard",
   recommendedAge: "10-18 岁",
   estimatedTimePerCar: "35 分钟",
-  description: "复兴号旗舰大师版：真·八面多面体流线车身截面（车顶斜肩+下裙板内折）与四面立体微曲雕塑车鼻（中央刀锋破风脊线）。",
-  descriptionEn: "Master Edition CR400 featuring an authentic 8-facet tumblehome cross-section and razor-spine aerodynamic needle nose.",
+  description: "八面车体、分片车鼻与内折下裙。",
+  descriptionEn: "Eight-sided body, sectional nose and inset skirt.",
   defaultThemeId: "cr400-fuxing-red",
   assembly: {
     type: "consist",
@@ -834,7 +834,7 @@ export const cr400TrainConsistMaster: TrainModelConsist = {
     head: {
       type: "head",
       name: "先头车 (八面流线 · 刀锋破风长鼻)",
-      nameEn: "CR400 Head Car (Octagonal Aero Master Ed.)",
+      nameEn: "CR400 Head Car (Detailed)",
       description: "八面低风阻多面体车身与中央刀锋破风长鼻锥",
       descriptionEn: "Aerodynamic octagonal cross-section and razor-spine needle nose",
       schema: cr400HeadMasterSchema
@@ -842,7 +842,7 @@ export const cr400TrainConsistMaster: TrainModelConsist = {
     middle: {
       type: "middle",
       name: "中间车 (八面贯通客舱)",
-      nameEn: "CR400 Middle Coach (Master Ed.)",
+      nameEn: "CR400 Middle Coach (Detailed)",
       description: "八面体微曲贯通客舱",
       descriptionEn: "Continuous 8-facet tumblehome body",
       schema: cr400MiddleMasterSchema
@@ -850,7 +850,7 @@ export const cr400TrainConsistMaster: TrainModelConsist = {
     tail: {
       type: "tail",
       name: "尾车 (八面流线 · 刀锋破风长鼻)",
-      nameEn: "CR400 Tail Car (Octagonal Aero Master Ed.)",
+      nameEn: "CR400 Tail Car (Detailed)",
       description: "八面低风阻多面体车身与中央刀锋破风长鼻锥",
       descriptionEn: "Aerodynamic octagonal cross-section and razor-spine needle nose",
       schema: cr400HeadMasterSchema

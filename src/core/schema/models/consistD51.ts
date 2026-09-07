@@ -400,12 +400,12 @@ const d51CoachSchema: PapercraftModelSchema = {
 
 export const d51TrainConsist: TrainModelConsist = {
   id: 'd51-consist',
-  name: 'D51形 蒸汽机车',
-  nameEn: 'Class D51 Steam Locomotive',
+  name: "D51 蒸汽列车",
+  nameEn: "D51 steam train",
   category: 'steam',
   defaultThemeId: 'vintage-steam',
-  description: '经典蒸汽机车，包含蒸汽机车头、后挂煤水补给车 (Tender) 与复古客车厢。',
-  descriptionEn: 'Legendary Japanese steam locomotive with coal tender and vintage passenger cars.',
+  description: "蒸汽机车、煤水车与客车编组。",
+  descriptionEn: "Steam locomotive, tender and passenger coaches.",
   difficulty: 'hard',
   recommendedAge: '8-14 岁',
   estimatedTimePerCar: '30 分钟/节',
