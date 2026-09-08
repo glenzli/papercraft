@@ -2,59 +2,55 @@
 
 [中文](#中文) · [English](#english)
 
----
-
 <a id="中文"></a>
 
 ## 中文
 
-Papercraft Studio 是一个用于列车与车辆纸模型设计、涂装定制与展开图纸导出的浏览器小工具。
+Papercraft Studio 是一个浏览器中的车辆纸模工具，用于选择模型、调整编组与涂装，并导出带剪折线和粘合翼的 A4 图纸。
 
-用户可以在 3D 视图中查看车辆编组、调整颜色涂装，并将模型展开为带折痕和粘贴边的 2D 打印图纸（A4 PDF）。
+![Haruka 281 精细版与涂装面板](docs/preview.png)
 
-![Papercraft Studio 预览图](docs/preview.png)
+### 主要能力
 
-### 主要功能
+- **模型与编组**：提供列车、公交车和有轨电车，支持名称搜索、类别与难度筛选。CR400、GSE、Haruka 281 和 Rapi:t 50000 各有基础版与精细版；支持编组的车型可增减中间车厢。
+- **涂装定制**：选择兼容预设，调整颜色和文字，或上传侧身插画、贴图总谱。标为“风格”的配色只改变图案，不将车体变为另一车型。
+- **预览与展开**：在 3D、2D 或分屏视图中检查模型。复杂车体分为多个纸片，使用接缝编号配对，并提供纸质车钩等连接件。
+- **导出与交换**：导出带矢量剪折线的 A4 PDF；用 `.papercraft` 交换模型与涂装资源，用 `.papercraft-livery` 单独交换涂装。
 
-- **3D 预览与编组**：在 3D 视图中浏览和旋转车辆，支持增减中间车厢数量，并预览车钩与贯通道连挂效果。
-- **预设车型与涂装**：内置高铁（复兴号/和谐号/新干线）、干线货运（东风4B/EF510等）、双节巨龙公交、双层客车与经典有轨电车等车型及基础涂装。
-- **精细版纸模**：Haruka 281 与南海 Rapi:t 50000 提供独立的多折面车体、驾驶室和前脸制作分区；原基础版继续保留。标准三节编组各用 3 张 A4，详见[制作说明](docs/professional-trains.md)。
-- **模型库**：支持名称搜索、类别与难度筛选，基础版和精细版并列展示；筛选不会切换当前模型。
-- **涂装选择**：按当前模型列出兼容涂装，并将预设、调色与文字、上传贴图区分为三个入口。在本次页面会话内，切换模型保留各自的涂装、编组与已应用贴图。
-- **涂装与文字定制**：支持调整主色、副色、点缀色和车顶颜色，可按需添加车次与线路铭牌。
-- **2D 展开与排版**：3D、展开和贴图共用同一份面片与 UV。复杂表面可拆成多个无重叠纸片，按编号粘合；所有纸片与粘合翼按实际毫米尺寸分页到 A4。
-- **图纸导出**：A4 PDF 使用位图贴图和矢量剪折线、接缝编号，附 50 mm 校准标尺。打印时选择“100% / 实际大小”。
-- **简易纸质连接件**：提供免额外五金配件的纸质插扣与折棚图纸，用于组装后车厢之间的活动连接。
-- **文件导入与导出**：支持以 `.papercraft`（ZIP 格式）导入导出包含模型定义与涂装的车辆包。
+![模型库：搜索、类别与难度筛选](docs/model-library.png)
 
-### 当前边界
+### 使用方式
 
-- 模型由平面纸片组成，复杂车头保留折面近似。展开搜索不保证最少切口；纸厚、粘贴顺序和连接强度仍需打印试装。
-- 2D 排版目前针对标准 A4 纸张优化，暂未对其他纸张尺寸做自动分页适配。
-- 贴图基于 Canvas 2D 程序化绘制，暂不支持任意外部贴图的手动 UV 绘制与烘焙。
+1. 打开模型库，选择车型与制作难度。
+2. 调整编组，在“预设涂装”“调色与文字”或“贴图”中设置外观。
+3. 检查 3D 外形和各页展开图，按同一车厢内的接缝编号确认连接关系。
+4. 导出 PDF，以 **100% / 实际大小** 打印，核对图纸上的 **50 mm** 标尺，再剪裁、压折和粘合。
 
-### 快速开始
+### 当前限制
+
+- 复杂曲面使用平面折面近似，并非精确工程缩尺。纸厚、粘贴顺序和接缝强度仍需实物试装；展开不保证最少切口或最少页数，目前仅自动分页到 A4。
+- 切换模型会保留各自的编辑状态，**刷新页面会清除这些状态**。`.papercraft` 是模型与涂装资源包，不是包含当前编组、全部调色、文字及上传贴图的项目存档。
+- 上传图片按既定贴图布局映射到模型；目前没有自由编辑模型几何或 UV 的可视化工具。
+
+### 本地开发
+
+需要 Node.js 与 npm。
 
 ```bash
-# 安装依赖
 npm install
-
-# 启动本地开发服务
-npm run dev
-
-# 几何、接缝、UV 与分页回归检查
-npm test
-
-# 构建生产产物
-npm run build
+npm run dev      # 启动开发服务，访问终端显示的地址
+npm test         # 几何、接缝、贴图与模型库回归检查
+npm run build    # 构建到 dist/
+npm run preview  # 本地预览构建产物
 ```
 
-### 技术栈
+使用 React、TypeScript、Vite、Three.js 和 Tailwind CSS；PDF 与资源包由 jsPDF、JSZip 生成。
 
-- **前端框架**：React 18, TypeScript, Vite
-- **3D 渲染**：Three.js
-- **样式与图标**：Tailwind CSS, Lucide Icons
-- **文件导出**：jsPDF, JSZip
+### 文档
+
+- [模型库、涂装与新增模型约定](docs/model-library.md)
+- [Haruka / Rapi:t 精细版制作说明](docs/professional-trains.md)
+- [几何、展开、贴图与验证约束](docs/geometry-pipeline.md)
 
 ---
 
@@ -62,53 +58,52 @@ npm run build
 
 ## English
 
-Papercraft Studio is a browser-based tool for previewing, customizing, and exporting 2D printable net layouts for train and vehicle papercraft models.
+Papercraft Studio is a browser tool for choosing vehicle models, adjusting consists and liveries, and exporting A4 paper patterns with cut lines, folds and glue tabs.
 
-It allows users to inspect 3D vehicle consists, adjust basic liveries, and generate 2D unfold patterns with folding creases and glue tabs ready for A4 printing.
+![Detailed Haruka 281 and livery controls](docs/preview.png)
 
-![Papercraft Studio Preview](docs/preview.png)
+### Features
 
-### Key Features
+- **Models and consists**: Trains, buses and trams with name search, category and difficulty filters. CR400, GSE, Haruka 281 and Rapi:t 50000 have basic and detailed variants. Models that support consists allow middle cars to be added or removed.
+- **Livery customization**: Choose compatible presets, adjust colors and text, or upload side artwork and texture atlases. Liveries described as another vehicle's “style” change artwork, not the body geometry.
+- **Preview and nets**: Inspect models in 3D, 2D or split view. Complex bodies unfold into multiple pieces with matching seam numbers and include paper couplers or other connecting parts.
+- **Export and exchange**: Export A4 PDFs with vector construction lines. Exchange model and livery resources through `.papercraft` packages, or individual liveries through `.papercraft-livery` files.
 
-- **3D Preview & Consist Assembly**: View and orbit vehicles in 3D, adjust middle car counts, and inspect inter-car couplers and gangways.
-- **Built-in Models & Liveries**: Includes high-speed trains, freight locomotives, articulated buses, double-decker coaches, and streetcars with preset liveries.
-- **Detailed Models**: Haruka 281 and Nankai Rapi:t 50000 add faceted bodies and authored cab/nose panels alongside the existing simpler versions. Each default three-car consist uses three A4 sheets; see the [assembly notes](docs/professional-trains.md).
-- **Model Library**: Search by name and filter by category or difficulty. Basic and detailed variants appear together; filtering does not change the selected model.
-- **Livery Selection**: Compatible liveries, color/text controls and uploaded artwork have separate tabs. Each model keeps its livery, consist count and applied artwork while switching within the current page session.
-- **Color & Text Customization**: Customize primary, secondary, accent, and roof colors, with optional custom route and train numbering.
-- **2D Net Layout & Packing**: 3D, nets and textures share the same triangles and corner UVs. Complex surfaces can split into non-overlapping pieces with numbered seams; every piece and tab is paginated at its actual millimetre scale.
-- **PDF Export**: A4 sheets combine raster artwork with vector construction lines and seam numbers. Print at 100% / Actual size and check the included 50 mm ruler.
-- **Paper Couplers**: Simple cut-out paper drawbars and folded bellows for joining assembled cars without extra hardware.
-- **File Import & Export**: Import and export `.papercraft` ZIP packages containing model geometries and theme definitions.
+![Model library with search, category and difficulty filters](docs/model-library.png)
 
-### Current Boundaries
+### Usage
 
-- Surfaces use planar paper facets. The search does not guarantee the fewest cuts; paper thickness, assembly order and joint strength still need physical trials.
-- Net layout and pagination are currently optimized for standard A4 paper.
-- Textures are procedurally generated via 2D Canvas and do not currently support arbitrary external UV texture painting.
+1. Open the model library and choose a vehicle and crafting difficulty.
+2. Adjust the consist and use Presets, Colors & Text or Artwork to customize its appearance.
+3. Inspect the 3D body and every sheet, matching seam numbers within each car.
+4. Export the PDF and print at **100% / Actual size**. Check the **50 mm** ruler before cutting, scoring and gluing.
 
-### Getting Started
+### Limitations
+
+- Curved surfaces use planar facets; models are not exact engineering-scale replicas. Paper thickness, assembly order and joint strength still require physical trials. Nets do not guarantee the fewest cuts or sheets, and automatic pagination currently supports A4 only.
+- Each model retains its editing state while switching, but **reloading the page clears these drafts**. A `.papercraft` package contains model and livery resources, not a complete project snapshot of the current consist, color edits, text and uploaded artwork.
+- Uploaded images follow predefined texture layouts. There is currently no visual editor for arbitrary model geometry or UV coordinates.
+
+### Local development
+
+Requires Node.js and npm.
 
 ```bash
-# Install dependencies
 npm install
-
-# Start development server
-npm run dev
-
-# Build production bundle
-npm run build
+npm run dev      # Open the address printed in the terminal
+npm test         # Geometry, seams, artwork and catalog regression checks
+npm run build    # Build into dist/
+npm run preview  # Preview the production build locally
 ```
 
-### Tech Stack
+Built with React, TypeScript, Vite, Three.js and Tailwind CSS. jsPDF and JSZip generate PDFs and resource packages.
 
-- **Frontend**: React 18, TypeScript, Vite
-- **3D Graphics**: Three.js
-- **Styling & Icons**: Tailwind CSS, Lucide Icons
-- **Export & Compression**: jsPDF, JSZip
+### Documentation
 
-### License
+- [Model library, liveries and adding models](docs/model-library.md)
+- [Detailed Haruka / Rapi:t assembly notes](docs/professional-trains.md)
+- [Geometry, nets, textures and validation contracts](docs/geometry-pipeline.md)
+
+---
 
 MIT License.
-
-展开流程、资产约束与验证范围 / Geometry pipeline, asset contracts and validation: [geometry-pipeline.md](docs/geometry-pipeline.md).
