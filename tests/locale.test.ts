@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict'
+import { getUrlLocale, resolveLocale, urlWithLocale } from '../src/i18n/urlLocale'
+assert.equal(resolveLocale('?lang=en', 'zh-CN'), 'en-US')
+assert.equal(resolveLocale('?lang=zh', 'en-US'), 'zh-CN')
+assert.equal(resolveLocale('', 'en-US'), 'en-US')
+assert.equal(resolveLocale('?lang=fr', 'en-US'), 'en-US')
+assert.equal(resolveLocale('?lang=', null), 'zh-CN')
+assert.equal(resolveLocale('', 'invalid'), 'zh-CN')
+assert.equal(getUrlLocale('?embedded=1&lang=en'), 'en-US')
+const url = new URL(urlWithLocale('https://example.test/apps/papercraft/?embedded=1&lang=en#model', 'zh-CN'))
+assert.equal(url.pathname, '/apps/papercraft/')
+assert.equal(url.searchParams.get('embedded'), '1')
+assert.equal(url.searchParams.get('lang'), 'zh')
+assert.equal(url.hash, '#model')
+console.log('PASS locale: URL priority, fallback and embedded URL preservation')

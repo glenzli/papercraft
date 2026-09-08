@@ -26,6 +26,8 @@ Papercraft Studio 是一个浏览器中的车辆纸模工具，用于选择模�
 3. 检查 3D 外形和各页展开图，按同一车厢内的接缝编号确认连接关系。
 4. 导出 PDF，以 **100% / 实际大小** 打印，核对图纸上的 **50 mm** 标尺，再剪裁、压折和粘合。
 
+链接可添加 `?lang=zh` 或 `?lang=en` 指定界面语言，优先于浏览器中保存的选择；手动切换语言会同步更新链接。
+
 ### 当前限制
 
 - 复杂曲面使用平面折面近似，并非精确工程缩尺。纸厚、粘贴顺序和接缝强度仍需实物试装；展开不保证最少切口或最少页数，目前仅自动分页到 A4。
@@ -77,6 +79,8 @@ Papercraft Studio is a browser tool for choosing vehicle models, adjusting consi
 2. Adjust the consist and use Presets, Colors & Text or Artwork to customize its appearance.
 3. Inspect the 3D body and every sheet, matching seam numbers within each car.
 4. Export the PDF and print at **100% / Actual size**. Check the **50 mm** ruler before cutting, scoring and gluing.
+
+Add `?lang=zh` or `?lang=en` to a link to choose the interface language, overriding the saved preference. Switching languages also updates the URL.
 
 ### Limitations
 

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useMemo, useCall
 import { Locale, TranslationSchema } from './types'
 import { zhCN } from './locales/zh-CN'
 import { enUS } from './locales/en-US'
+import { getUrlLocale, resolveLocale, urlWithLocale } from './urlLocale'
 
 const dictionaries: Record<Locale, TranslationSchema> = {
   'zh-CN': zhCN,
@@ -21,17 +22,10 @@ const I18nContext = createContext<I18nContextType | null>(null)
 const LOCAL_STORAGE_KEY = 'papercraft_locale'
 
 function getInitialLocale(): Locale {
-  if (typeof window !== 'undefined') {
-    const saved = localStorage.getItem(LOCAL_STORAGE_KEY) as Locale | null
-    if (saved && (saved === 'zh-CN' || saved === 'en-US')) {
-      return saved
-    }
-    const navLang = navigator.language.toLowerCase()
-    if (navLang.startsWith('zh')) {
-      return 'zh-CN'
-    }
-  }
-  return 'zh-CN'
+  if (typeof window === 'undefined') return 'zh-CN'
+  let saved: string | null = null
+  try { saved = window.localStorage.getItem(LOCAL_STORAGE_KEY) } catch { /* Storage may be unavailable in embeds. */ }
+  return resolveLocale(window.location.search, saved)
 }
 
 export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -40,20 +34,28 @@ export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const setLocale = useCallback((newLocale: Locale) => {
     setLocaleState(newLocale)
     if (typeof window !== 'undefined') {
-      localStorage.setItem(LOCAL_STORAGE_KEY, newLocale)
+      window.history.replaceState(window.history.state, '', urlWithLocale(window.location.href, newLocale))
+      try { window.localStorage.setItem(LOCAL_STORAGE_KEY, newLocale) } catch { /* URL and UI still work without storage. */ }
     }
   }, [])
 
   // 监听多标签页或其他地方的语言变动
   useEffect(() => {
     const handleStorage = (e: StorageEvent) => {
-      if (e.key === LOCAL_STORAGE_KEY && (e.newValue === 'zh-CN' || e.newValue === 'en-US')) {
+      if (!getUrlLocale(window.location.search) && e.key === LOCAL_STORAGE_KEY && (e.newValue === 'zh-CN' || e.newValue === 'en-US')) {
         setLocaleState(e.newValue as Locale)
       }
     }
+    const handleNavigation = () => setLocaleState(getInitialLocale())
     window.addEventListener('storage', handleStorage)
-    return () => window.removeEventListener('storage', handleStorage)
+    window.addEventListener('popstate', handleNavigation)
+    return () => {
+      window.removeEventListener('storage', handleStorage)
+      window.removeEventListener('popstate', handleNavigation)
+    }
   }, [])
+
+  useEffect(() => { document.documentElement.lang = locale }, [locale])
 
   // 核心翻译函数支持嵌套路径 (e.g. 'header.builtInTrains') 与插值参数 (e.g. { count: 3 })
   const t = useCallback((path: string, params?: Record<string, string | number>): string => {
