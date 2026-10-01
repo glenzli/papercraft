@@ -88,7 +88,7 @@ export interface UnfoldedPart {
 export interface PapercraftModelData {
   id: string
   name: string
-  category: 'train' | 'bus' | 'building' | 'vehicle'
+  category: 'train' | 'bus' | 'building' | 'vehicle' | 'aircraft'
   description: string
   difficulty: 'beginner' | 'intermediate' | 'advanced'
   recommendedAge: string

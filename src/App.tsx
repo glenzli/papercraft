@@ -41,7 +41,7 @@ export function App() {
   // 3. 视口与交互状态
   const [viewMode, setViewMode] = useState<'3d' | '2d' | 'split'>('split')
   const [sidebarTab, setSidebarTab] = useState<'models' | 'texture'>('models')
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => window.matchMedia('(min-width: 1024px)').matches)
 
   // 5. 纹理烘焙器
   const baker = useMemo(() => new TextureBaker(1024), [])
@@ -204,7 +204,7 @@ export function App() {
       {/* 主工作区 */}
       <div className="flex-1 flex overflow-hidden">
         {/* 左/中 视口展示区 */}
-        <div className="flex-1 flex overflow-hidden relative">
+        <div className="flex-1 min-w-0 flex overflow-hidden relative">
           {viewMode === '3d' && (
             <div className="w-full h-full">
               <Scene3D
@@ -232,8 +232,8 @@ export function App() {
           )}
 
           {viewMode === 'split' && (
-            <div className="w-full h-full flex">
-              <div className={`w-1/2 h-full border-r ${isLight ? 'border-zinc-200' : 'border-zinc-800'}`}>
+            <div className="w-full h-full flex flex-col md:flex-row">
+              <div className={`w-full h-1/2 md:w-1/2 md:h-full border-b md:border-b-0 md:border-r ${isLight ? 'border-zinc-200' : 'border-zinc-800'}`}>
                 <Scene3D
                   cars={cars}
                   focusedCarIndex={focusedCarIndex}
@@ -242,7 +242,7 @@ export function App() {
                   themeMode={themeMode}
                 />
               </div>
-              <div className="w-1/2 h-full">
+              <div className="w-full h-1/2 md:w-1/2 md:h-full">
                 <NetViewer2D
                   cars={cars}
                   currentPageIndex={current2dPageIndex}
@@ -259,7 +259,7 @@ export function App() {
 
         {/* 右侧设计侧边栏 (收窄至 288px，支持一键折叠) */}
         {isSidebarOpen && (
-          <div className={`w-72 h-full flex flex-col ${isLight ? 'bg-white border-zinc-200' : 'bg-zinc-900 border-zinc-800'} border-l shrink-0 transition-all duration-200`}>
+          <div className={`absolute lg:static right-0 top-11 bottom-0 z-30 w-72 h-auto lg:h-full shadow-xl lg:shadow-none flex flex-col ${isLight ? 'bg-white border-zinc-200' : 'bg-zinc-900 border-zinc-800'} border-l shrink-0 transition-all duration-200`}>
             {/* 侧边栏 Tab 切换 */}
             <div className={`flex items-center border-b ${isLight ? 'border-zinc-200 bg-zinc-50' : 'border-zinc-800 bg-zinc-950/40'} p-1 gap-1 text-xs shrink-0`}>
               <button
@@ -331,7 +331,7 @@ export function App() {
 
       <ModelLibrary open={isModelLibraryOpen} onClose={() => setIsModelLibraryOpen(false)} models={modelManifest} selectedId={currentConsist.id} onSelect={handleSelectConsistById} onImport={handleImportFile} themeMode={themeMode}/>
       {/* 组装指南弹窗 */}
-      <AssemblyGuide isOpen={isGuideOpen} onClose={() => setIsGuideOpen(false)} />
+      <AssemblyGuide consist={currentConsist} isOpen={isGuideOpen} onClose={() => setIsGuideOpen(false)} />
     </div>
   )
 }

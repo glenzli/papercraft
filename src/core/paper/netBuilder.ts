@@ -14,6 +14,7 @@ interface Island {
   faces: Map<number,Triple<Point2D>>
   parents: Map<number,number>
 }
+const printFaceUp=(points:Triple<Point2D>):Triple<Point2D>=>signedArea(points)<0?points:points.map(p=>({x:-p.x,y:p.y})) as Triple<Point2D>
 const fit=(polys:Point2D[][],w:number,h:number)=>{
   const b=bounds2(polys)
   return (b.width<=w+LENGTH_EPS&&b.height<=h+LENGTH_EPS)||(b.width<=h+LENGTH_EPS&&b.height<=w+LENGTH_EPS)
@@ -49,6 +50,10 @@ function templateIslands(surface:PaperSurface,w:number,h:number):Island[]|null {
       for(const next of adjacency[index])if(!seen.has(next)){seen.add(next);parents.set(next,index);queue.push(next)}
     }
     if(!fit([...faces.values()],w,h))return null
+    const winding=Math.sign(signedArea(faces.values().next().value!))
+    if([...faces.values()].some(p=>Math.sign(signedArea(p))!==winding))return null
+    // Reflect a whole island, never individual faces, so authored shared edges stay joined.
+    if(signedArea(faces.values().next().value!)>0)for(const [i,p] of faces)faces.set(i,p.map(v=>({x:-v.x,y:v.y})) as Triple<Point2D>)
     islands.push({faces,parents})
   }
   return islands
@@ -71,7 +76,7 @@ function growIslands(surface:PaperSurface,w:number,h:number,variant:number,rootF
     const requested=surface.triangles.findIndex(f=>f.id===rootFaceId)
     const seed=islands.length===0&&unplaced.has(requested)?requested:candidates[Math.min(islands.length===0?variant:0,candidates.length-1)]
     const triangle=surface.triangles[seed]
-    const root=triangle.layoutHint&&isIsometric(triangle.vertices,triangle.layoutHint)?triangle.layoutHint:flattenTriangle(triangle.vertices)
+    const root=printFaceUp(triangle.layoutHint&&isIsometric(triangle.vertices,triangle.layoutHint)?triangle.layoutHint:flattenTriangle(triangle.vertices))
     if(!fit([root],w,h))throw new Error(`${surface.id}/${triangle.id}: a single face is larger than the printable area; reduce the model scale`)
     const faces=new Map<number,Triple<Point2D>>([[seed,root]]),parents=new Map<number,number>()
     unplaced.delete(seed)
@@ -164,7 +169,7 @@ export function buildNets(surface:PaperSurface,partNumber:number,diagnostics:Pap
     }
     for(const ref of refs) {
       const [p1,p2]=segment(ref)
-      location.get(ref.faceIndex)!.face.creases.push({type:ref===tabOwner?'mountain':'cut',p1,p2,label:ref===tabOwner?undefined:label,seamId,edgeId:edge.id})
+      location.get(ref.faceIndex)!.face.creases.push({type:ref===tabOwner?(edge.foldAngle<0?'valley':'mountain'):'cut',p1,p2,label:ref===tabOwner?undefined:label,seamId,edgeId:edge.id})
     }
     if(!tabOwner) {
       // A narrow concave corner may leave no usable tab on either side. Supply a separate

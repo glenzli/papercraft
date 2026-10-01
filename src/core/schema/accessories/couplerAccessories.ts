@@ -15,21 +15,3 @@ export const couplerDrawbarAccessory:SchemaAccessory={
   indices:drawbars.flatMap((f,i)=>f.indices.map(v=>v+i*12)),faces:drawbars,
   layout2D:{x:170,y:70,width:44,height:30}
 }
-
-// Five rigid pleat bands preserve the 34 mm developed length. Alternating folds are
-// derived from their actual normals instead of being unrelated drawing annotations.
-const pleats:SchemaFace[]=[]
-let sheetY=2,y=36,z=-3
-for(let i=0;i<5;i++) {
-  const length=i===4?6:7,nextY=y-length*.5,nextZ=z+(i%2===0?1:-1)*length*Math.sqrt(3)/2
-  pleats.push({id:`bellows_pleat_${i+1}`,name:`折棚褶片 ${i+1}`,slotName:'bellows',
-    vertices3D:[[-17,y,z],[17,y,z],[17,nextY,nextZ],[-17,nextY,nextZ]],
-    vertices2D:[[2,sheetY],[36,sheetY],[36,sheetY+length],[2,sheetY+length]],
-    uvCoords:[[0,1-(sheetY-2)/34],[1,1-(sheetY-2)/34],[1,1-(sheetY+length-2)/34],[0,1-(sheetY+length-2)/34]],indices:[0,1,2,0,2,3]})
-  y=nextY;z=nextZ;sheetY+=length
-}
-export const bellowsGangwayAccessory:SchemaAccessory={
-  id:'bellows_gangway_articulated',name:'立体铰接手风琴折棚风挡',slotName:'bellows',position3D:[0,0,0],
-  vertices3D:pleats.flatMap(f=>f.vertices3D),uvCoords:pleats.flatMap(f=>f.uvCoords),indices:pleats.flatMap((f,i)=>f.indices.map(v=>v+i*4)),
-  layout2D:{x:170,y:65,width:38,height:38},faces:pleats
-}

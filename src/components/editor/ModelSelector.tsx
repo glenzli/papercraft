@@ -1,3 +1,4 @@
+import { ARTICULATED_GAP_MM } from '../../core/schema/accessories/articulatedJoint'
 // 纸模车型与载具选择控制器 (支持多品类筛选、单体载具/列车编组自适应、双语与 .papercraft 导入导出)
 import React from 'react'
 import { packConsistToA4Pages } from '../../core/unfoldEngine'
@@ -32,11 +33,11 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
   const { t, isZh } = useI18n()
   
   const isLight = themeMode === 'light'
-  const isSingleVehicle = currentConsist.assembly?.type === 'single' || currentConsist.assembly?.allowConsistCount === false
+  const isSingleVehicle = !currentConsist.carDefinitions.middle || currentConsist.assembly?.allowConsistCount === false
   const maxMiddleCars = currentConsist.carDefinitions.middle ? (currentConsist.assembly?.maxMiddleCars ?? 5) : 0
   const pageCount = packConsistToA4Pages(cars).length
   // 计算整车/整列总长度 (mm)
-  const totalLengthMm = cars.reduce((sum, car) => sum + car.modelData.dimensions.length, 0) + Math.max(0,cars.length-1)*(currentConsist.assembly?.type==='articulated'?1:8)
+  const totalLengthMm = cars.reduce((sum, car) => sum + car.modelData.dimensions.length, 0) + Math.max(0,cars.length-1)*(currentConsist.assembly?.type==='articulated'?ARTICULATED_GAP_MM:8)
   const pieces = cars.reduce((n, car) => n + car.modelData.partsCount, 0)
   const strips = cars.reduce((n, car) => n + car.modelData.generateUnfoldedParts().filter(p => p.kind === 'join-strip').length, 0)
   const warnings = cars.flatMap(car => (car.modelData.paperModel?.diagnostics || []).filter(d => d.severity === 'warning').map(d => `${car.carIndex + 1} · ${d.message}`))
@@ -60,14 +61,14 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5 font-semibold text-xs">
                 <Car className="w-3.5 h-3.5 text-sky-500" />
-                <span>{t('models.singleVehicleSettings')}</span>
+                <span>{currentConsist.assembly?.type==='articulated'?(isZh?'双节柔性铰接':'Two-section paper articulation'):t('models.singleVehicleSettings')}</span>
               </div>
               <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-sky-500/10 text-sky-600 dark:text-sky-400 font-bold">
-                {t('models.singleVehicleBadge')}
+                {isZh?`${cars.length} 节`:`${cars.length} section${cars.length>1?'s':''}`}
               </span>
             </div>
             <p className="text-[10px] opacity-60 leading-relaxed">
-              {t('models.singleVehicleBlueprint')}
+              {isZh?`${pageCount} 张展开图${currentConsist.carDefinitions.head.schema.assemblySteps?.length?'，另附装配说明。':'。'}`:`${pageCount} net sheet${pageCount>1?'s':''}${currentConsist.carDefinitions.head.schema.assemblySteps?.length?' plus assembly guide.':'.'}`}
             </p>
           </div>
         ) : (
@@ -146,7 +147,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
           </div>
           <div className="flex justify-between">
             <span className="opacity-60">{t('models.sheetPages')}</span>
-            <span className="font-mono font-medium">{t('models.pagesUnit', { count: pageCount })}</span>
+            <span className="font-mono font-medium">{t('models.pagesUnit', { count: pageCount })}{currentConsist.carDefinitions.head.schema.assemblySteps?.length ? (isZh?' + 1 说明页':' + 1 guide') : ''}</span>
           </div>
         </div>
       </div>

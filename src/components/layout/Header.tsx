@@ -63,15 +63,15 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header
-      className={`h-11 border-b flex items-center justify-between px-3 shrink-0 select-none z-30 transition-colors ${
+      className={`h-11 border-b flex items-center justify-between gap-1 px-2 sm:px-3 shrink-0 select-none z-30 transition-colors ${
         isLight
           ? 'bg-white/95 border-zinc-200 text-zinc-900'
           : 'bg-zinc-900/95 border-zinc-800 text-zinc-100'
       } backdrop-blur-md`}
     >
       {/* 左侧: Logo 与车型切换 */}
-      <div className="flex items-center gap-2">
-        <div className="flex items-center gap-1.5 font-bold tracking-tight text-xs">
+      <div className="flex min-w-0 items-center gap-1 sm:gap-2">
+        <div className="hidden sm:flex items-center gap-1.5 font-bold tracking-tight text-xs">
           <img
             src="/icon-192.png"
             alt="Papercraft Studio"
@@ -81,12 +81,12 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         <button onClick={onOpenModelLibrary} aria-haspopup="dialog" className={`flex items-center gap-2 px-2 py-1 rounded-md border text-xs font-medium ${isLight?'bg-zinc-100 hover:bg-zinc-200 border-zinc-200':'bg-zinc-800 hover:bg-zinc-700 border-zinc-700'}`} title={isZh?'打开模型库':'Open model library'}>
-          <span className="truncate max-w-[120px] sm:max-w-[180px]">{currentDisplayName}</span><ChevronDown className="w-3 h-3 opacity-60"/>
+          <span className="truncate max-w-[80px] sm:max-w-[180px]">{currentDisplayName}</span><ChevronDown className="w-3 h-3 opacity-60"/>
         </button>
       </div>
 
       {/* 中间: 视口模式与快速换页 */}
-      <div className="flex items-center gap-2">
+      <div className="flex min-w-0 items-center gap-1 sm:gap-2">
         {/* 视口切换胶囊 */}
         <div
           className={`flex items-center p-0.5 rounded-lg border text-xs ${
@@ -160,7 +160,7 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* 右侧: 语言切换、主题、组装指南与导出 PDF */}
-      <div className="flex items-center gap-1.5">
+      <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
         {/* 语言切换按钮 (中/EN) */}
         <button
           onClick={toggleLanguage}
@@ -191,6 +191,8 @@ export const Header: React.FC<HeaderProps> = ({
         {/* 组装指南 */}
         <button
           onClick={onOpenGuide}
+          aria-label={t('common.guide')}
+          title={t('common.guide')}
           className={`flex items-center gap-1 px-2 py-1 rounded-md border text-xs transition-colors ${
             isLight
               ? 'bg-zinc-50 hover:bg-zinc-100 text-zinc-700 border-zinc-200'
@@ -198,14 +200,16 @@ export const Header: React.FC<HeaderProps> = ({
           }`}
         >
           <HelpCircle className="w-3 h-3 opacity-70" />
-          <span>{t('common.guide')}</span>
+          <span className="hidden sm:inline">{t('common.guide')}</span>
         </button>
 
         {/* PDF 导出 */}
         <button
           onClick={onExportPdf}
+          aria-label={isExporting?t('common.exporting'):t('common.export')}
+          title={t('common.export')}
           disabled={isExporting}
-          className={`flex items-center gap-1.5 px-3 py-1 rounded-md font-medium text-xs shadow-sm transition-all ${
+          className={`flex items-center gap-1.5 px-2 sm:px-3 py-1 rounded-md font-medium text-xs shadow-sm transition-all ${
             isExporting
               ? 'bg-zinc-400 text-white cursor-not-allowed'
               : isLight
@@ -214,7 +218,7 @@ export const Header: React.FC<HeaderProps> = ({
           }`}
         >
           <Printer className={`w-3.5 h-3.5 ${isExporting ? 'animate-bounce' : ''}`} />
-          <span>{isExporting ? t('common.exporting') : t('common.export')}</span>
+          <span className="hidden sm:inline">{isExporting ? t('common.exporting') : t('common.export')}</span>
         </button>
 
         {/* 侧边栏折叠/展开 */}

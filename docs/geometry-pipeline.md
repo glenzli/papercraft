@@ -65,6 +65,12 @@ or a separately numbered backing strip if neither side has room for a tab. Tab c
 checked as whole polygons against all faces and already accepted tabs. Very narrow strips produce
 assembly notes. Numbers are local to a car; use the printed car number when sorting parts.
 
+Printable surface triangles use negative signed area in SVG coordinates (downward y). Computed
+roots and complete authored islands are normalized to this orientation; mixed-winding templates
+fall back to geometric unfolding. This makes the printed exterior and signed mountain/valley
+dihedrals agree. Concave seam tabs use valley folds, convex seam tabs use mountain folds. Backing
+strips fold in the opposite sense because they attach inside the body.
+
 All islands are packed, including disconnected surfaces. Packing reserves A4 margins, headers,
 part captions and a footer. Rotation moves geometry, tabs, marks and texture correspondence
 together. Overflow starts a new page. Pieces are never independently scaled to fit; a triangle
@@ -84,7 +90,7 @@ thickness clearance, glue access or strength; representative physical assembly r
 
 ## Validation
 
-Run `npm test` for all 16 built-in families plus independent geometry fixtures. The tests check:
+Run `npm test` for all 21 built-in families plus independent geometry fixtures. The tests check:
 
 - Box geometry with indexed and unindexed UV seams: all 12 triangles retained, one island.
 - Disconnected meshes, T-junction subdivision and forced cuts, non-manifold rejection.
@@ -96,6 +102,12 @@ Run `npm test` for all 16 built-in families plus independent geometry fixtures. 
 - CR400 Master windshield/panels remain complete, both cheek nets are congruent, and region cuts
   leave physical geometry and UVs unchanged.
 - Native vector PDF paths and seam text; tab bases have fold lines rather than cut lines.
+- Printed-face winding and reconstruction of retained folds from their printed labels, including
+  signed 3D volume to detect mirrored assemblies; concave/convex tab direction.
+- All 35 distinct minimum/maximum consist configurations stay within A4 margins without overlap.
+- Articulated joint end contact, alternating folds, yaw clearance and developed-length reserve;
+  genuinely open pickup bed, closed car/aircraft shells, integral aircraft mounting flanges.
+- Readable professional/transport lettering and model-specific instructions preserved in packages.
 
 `npm run build` checks the production TypeScript/Vite bundle. Browser smoke testing additionally
 covers displayed 3D/SVG output, actual PDF download, and texture replacement across car roles.

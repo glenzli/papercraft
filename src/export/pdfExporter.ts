@@ -98,13 +98,20 @@ export function drawPageVectors(doc:jsPDF,page:ConsistPageLayout) {
 
 export async function createConsistPdf(options:ExportConsistPdfOptions):Promise<jsPDF> {
   const {consistName,cars,baker,isBlankTemplate=false,locale='zh-CN'}=options
-  const pages=packConsistToA4Pages(cars),doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'})
+  const steps=cars[0]?.schema.assemblySteps||[]
+  const pages=packConsistToA4Pages(cars),totalPages=pages.length+(steps.length?1:0),doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'})
   for(const [i,page] of pages.entries()) {
     if(i)doc.addPage('a4','portrait')
-    const canvas=renderConsistPageToCanvas(page,consistName,pages.length,baker,isBlankTemplate,locale,false)
+    const canvas=renderConsistPageToCanvas(page,consistName,totalPages,baker,isBlankTemplate,locale,false)
     doc.addImage(canvas,'PNG',0,0,A4_WIDTH_MM,A4_HEIGHT_MM,undefined,'FAST')
     drawPageVectors(doc,page)
     canvas.width=canvas.height=1
+  }
+  if(steps.length) {
+    doc.addPage('a4','portrait')
+    const instructions=renderAssemblySteps(consistName,steps,locale)
+    doc.addImage(instructions,'PNG',0,0,A4_WIDTH_MM,A4_HEIGHT_MM,undefined,'FAST')
+    instructions.width=instructions.height=1
   }
   return doc
 }
@@ -120,4 +127,23 @@ export function exportConsistPageToPng(options:{page:ConsistPageLayout;consistNa
   const canvas=renderConsistPageToCanvas(page,consistName,totalPages,baker,isBlankTemplate,locale),link=document.createElement('a')
   link.download=`${consistName}-P${page.pageIndex+1}-${isBlankTemplate?'Coloring':'Assembly'}.png`
   link.href=canvas.toDataURL('image/png');link.click()
+}
+
+/** Bilingual assembly instructions are an extra sheet, never laid over construction parts. */
+export function renderAssemblySteps(name:string,steps:{text:string;textEn:string}[],locale:'zh-CN'|'en-US'):HTMLCanvasElement {
+  const c=document.createElement('canvas');c.width=2480;c.height=3508
+  const ctx=c.getContext('2d')!;ctx.fillStyle='white';ctx.fillRect(0,0,c.width,c.height);ctx.scale(c.width/210,c.height/297)
+  const en=locale==='en-US';ctx.fillStyle='#0f172a';ctx.font=`bold 5px ${font}`;ctx.fillText(name,12,18,186)
+  ctx.font=`bold 3.5px ${font}`;ctx.fillText(en?'Assembly sequence':'装配顺序',12,28)
+  ctx.font=`3px ${font}`;let y=40
+  for(const [i,step] of steps.entries()) {
+    const value=`${i+1}. ${en?step.textEn:step.text}`
+    let line=''
+    for(const ch of value){if(ctx.measureText(line+ch).width>184){ctx.fillText(line,12,y);y+=5;line=''}line+=ch}
+    if(line){ctx.fillText(line,12,y);y+=5}y+=4
+  }
+  ctx.font=`2.8px ${font}`;ctx.fillStyle='#475569'
+  ctx.fillText(en?'Print nets at 100% / Actual size; check their 50 mm ruler.':'展开图按 100% / 实际大小打印，并核对 50 mm 标尺。',12,y+6,186)
+  ctx.fillText(en?'Geometry checks do not replace a physical paper assembly trial.':'几何检查不能替代纸张实物试装。',12,y+14,186)
+  return c
 }

@@ -183,7 +183,7 @@ export const Scene3D: React.FC<Scene3DProps> = ({
   useEffect(() => {
     if (!sceneRef.current || !trainRootGroupRef.current) return
 
-    const isBusOrRoadVehicle = cars[0]?.schema.category === 'bus'
+    const isBusOrRoadVehicle = ['bus','vehicle','aircraft'].includes(cars[0]?.schema.category)
     if (railGroupRef.current) {
       railGroupRef.current.visible = !isBusOrRoadVehicle
     }
@@ -197,9 +197,10 @@ export const Scene3D: React.FC<Scene3DProps> = ({
       if (focusedCarIndex !== -1 && focusedCarIndex !== car.carIndex) return
       const carGroup = new THREE.Group()
       carGroup.position.z = focusedCarIndex === -1 ? car.spacingOffsetZ : 0
-      carGroup.rotation.y = car.carType === 'tail' ? Math.PI : 0
+      carGroup.rotation.y = car.rotationY ?? (car.carType === 'tail' ? Math.PI : 0)
       trainRoot.add(carGroup)
       for (const surface of car.modelData.paperModel?.surfaces || []) {
+        const openSheet=surface.edges.some(edge=>edge.faces.length===1)
         const slots = new Set(surface.triangles.map(f => f.textureSlot))
         for (const slot of slots) {
           const faces = surface.triangles.filter(f => f.textureSlot === slot)
@@ -218,12 +219,17 @@ export const Scene3D: React.FC<Scene3DProps> = ({
               textures.set(canvas, texture)
             }
           }
-          const material = new THREE.MeshStandardMaterial({ map: texture, side: THREE.DoubleSide, roughness: 0.65, metalness: 0, wireframe: isWireframe })
+          const material = new THREE.MeshStandardMaterial({ map: texture, side: openSheet?THREE.FrontSide:THREE.DoubleSide, roughness: 0.65, metalness: 0, wireframe: isWireframe })
           const mesh = new THREE.Mesh(geometry, material)
           mesh.userData = { carIndex: car.carIndex, surfaceId: surface.id, faces }
           mesh.castShadow = true
           mesh.receiveShadow = true
           carGroup.add(mesh)
+          if(openSheet){
+            // Single-sided paper has an unprinted back; do not mirror artwork onto it.
+            const back=new THREE.Mesh(geometry,new THREE.MeshStandardMaterial({color:'#f8fafc',side:THREE.BackSide,roughness:.8,wireframe:isWireframe}))
+            back.userData=mesh.userData;back.castShadow=true;back.receiveShadow=true;carGroup.add(back)
+          }
         }
       }
     })

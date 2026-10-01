@@ -1,4 +1,5 @@
 // 官方预设涂装主题库 (声明车型适配兼容性 compatibleCategories、targetConsistIds 与专属 liveryStyle)
+import { TRANSPORT_THEMES } from './transportLivery'
 import { TextureTheme } from './types'
 
 export const PRESET_THEMES: TextureTheme[] = [
@@ -1347,5 +1348,6 @@ export const PRESET_THEMES: TextureTheme[] = [
     pattern: 'wood',
     badgeText: 'SL-HITOYOSHI',
     promptKeywords: ['SL Hitoyoshi steam train', 'piano black', 'gold pinstripes', 'classic steam train']
-  }
+  },
+  ...TRANSPORT_THEMES,
 ]

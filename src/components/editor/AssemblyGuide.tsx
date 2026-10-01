@@ -1,19 +1,21 @@
 // 纸模手工拼装指南 (双语支持，干净极简风格)
 import React from 'react'
+import type { TrainModelConsist } from '../../core/schema/consistSchema'
 import { X, Scissors, Bookmark, Droplets, CheckCircle2, HelpCircle } from 'lucide-react'
 import { useI18n } from '../../i18n'
 
 interface AssemblyGuideProps {
+  consist: TrainModelConsist
   isOpen: boolean
   onClose: () => void
 }
 
-export const AssemblyGuide: React.FC<AssemblyGuideProps> = ({ isOpen, onClose }) => {
-  const { t } = useI18n()
+export const AssemblyGuide: React.FC<AssemblyGuideProps> = ({ consist, isOpen, onClose }) => {
+  const { t, isZh } = useI18n()
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in select-none">
+    <div role="dialog" aria-modal="true" aria-label={t('guide.title')} className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in select-none">
       <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 w-full max-w-xl rounded-2xl shadow-xl overflow-hidden text-zinc-800 dark:text-zinc-100">
         {/* 标题栏 */}
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/40">
@@ -22,6 +24,7 @@ export const AssemblyGuide: React.FC<AssemblyGuideProps> = ({ isOpen, onClose })
             <span>{t('guide.title')}</span>
           </div>
           <button
+            aria-label={isZh?'关闭指南':'Close guide'}
             onClick={onClose}
             className="p-1 rounded-lg text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
           >
@@ -31,6 +34,10 @@ export const AssemblyGuide: React.FC<AssemblyGuideProps> = ({ isOpen, onClose })
 
         {/* 内容 */}
         <div className="p-5 space-y-4 max-h-[72vh] overflow-y-auto text-xs leading-relaxed">
+          {consist.carDefinitions.head.schema.assemblySteps?.length && <div>
+            <h3 className="font-bold mb-2">{isZh?consist.name:(consist.nameEn||consist.name)}</h3>
+            <ol className="list-decimal pl-4 space-y-2">{consist.carDefinitions.head.schema.assemblySteps.map((step,i)=><li key={i}>{isZh?step.text:step.textEn}</li>)}</ol>
+          </div>}
           {/* 1. 工具准备 */}
           <div>
             <h3 className="font-bold text-zinc-900 dark:text-zinc-100 mb-2">{t('guide.sec1Title')}</h3>
@@ -64,7 +71,7 @@ export const AssemblyGuide: React.FC<AssemblyGuideProps> = ({ isOpen, onClose })
           <div className="p-3 bg-zinc-50 dark:bg-zinc-950/50 border border-zinc-100 dark:border-zinc-800 rounded-xl">
             <span className="font-semibold">{t('guide.paperTitle')}</span>
             <span className="opacity-80">
-              {t('guide.paperDesc')}
+              {consist.assembly?.type==='articulated'?(isZh?'车壳建议 160–220 g/m² 纸；风琴折棚和底部连接带建议另用 100–120 g/m² 薄纸。':'Use 160–220 gsm paper for bodies and separate 100–120 gsm sheets for bellows and the underside strap.'):t('guide.paperDesc')}
             </span>
           </div>
 

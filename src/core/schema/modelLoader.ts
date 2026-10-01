@@ -10,7 +10,7 @@ export function loadPapercraftFromSchema(schema:PapercraftModelSchema):Papercraf
   if(cached)return cached
   const paperModel=compilePaperModel(schema)
   const model:PapercraftModelData={
-    id:schema.id,name:schema.name,category:schema.category==='bus'?'bus':schema.category==='vehicle'?'vehicle':'train',description:schema.description,
+    id:schema.id,name:schema.name,category:schema.category==='aircraft'?'aircraft':schema.category==='bus'?'bus':schema.category==='vehicle'?'vehicle':'train',description:schema.description,
     difficulty:schema.difficulty==='easy'?'beginner':schema.difficulty==='medium'?'intermediate':'advanced',
     recommendedAge:schema.recommendedAge,estimatedTime:schema.estimatedTime,partsCount:paperModel.parts.length,dimensions:schema.dimensions,paperModel,
     create3DParts:()=>paperModel.surfaces.map(surface=>({

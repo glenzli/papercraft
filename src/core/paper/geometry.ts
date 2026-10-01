@@ -51,7 +51,9 @@ export const overlaps = (a: Point2D[], b: Point2D[]) => intersectionArea(a,b)>AR
 export function flattenTriangle(v: Triple<Point3D>): Triple<Point2D> {
   const d=dist3(v[0],v[1]),b=dist3(v[0],v[2]),c=dist3(v[1],v[2])
   const x=(b*b+d*d-c*c)/(2*d),y=Math.sqrt(Math.max(0,b*b-x*x))
-  return [{x:0,y:0},{x:d,y:0},{x,y}]
+  // SVG/PDF y points down: negative area puts the oriented surface's printed face up.
+  // Its signed dihedral then agrees with the physical mountain/valley convention.
+  return [{x:0,y:0},{x:d,y:0},{x,y:-y}]
 }
 
 export function isIsometric(v: Triple<Point3D>,p: Triple<Point2D>): boolean {

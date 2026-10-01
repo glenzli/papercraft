@@ -1,3 +1,4 @@
+import { bakeTransportLivery, jointLivery } from './transportLivery'
 // 纹理烘焙器 (支持通勤电车、新干线高速、大正复古蒸汽全车型真实拟真贴图)
 import * as THREE from 'three'
 import { bakeProfessionalTrainLivery } from './professionalTrainLivery'
@@ -108,6 +109,8 @@ export class TextureBaker {
     this.dataUrls = new WeakMap()
     this.texture?.dispose()
     this.texture = null
+    const transport=bakeTransportLivery(options)
+    if(transport){this.slotCanvases=transport;return}
     const professional = bakeProfessionalTrainLivery(options, {
       side: (ctx,w,h,isLeft,middle) => {
         this.drawHarukaFullSakuraLivery(ctx,w,h,isLeft,middle)
@@ -203,6 +206,7 @@ export class TextureBaker {
     this.slotCanvases.set('coupler_3d', couplerCanvas3D)
     this.slotCanvases.set('bellows', bellowsCanvas2D)
     this.slotCanvases.set('bellows_3d', bellowsCanvas3D)
+    jointLivery().forEach((canvas,slot)=>this.slotCanvases.set(slot,canvas))
   }
 
   /**

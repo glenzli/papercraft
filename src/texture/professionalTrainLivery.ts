@@ -67,12 +67,12 @@ export function bakeProfessionalTrainLivery(options:BakeOptions,decorations?:Pro
           for(const z of [46,48,50,52]){ctx.beginPath();ctx.moveTo(maxZ-z,29);ctx.lineTo(maxZ-z,34);ctx.stroke()}
         }
       }
-      if(!sakura)text(ctx,haruka?'HARUKA':'rapi:t',length*.55,12,2.4,haruka?color.secondary:color.accent,28,mirror)
-      text(ctx,haruka?'281':'50000',length-16,3.5,1.7,color.accent,12,mirror)
+      if(!sakura)text(ctx,haruka?'HARUKA':'rapi:t',length*.55,12,2.4,haruka?color.secondary:color.accent,28,!mirror)
+      text(ctx,haruka?'281':'50000',length-16,3.5,1.7,color.accent,12,!mirror)
       if(options.customText.enabled) {
         const t=options.customText,value=[t.trainNumber,t.destination,t.kidName].filter(Boolean).join(' · ')
         const x=length*.55+(t.offsetX||0)*length/100,y=13+(t.offsetY||0)*height/100
-        if(value){box(ctx,x-24,y-1,48,4,t.bgColor||color.primary,undefined,.4);text(ctx,value,x,y,2.5,t.textColor||color.accent,46,mirror)}
+        if(value){box(ctx,x-24,y-1,48,4,t.bgColor||color.primary,undefined,.4);text(ctx,value,x,y,2.5,t.textColor||color.accent,46,!mirror)}
       }
     })
     const front=canvas(28,height,color.primary,ctx=>{
@@ -87,14 +87,14 @@ export function bakeProfessionalTrainLivery(options:BakeOptions,decorations?:Pro
         polygon(ctx,[[3.3,27],[4.5,33.8],[23.5,33.8],[24.7,27]],color.window,color.frame)
         box(ctx,11,8,6,22,color.primary,color.frame,.4);box(ctx,11.7,25.5,4.6,4.5,color.window,color.frame,.3)
         for(const x of [4.5,23.5]){box(ctx,x-1.8,9,3.6,2.3,'#f7f3d4',color.frame,.6);box(ctx,x-1.5,6,3,1,color.accent,undefined,.3)}
-        if(!sakura)text(ctx,'HARUKA',14,18,1.7,color.secondary,10,true)
+        if(!sakura)text(ctx,'HARUKA',14,18,1.7,color.secondary,10)
       } else {
         polygon(ctx,[[2.1,26],[5.5,33],[22.5,33],[25.9,26]],color.window,color.frame)
         box(ctx,13.8,26.2,.4,6.1,color.frame,undefined,0)
         polygon(ctx,[[4,20],[24,20],[22,15],[6,15]],color.roof)
         for(const x of [5,23])box(ctx,x-1.5,13,3,1.8,'#f4edcc',color.frame,.7)
         box(ctx,11,3,6,4,color.roof,color.frame,.4)
-        text(ctx,'rapi:t',14,9,2.1,color.accent,12,true)
+        text(ctx,'rapi:t',14,9,2.1,color.accent,12)
       }
     })
     const roof=canvas(28,length,color.primary,ctx=>{

@@ -80,13 +80,15 @@ export const NetViewer2D: React.FC<NetViewer2DProps> = ({
     const containerH = containerRef.current.clientHeight - 48
     const scaleW = containerW / A4_WIDTH_MM
     const scaleH = containerH / A4_HEIGHT_MM
-    const fitScale = Math.max(1.5, Math.min(scaleW, scaleH) * 0.95)
+    const fitScale = Math.max(.25, Math.min(scaleW, scaleH) * 0.95)
     setScale(fitScale)
     setPanOffset({ x: 0, y: 0 })
   }
 
   useEffect(() => {
-    fitToScreen()
+    const observer=new ResizeObserver(fitToScreen)
+    if(containerRef.current)observer.observe(containerRef.current)
+    return ()=>observer.disconnect()
   }, [])
 
   // 鼠标滚轮缩放
@@ -119,10 +121,10 @@ export const NetViewer2D: React.FC<NetViewer2DProps> = ({
   return (
     <div className={`relative w-full h-full flex flex-col ${isLight ? 'bg-zinc-100 text-zinc-800' : 'bg-zinc-950 text-zinc-200'} overflow-hidden select-none`}>
       {/* 悬浮微型工具胶囊 (右上角，不占用顶部整排空间) */}
-      <div className="absolute top-3 right-3 flex items-center gap-1.5 z-20">
+      <div className="flex flex-wrap items-center justify-end gap-1.5 p-2 shrink-0 z-20">
         {/* 全编组多页翻页控制器 */}
         {consistPages.length > 1 && (
-          <div className={`flex items-center gap-1 px-2 py-1 rounded-lg border backdrop-blur-md shadow-md text-xs mr-1 ${
+          <div className={`flex items-center gap-1 px-2 py-1 rounded-lg border backdrop-blur-md shadow-md text-xs min-w-0 max-w-full ${
             isLight ? 'bg-white/95 border-zinc-200 text-zinc-800' : 'bg-zinc-900/95 border-zinc-700 text-zinc-200'
           }`}>
             <button
@@ -139,7 +141,7 @@ export const NetViewer2D: React.FC<NetViewer2DProps> = ({
             >
               ◀
             </button>
-            <span className="font-semibold text-[11px] px-1 max-w-[260px] truncate">
+            <span className="font-semibold text-[11px] px-1 min-w-0 max-w-[220px] truncate">
               {t('viewer2D.pageTitle', {
                 current: currentPageIndex + 1,
                 total: consistPages.length,
@@ -163,7 +165,7 @@ export const NetViewer2D: React.FC<NetViewer2DProps> = ({
           </div>
         )}
 
-        <div className={`flex items-center gap-1 px-2 py-1 rounded-lg border backdrop-blur-md shadow-md text-xs ${
+        <div className={`flex items-center gap-1 px-2 py-1 rounded-lg border backdrop-blur-md shadow-md text-xs whitespace-nowrap shrink-0 ${
           isLight ? 'bg-white/90 border-zinc-200 text-zinc-700' : 'bg-zinc-900/90 border-zinc-800 text-zinc-300'
         }`}>
           <button
@@ -234,7 +236,7 @@ export const NetViewer2D: React.FC<NetViewer2DProps> = ({
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
-        className="w-full h-full flex items-center justify-center cursor-grab active:cursor-grabbing overflow-hidden p-6"
+        className="w-full flex-1 min-h-0 flex items-center justify-center cursor-grab active:cursor-grabbing overflow-hidden p-6"
       >
         <div
           style={{
@@ -258,26 +260,12 @@ export const NetViewer2D: React.FC<NetViewer2DProps> = ({
               </pattern>
             </defs>
 
-            {/* 1. 单行紧凑页眉：车厢标题 + 页码 + 剪折图例 (极度节约纵向空间) */}
-            <g transform="translate(10, 8)">
-              <text x="0" y="3.5" fontSize="3.6" fontWeight="bold" fill="#0f172a">
-                {activePage?.pageTitle || t('viewer2D.sheetTitle')}
-                <tspan fontSize="2.5" fontWeight="normal" fill="#64748b" dx="4">
-                  (P. {currentPageIndex + 1} / {consistPages.length})
-                </tspan>
-              </text>
-
-              <g transform="translate(115, 2.5)">
-                <line x1="0" y1="0" x2="6" y2="0" stroke="#0f172a" strokeWidth="0.4" />
-                <text x="7.5" y="1" fontSize="2.2" fill="#334155">{t('viewer2D.legendCut')}</text>
-
-                <line x1="20" y1="0" x2="26" y2="0" stroke="#dc2626" strokeWidth="0.35" strokeDasharray="1.5, 1" />
-                <text x="27.5" y="1" fontSize="2.2" fill="#dc2626">{t('viewer2D.legendMountain')}</text>
-
-                <line x1="40" y1="0" x2="46" y2="0" stroke="#0284c7" strokeWidth="0.35" strokeDasharray="2.5, 1, 0.8, 1" />
-                <text x="47.5" y="1" fontSize="2.2" fill="#0284c7">{t('viewer2D.legendValley')}</text>
-              </g>
-            </g>
+            <text x="10" y="8" fontSize="2.5" fontWeight="bold" fill="#0f172a" textLength={(activePage?.pageTitle.length||0)>65?165:undefined} lengthAdjust="spacingAndGlyphs">{activePage?.pageTitle||t('viewer2D.sheetTitle')}</text>
+            <text x="200" y="8" fontSize="2.5" textAnchor="end">{currentPageIndex+1} / {consistPages.length}</text>
+            {(['cut','mountain','valley'] as const).map((type,i)=>{const style=lineStyle(type);return <g key={type} transform={`translate(${10+i*30},12)`}>
+              <line x1="0" y1="0" x2="7" y2="0" stroke={style.color} strokeWidth={style.width} strokeDasharray={style.dash.join(' ')}/>
+              <text x="9" y=".7" fontSize="2" fill={style.color}>{t(type==='cut'?'viewer2D.legendCut':type==='mountain'?'viewer2D.legendMountain':'viewer2D.legendValley')}</text>
+            </g>})}
 
             {/* 2. 渲染当前页的所有零件 (车身独立或配件专页) */}
             {activePage?.placements.map((placement: ConsistPartPlacement, pIdx: number) => {

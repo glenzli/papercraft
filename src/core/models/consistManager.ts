@@ -1,3 +1,6 @@
+import { ARTICULATED_GAP_MM, withArticulatedJoint } from '../schema/accessories/articulatedJoint'
+import { compactCarConsist, pickupConsist } from '../schema/models/transport/roadVehicles'
+import { travelPlaneConsist } from '../schema/models/transport/travelPlane'
 import { haruka281ProConsist } from '../schema/models/pro/haruka281'
 import { rapit50000ProConsist } from '../schema/models/pro/rapit50000'
 // 载具与多节车厢编组管理器 (Consist & Vehicle Manager)
@@ -19,7 +22,7 @@ import { consistTram } from '../schema/models/consistTram'
 import { consistHKTram } from '../schema/models/consistHKTram'
 import { consistDF4BFreight } from '../schema/models/consistDF4BFreight'
 import { loadPapercraftFromSchema } from '../schema/modelLoader'
-import { couplerDrawbarAccessory, bellowsGangwayAccessory } from '../schema/accessories/couplerAccessories'
+import { couplerDrawbarAccessory } from '../schema/accessories/couplerAccessories'
 import { PapercraftModelData } from '../types'
 
 export const CONSIST_REGISTRY: TrainModelConsist[] = [
@@ -40,7 +43,10 @@ export const CONSIST_REGISTRY: TrainModelConsist[] = [
   nankaiRapitConsist,
   harukaTrainConsist,
   e5TrainConsist,
-  d51TrainConsist
+  d51TrainConsist,
+  compactCarConsist,
+  pickupConsist,
+  travelPlaneConsist
 ]
 
 export interface ConsistCarItem {
@@ -49,6 +55,7 @@ export interface ConsistCarItem {
   carType: 'head' | 'middle' | 'tail' | 'tender'
   modelData: PapercraftModelData
   schema: import('../schema/papercraftSchema').PapercraftModelSchema
+  rotationY?: number    // Explicit orientation, preserving imported tail schemas
   spacingOffsetZ: number // 在 3D 编组连结中的 Z 轴世界位置偏移 (m)
 }
 
@@ -63,18 +70,24 @@ export function buildTrainConsistCars(
   const consist: TrainModelConsist = typeof consistOrId === 'object'
     ? consistOrId
     : CONSIST_REGISTRY.find(c => c.id === consistOrId) || CONSIST_REGISTRY[0]
+  const requested=Number.isFinite(middleCarCount)?Math.floor(middleCarCount):0
+  middleCarCount=Math.max(0,Math.min(consist.assembly?.maxMiddleCars??5,requested))
   const cars: ConsistCarItem[] = []
   const isEn = locale === 'en-US'
+  const loadLocalized=(schema:ConsistCarItem['schema'])=>{
+    const model=loadPapercraftFromSchema(schema)
+    return {...model,name:isEn?(schema.nameEn||schema.name):schema.name}
+  }
   const isArticulated = consist.assembly?.type === 'articulated'
   const isSingle = consist.assembly?.type === 'single' || (!consist.carDefinitions.middle && !consist.carDefinitions.tail)
 
   let currentZ = 0
-  const couplerGap = isArticulated ? 0.01 : 0.08 // 铰接风挡紧密连结间距 1cm，普通车厢 8cm
+  const couplerGap = isArticulated ? ARTICULATED_GAP_MM*.01 : 0.08 // Paper joint 24 mm; ordinary display spacing 8 mm
 
   // 1. 单体车辆 (如单节公交车 / 双层大巴 / 叮叮车)
   if (isSingle) {
     const bodySchema = consist.carDefinitions.head.schema
-    const bodyModel = loadPapercraftFromSchema(bodySchema)
+    const bodyModel = loadLocalized(bodySchema)
     let bodyText = isEn ? 'Vehicle Body (Single)' : '车身主体 (单车制作)'
     if (consist.id === 'hk-tram-consist') {
       bodyText = isEn ? 'HK Double-Decker Tram' : '香港双层叮叮车 (单车制作)'
@@ -98,16 +111,15 @@ export function buildTrainConsistCars(
   // 2. 多节编组列车/铰接车：头车 (Head Car / Lead Section)
   const headSchema = consist.carDefinitions.head.schema
   const headAccessories = [...(headSchema.accessories || [])]
-  if (isArticulated) {
-    headAccessories.push(bellowsGangwayAccessory)
-  } else if (!isSingle) {
+  if (!isArticulated && !isSingle) {
     headAccessories.push(couplerDrawbarAccessory)
   }
+  const headWithJoint=isArticulated?withArticulatedJoint(headSchema):headSchema
   const effectiveHeadSchema: import('../schema/papercraftSchema').PapercraftModelSchema = {
-    ...headSchema,
-    accessories: headAccessories
+    ...headWithJoint,
+    accessories: isArticulated?headWithJoint.accessories:headAccessories
   }
-  const headModel = loadPapercraftFromSchema(effectiveHeadSchema)
+  const headModel = loadLocalized(effectiveHeadSchema)
   const headLen = headModel.dimensions.length * 0.01 // 转换为米/3D单位
   currentZ = headLen / 2
 
@@ -132,7 +144,7 @@ export function buildTrainConsistCars(
   // 3. 如果是蒸汽火车，紧接煤水车 (Tender Car)
   if (consist.carDefinitions.tender) {
     const tenderSchema = consist.carDefinitions.tender.schema
-    const tenderModel = loadPapercraftFromSchema(tenderSchema)
+    const tenderModel = loadLocalized(tenderSchema)
     const tenderLen = tenderModel.dimensions.length * 0.01
     currentZ -= (headLen / 2 + couplerGap + tenderLen / 2)
 
@@ -150,7 +162,7 @@ export function buildTrainConsistCars(
   if (consist.carDefinitions.middle) {
     for (let i = 0; i < middleCarCount; i++) {
       const middleSchema = consist.carDefinitions.middle.schema
-      const middleModel = loadPapercraftFromSchema(middleSchema)
+      const middleModel = loadLocalized(middleSchema)
       const middleLen = middleModel.dimensions.length * 0.01
       const prevLen = cars[cars.length - 1].modelData.dimensions.length * 0.01
 
@@ -177,7 +189,7 @@ export function buildTrainConsistCars(
   // 5. 尾部驾驶车/铰接副车身/散货车 (Tail Car)
   if (consist.carDefinitions.tail) {
     const tailSchema = consist.carDefinitions.tail.schema
-    const tailModel = loadPapercraftFromSchema(tailSchema)
+    const tailModel = loadLocalized(tailSchema)
     const tailLen = tailModel.dimensions.length * 0.01
     const prevLen = cars[cars.length - 1].modelData.dimensions.length * 0.01
 
@@ -196,6 +208,7 @@ export function buildTrainConsistCars(
       carIndex: cars.length,
       carNumberText: tailText,
       carType: 'tail',
+      rotationY: isArticulated?0:Math.PI,
       modelData: tailModel,
       schema: tailSchema,
       spacingOffsetZ: currentZ

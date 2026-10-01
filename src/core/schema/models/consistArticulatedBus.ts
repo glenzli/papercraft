@@ -222,6 +222,14 @@ const frontBusSchema: PapercraftModelSchema = {
   ]
 }
 
+frontBusSchema.assemblySteps=[
+  {text:'先压好左右折棚与底部纸带的交替山谷折。FRONT/REAR 安装端折向车身，只在两端安装翼涂胶，不要粘住褶片。',textEn:'Pre-score alternating mountain/valley folds on both bellows and the strap. Fold FRONT/REAR mounting ends toward the bodies. Glue only the end flanges; keep pleats free.'},
+  {text:'闭合前后车身，后节车头朝前，不要倒转。用 24 mm 宽余纸作临时垫片保持连接端间距。',textEn:'Close both bodies. Keep the rear section facing forward. Use a 24 mm offcut as a temporary spacer between the joining end walls.'},
+  {text:'左右折棚粘到两端隔板左右区域（离侧边约 4 mm、上下各留 3 mm），底部 12 mm 宽纸带的两端各粘入车底 10 mm。',textEn:'Glue side flanges to both end walls, about 4 mm in from the side edges with 3 mm top/bottom clearance. Glue each end of the 12 mm strap 10 mm onto the underside.'},
+  {text:'胶完全干后移除垫片，轻轻左右转动，建议先在 ±15° 内试验；这是柔性纸铰接，不是轴承。折棚用 100–120 g/m² 薄纸更易活动，可与车身分开打印。',textEn:'Let glue cure, remove the spacer and gently turn each way. Start within ±15°. This is a flexible paper joint, not a bearing. Bellows move more easily on 100–120 gsm paper; print them separately from the bodies if desired.'},
+  {text:'禁止拉扯或强行转弯；纸厚、扭转与连接强度需要实物试装确认。',textEn:'Avoid pulling or forcing turns. Paper thickness, twist and joint strength still need a physical assembly trial.'}
+]
+
 // 2. 后节铰接副车身 (Rear Section / 105mm 带手风琴折棚风挡)
 const rearBusSchema: PapercraftModelSchema = {
   version: '2.0',
@@ -380,7 +388,7 @@ const rearBusSchema: PapercraftModelSchema = {
         {
           id: 'front',
           name: '手风琴式折叠铰接风挡 (Bellows)',
-          slotName: 'front',
+          slotName: 'joint_partition',
           vertices3D: [[-20, 44, 52.5], [20, 44, 52.5], [-20, 0, 52.5], [20, 0, 52.5]],
           vertices2D: [
             [85, 60 + 105],
@@ -446,8 +454,8 @@ export const consistArticulatedBus: TrainModelConsist = {
   name: "双节铰接公交车",
   nameEn: "Articulated bus",
   category: 'bus',
-  description: "前后车身通过纸质折棚连接。",
-  descriptionEn: "Front and rear sections joined by paper bellows.",
+  description: "前后车身通过24 mm 间隙的侧风琴与底部柔性纸带连接。",
+  descriptionEn: "Front and rear sections joined by side bellows and a flexible underside strap with a 24 mm gap.",
   difficulty: 'medium',
   recommendedAge: '6-12 岁',
   estimatedTimePerCar: '20 分钟',

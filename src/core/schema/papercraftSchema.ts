@@ -92,5 +92,7 @@ export interface PapercraftModelSchema {
     height: number // mm
   }
   parts: SchemaPart[]
+  /** Model-specific steps travel with the asset and are printed with its sheets. */
+  assemblySteps?: { text:string; textEn:string }[]
   accessories?: SchemaAccessory[]
 }
