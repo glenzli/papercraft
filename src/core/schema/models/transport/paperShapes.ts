@@ -4,9 +4,9 @@ export type Vertex = [number, number, number]
 
 /** Planar polygon with an explicit artwork projection; physical units are millimetres. */
 export function panel(id:string,slotName:string,vertices3D:Vertex[],uvCoords:[number,number][],name=id):SchemaFace {
-  const a=vertices3D[0],b=vertices3D[1],c=vertices3D[2]
-  const ab=b.map((v,i)=>v-a[i]),ac=c.map((v,i)=>v-a[i])
-  const n=[ab[1]*ac[2]-ab[2]*ac[1],ab[2]*ac[0]-ab[0]*ac[2],ab[0]*ac[1]-ab[1]*ac[0]]
+  // Newell's normal also handles silhouettes beginning with collinear points.
+  const n=[0,0,0]
+  vertices3D.forEach((a,i)=>{const b=vertices3D[(i+1)%vertices3D.length];n[0]+=(a[1]-b[1])*(a[2]+b[2]);n[1]+=(a[2]-b[2])*(a[0]+b[0]);n[2]+=(a[0]-b[0])*(a[1]+b[1])})
   const axis=n.map(Math.abs).indexOf(Math.max(...n.map(Math.abs)))
   const points=vertices3D.map(v=>new Vector2(v[(axis+1)%3],v[(axis+2)%3]))
   return {id,name,slotName,vertices3D,vertices2D:[],uvCoords:uvCoords.map(([u,v])=>[1-u,v]),indices:ShapeUtils.triangulateShape(points,[]).flat()}

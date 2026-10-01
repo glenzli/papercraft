@@ -1,6 +1,9 @@
 import { ARTICULATED_GAP_MM, withArticulatedJoint } from '../schema/accessories/articulatedJoint'
 import { compactCarConsist, pickupConsist } from '../schema/models/transport/roadVehicles'
 import { travelPlaneConsist } from '../schema/models/transport/travelPlane'
+import { jetAirlinerConsist } from '../schema/models/transport/jetAirliner'
+import { helicopterConsist } from '../schema/models/transport/helicopter'
+import { floatplaneConsist } from '../schema/models/transport/floatplane'
 import { haruka281ProConsist } from '../schema/models/pro/haruka281'
 import { rapit50000ProConsist } from '../schema/models/pro/rapit50000'
 // 载具与多节车厢编组管理器 (Consist & Vehicle Manager)
@@ -46,7 +49,10 @@ export const CONSIST_REGISTRY: TrainModelConsist[] = [
   d51TrainConsist,
   compactCarConsist,
   pickupConsist,
-  travelPlaneConsist
+  travelPlaneConsist,
+  jetAirlinerConsist,
+  helicopterConsist,
+  floatplaneConsist
 ]
 
 export interface ConsistCarItem {

@@ -202,7 +202,7 @@ export function App() {
       />
 
       {/* 主工作区 */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 min-h-0 flex overflow-hidden relative">
         {/* 左/中 视口展示区 */}
         <div className="flex-1 min-w-0 flex overflow-hidden relative">
           {viewMode === '3d' && (
@@ -259,7 +259,7 @@ export function App() {
 
         {/* 右侧设计侧边栏 (收窄至 288px，支持一键折叠) */}
         {isSidebarOpen && (
-          <div className={`absolute lg:static right-0 top-11 bottom-0 z-30 w-72 h-auto lg:h-full shadow-xl lg:shadow-none flex flex-col ${isLight ? 'bg-white border-zinc-200' : 'bg-zinc-900 border-zinc-800'} border-l shrink-0 transition-all duration-200`}>
+          <div className={`absolute lg:static right-0 top-0 bottom-0 z-30 w-72 h-auto lg:h-full shadow-xl lg:shadow-none flex flex-col ${isLight ? 'bg-white border-zinc-200' : 'bg-zinc-900 border-zinc-800'} border-l shrink-0 transition-all duration-200`}>
             {/* 侧边栏 Tab 切换 */}
             <div className={`flex items-center border-b ${isLight ? 'border-zinc-200 bg-zinc-50' : 'border-zinc-800 bg-zinc-950/40'} p-1 gap-1 text-xs shrink-0`}>
               <button

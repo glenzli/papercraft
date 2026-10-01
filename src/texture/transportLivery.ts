@@ -1,9 +1,11 @@
 import type { BakeOptions } from './textureBaker'
 import type { TextureTheme } from './types'
+import { AIRCRAFT_THEMES, bakeAircraftLivery } from './aircraftLivery'
 export const TRANSPORT_THEMES:TextureTheme[]=[
   {id:'hatchback-coral',name:'珊瑚橙',nameEn:'Coral',category:'custom',liveryStyle:'custom',compatibleCategories:['vehicle'],targetConsistIds:['compact-hatchback-consist'],description:'珊瑚橙车壳与深色车顶。',descriptionEn:'Coral shell and dark roof.',colors:{primary:'#ea7056',secondary:'#ffe6c9',accent:'#f6bd60',roof:'#334155',window:'#16334a',frame:'#475569'},stripes:{style:'none',width:0}},
   {id:'pickup-forest',name:'森林绿',nameEn:'Forest',category:'custom',liveryStyle:'custom',compatibleCategories:['vehicle'],targetConsistIds:['utility-pickup-consist'],description:'深绿车身与原木色开放货斗。',descriptionEn:'Forest body with a wood-colored open bed.',colors:{primary:'#397568',secondary:'#bed8c5',accent:'#e2b575',roof:'#e4e6df',window:'#173445',frame:'#334155'},stripes:{style:'none',width:0}},
-  {id:'plane-sky',name:'天空蓝白',nameEn:'Sky blue & white',category:'custom',liveryStyle:'custom',compatibleCategories:['all'],targetConsistIds:['travel-propeller-plane-consist'],description:'白色机身与蓝色翼面，带安装位置标记。',descriptionEn:'White fuselage and blue wings with mounting locations.',colors:{primary:'#f8fafc',secondary:'#2895bd',accent:'#f2bb52',roof:'#f8fafc',window:'#163b54',frame:'#526c7b'},stripes:{style:'single',width:3}}
+  {id:'plane-sky',name:'天空蓝白',nameEn:'Sky blue & white',category:'custom',liveryStyle:'custom',compatibleCategories:['all'],targetConsistIds:['travel-propeller-plane-consist'],description:'白色机身与蓝色翼面，带安装位置标记。',descriptionEn:'White fuselage and blue wings with mounting locations.',colors:{primary:'#f8fafc',secondary:'#2895bd',accent:'#f2bb52',roof:'#f8fafc',window:'#163b54',frame:'#526c7b'},stripes:{style:'single',width:3}},
+  ...AIRCRAFT_THEMES
 ]
 const canvas=(w:number,h:number,fill:string,paint:(ctx:CanvasRenderingContext2D)=>void)=>{
   const c=document.createElement('canvas');c.width=Math.ceil(w*10);c.height=Math.ceil(h*10)
@@ -15,10 +17,11 @@ const line=(ctx:CanvasRenderingContext2D,x:number,y:number,a:number,b:number,col
 
 /** Aircraft and road geometry have their own artwork, rather than inheriting train windows. */
 export function bakeTransportLivery(options:BakeOptions):Map<string,HTMLCanvasElement>|null {
-  const id=options.consistId,car=id==='compact-hatchback-consist',pickup=id==='utility-pickup-consist',plane=id==='travel-propeller-plane-consist'
+  const aircraft=bakeAircraftLivery(options);if(aircraft)return aircraft
+  const id=options.consistId,car=id==='compact-hatchback-consist',pickup=id==='utility-pickup-consist',plane=id==='travel-propeller-plane-consist'||id==='twin-float-seaplane-consist'
   if(!car&&!pickup&&!plane)return null
   const color={...options.theme.colors,...(options.useCustomColors?options.customColors:{})},slots=new Map<string,HTMLCanvasElement>()
-  const length=car?110:pickup?132:160,height=car?38:pickup?44:24
+  const length=car?110:pickup?132:160,height=car?42:pickup?54:24
   const store=(name:string,c:HTMLCanvasElement)=>{slots.set(name,c);slots.set(`${name}_3d`,c)}
   for(const side of ['left','right']) {
     const mirror=side==='left'
@@ -31,12 +34,9 @@ export function bakeTransportLivery(options:BakeOptions):Map<string,HTMLCanvasEl
         for(const [z,label,w] of [[1,'WING',38],[-36,'TAIL',16]] as const){const x=Math.min(position(z+w/2),position(z-w/2));box(ctx,x,6,w,6,color.roof);text(ctx,label,x+w/2,10,2,color.frame,w-1)}
         text(ctx,'PC-160',position(-5),21,3,color.secondary,40)
       } else {
-        for(const z of car?[-33,35]:[-44,44]) {
-          const x=position(z);ctx.beginPath();ctx.arc(x,height-7,7,0,Math.PI*2);ctx.fillStyle='#1e293b';ctx.fill();ctx.beginPath();ctx.arc(x,height-7,3,0,Math.PI*2);ctx.fillStyle='#cbd5e1';ctx.fill()
-        }
         box(ctx,Math.min(position(-24),position(14)),car?5:4,car?38:36,car?11:15,color.window)
         line(ctx,position(-6),4,position(-6),height-10,color.frame)
-        if(pickup){box(ctx,Math.min(position(-66),position(-15)),height-30,51,16,color.primary);line(ctx,position(-66),height-30,position(-15),height-30,color.accent)}
+        if(pickup){box(ctx,Math.min(position(-66),position(-15)),height-42,51,15,color.primary);line(ctx,position(-66),height-42,position(-15),height-42,color.accent)}
       }
       if(options.customText.enabled)text(ctx,options.customText.kidName,position(0),height-3,2.5,options.customText.textColor||color.accent,50)
     }))
@@ -57,7 +57,16 @@ export function bakeTransportLivery(options:BakeOptions):Map<string,HTMLCanvasEl
   store('wing_mount',canvas(38,6,'#e2e8f0',ctx=>text(ctx,'GLUE',19,4,2)))
   store('fin',canvas(26,23,color.secondary,ctx=>box(ctx,0,0,26,3,color.accent)))
   store('fin_mount',canvas(26,5,'#e2e8f0',ctx=>text(ctx,'GLUE',13,3.5,2)))
-  store('propeller',canvas(4,23,'#475569',ctx=>box(ctx,0,0,4,3,color.accent)))
+  store('propeller',canvas(46,15,'#475569',ctx=>{box(ctx,0,0,4,15,color.accent);box(ctx,42,0,4,15,color.accent)}))
+  store('prop_hub',canvas(8,8,color.accent,()=>{}))
+  store('frame',canvas(30,30,'#475569',()=>{}))
+  store('wheel_tread',canvas(8,8,'#1e293b',ctx=>{for(let y=1;y<8;y+=2)line(ctx,0,y,8,y,'#475569',.5)}))
+  store('wheel_hub',canvas(20,20,'#1e293b',ctx=>{ctx.beginPath();ctx.arc(10,10,5,0,2*Math.PI);ctx.fillStyle='#cbd5e1';ctx.fill();ctx.beginPath();ctx.arc(10,10,2,0,2*Math.PI);ctx.fillStyle=color.accent;ctx.fill()}))
+  for(const label of ['fl','fr','rl','rr']){
+    store(`wheel_inner_${label}`,canvas(20,20,'#334155',ctx=>{box(ctx,6.5,7,7,7,'#e2e8f0');text(ctx,label.toUpperCase(),10,11.5,2,'#334155',6)}))
+    store(`wheel_mount_${label}`,canvas(7,7,'#e2e8f0',ctx=>text(ctx,label.toUpperCase(),3.5,4.5,2,'#334155',6)))
+  }
+  for(const slot of ['float_side','float_roof','float_bottom','float_nose','float_tail','float_strut','air_mount'])store(slot,canvas(40,20,slot==='air_mount'?'#e2e8f0':slot==='float_strut'?'#64748b':color.secondary,()=>{}))
   return slots
 }
 

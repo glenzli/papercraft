@@ -12,11 +12,11 @@ Papercraft Studio 是一个浏览器中的车辆纸模工具，用于选择模�
 
 ### 主要能力
 
-- **模型与编组**：提供 21 款列车、公交车、电车、道路车辆和飞机，支持名称搜索、类别与难度筛选。新增两厢车、开放货斗皮卡和螺旋桨飞机。CR400、GSE、Haruka 281 和 Rapi:t 50000 各有基础版与精细版；支持编组的车型可增减中间车厢。
+- **模型与编组**：提供 24 款列车、公交车、电车、道路车辆和飞机，支持名称搜索、类别与难度筛选。道路车辆有实体轮拱与独立纸轮；飞机包括长双叶螺旋桨飞机、双发喷气客机、救援直升机和双浮筒水上飞机。CR400、GSE、Haruka 281 和 Rapi:t 50000 各有基础版与精细版；支持编组的车型可增减中间车厢。
 - **涂装定制**：选择兼容预设，调整颜色和文字，或上传侧身插画、贴图总谱。标为“风格”的配色只改变图案，不将车体变为另一车型。
 - **预览与展开**：在 3D、2D 或分屏视图中检查模型。复杂车体分为多个纸片，使用接缝编号配对，并提供纸质车钩等连接件。
 - **导出与交换**：导出带矢量剪折线的 A4 PDF；用 `.papercraft` 交换模型与涂装资源，用 `.papercraft-livery` 单独交换涂装。
-- **纸模连接**：双节公交有两侧风琴折棚、两端安装翼和底部柔性纸带。飞机翼根与尾鳍有一体安装翼；这四款模型的 PDF 附专属装配说明页。
+- **纸模连接**：双节公交有两侧风琴折棚、两端安装翼和底部柔性纸带。飞机翼根与尾鳍有一体安装翼；道路车辆、四种飞机与铰接公交的 PDF 附专属装配说明页。
 
 ![模型库：搜索、类别与难度筛选](docs/model-library.png)
 
@@ -32,7 +32,7 @@ Papercraft Studio 是一个浏览器中的车辆纸模工具，用于选择模�
 ### 当前限制
 
 - 复杂曲面使用平面折面近似，并非精确工程缩尺。纸厚、粘贴顺序和接缝强度仍需实物试装；展开不保证最少切口或最少页数，目前仅自动分页到 A4。
-- 公交柔性纸接头可按说明从左右各 15° 轻转试装；这不是经过实物寿命验证的转轴。汽车轮胎是印刷图案，飞机螺旋桨固定且仅供展示。
+- 公交柔性纸接头可按说明从左右各 15° 轻转试装；这不是经过实物寿命验证的转轴。两厢车和皮卡车轮是固定粘合的独立纸轮，无旋转轴；飞机桨叶均固定且仅供展示，水上飞机不防水。
 - 切换模型会保留各自的编辑状态，**刷新页面会清除这些状态**。`.papercraft` 是模型与涂装资源包，不是包含当前编组、全部调色、文字及上传贴图的项目存档。
 - 上传图片按既定贴图布局映射到模型；目前没有自由编辑模型几何或 UV 的可视化工具。
 
@@ -69,11 +69,11 @@ Papercraft Studio is a browser tool for choosing vehicle models, adjusting consi
 
 ### Features
 
-- **Models and consists**: 21 trains, buses, trams, road vehicles and aircraft with name search, category and difficulty filters. New models include a hatchback, open-bed pickup and propeller plane. CR400, GSE, Haruka 281 and Rapi:t 50000 have basic and detailed variants. Models that support consists allow middle cars to be added or removed.
+- **Models and consists**: 24 trains, buses, trams, road vehicles and aircraft with name search, category and difficulty filters. The hatchback and pickup have real wheel arches and separate paper wheels. Aircraft include a long-blade propeller plane, twin-engine jet, rescue helicopter and twin-float seaplane. CR400, GSE, Haruka 281 and Rapi:t 50000 have basic and detailed variants. Models that support consists allow middle cars to be added or removed.
 - **Livery customization**: Choose compatible presets, adjust colors and text, or upload side artwork and texture atlases. Liveries described as another vehicle's “style” change artwork, not the body geometry.
 - **Preview and nets**: Inspect models in 3D, 2D or split view. Complex bodies unfold into multiple pieces with matching seam numbers and include paper couplers or other connecting parts.
 - **Export and exchange**: Export A4 PDFs with vector construction lines. Exchange model and livery resources through `.papercraft` packages, or individual liveries through `.papercraft-livery` files.
-- **Paper connections**: The articulated bus includes two accordion sides with integral mounting flanges and an underside flexible strap. Aircraft wings and fin have integral mounting flanges. PDFs for these four models include a dedicated assembly sheet.
+- **Paper connections**: The articulated bus includes two accordion sides with integral mounting flanges and an underside flexible strap. Aircraft wings and fin have integral mounting flanges. PDFs for the road vehicles, four aircraft and articulated bus include dedicated assembly sheets.
 
 ![Model library with search, category and difficulty filters](docs/model-library.png)
 
@@ -89,7 +89,7 @@ Add `?lang=zh` or `?lang=en` to a link to choose the interface language, overrid
 ### Limitations
 
 - Curved surfaces use planar facets; models are not exact engineering-scale replicas. Paper thickness, assembly order and joint strength still require physical trials. Nets do not guarantee the fewest cuts or sheets, and automatic pagination currently supports A4 only.
-- Start the bus joint with gentle trials of 15° each way as instructed; its durability has not been physically tested. Car wheels are printed artwork. The aircraft has a fixed propeller and is for display.
+- Start the bus joint with gentle trials of 15° each way as instructed; its durability has not been physically tested. Hatchback and pickup wheels are separate glued paper parts without rotating axles. Aircraft rotors are fixed display parts; the seaplane is not waterproof.
 - Each model retains its editing state while switching, but **reloading the page clears these drafts**. A `.papercraft` package contains model and livery resources, not a complete project snapshot of the current consist, color edits, text and uploaded artwork.
 - Uploaded images follow predefined texture layouts. There is currently no visual editor for arbitrary model geometry or UV coordinates.
 

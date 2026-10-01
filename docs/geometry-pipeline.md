@@ -90,7 +90,7 @@ thickness clearance, glue access or strength; representative physical assembly r
 
 ## Validation
 
-Run `npm test` for all 21 built-in families plus independent geometry fixtures. The tests check:
+Run `npm test` for all 24 built-in families plus independent geometry fixtures. The tests check:
 
 - Box geometry with indexed and unindexed UV seams: all 12 triangles retained, one island.
 - Disconnected meshes, T-junction subdivision and forced cuts, non-manifold rejection.
@@ -104,9 +104,11 @@ Run `npm test` for all 21 built-in families plus independent geometry fixtures. 
 - Native vector PDF paths and seam text; tab bases have fold lines rather than cut lines.
 - Printed-face winding and reconstruction of retained folds from their printed labels, including
   signed 3D volume to detect mirrored assemblies; concave/convex tab direction.
-- All 35 distinct minimum/maximum consist configurations stay within A4 margins without overlap.
+- All 38 distinct minimum/maximum consist configurations stay within A4 margins without overlap.
 - Articulated joint end contact, alternating folds, yaw clearance and developed-length reserve;
   genuinely open pickup bed, closed car/aircraft shells, integral aircraft mounting flanges.
+- Sampled full attachment pads for wheel arms, engine pylons, aircraft stands, helicopter supports
+  and float struts; tyre/arch clearance, support planes, rotor facing and accessory dimensions.
 - Readable professional/transport lettering and model-specific instructions preserved in packages.
 
 `npm run build` checks the production TypeScript/Vite bundle. Browser smoke testing additionally

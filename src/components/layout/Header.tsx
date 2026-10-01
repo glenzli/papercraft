@@ -1,4 +1,4 @@
-// 顶部全局单行导航栏 (整合车型切换、动态 .papercraft 资产导入导出、车厢分页、双语切换与全局导出)
+// Responsive model selection, view controls and actions in normal document flow.
 import React from 'react'
 import { TrainModelConsist } from '../../core/schema/consistSchema'
 import { ConsistCarItem } from '../../core/models/consistManager'
@@ -63,39 +63,39 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header
-      className={`h-11 border-b flex items-center justify-between gap-1 px-2 sm:px-3 shrink-0 select-none z-30 transition-colors ${
+      className={`border-b grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto] lg:flex items-center justify-between gap-1 p-2 sm:px-3 shrink-0 select-none z-30 transition-colors [&_button]:min-h-11 [&_button]:min-w-11 [&_button]:shrink-0 ${
         isLight
           ? 'bg-white/95 border-zinc-200 text-zinc-900'
           : 'bg-zinc-900/95 border-zinc-800 text-zinc-100'
       } backdrop-blur-md`}
     >
       {/* 左侧: Logo 与车型切换 */}
-      <div className="flex min-w-0 items-center gap-1 sm:gap-2">
-        <div className="hidden sm:flex items-center gap-1.5 font-bold tracking-tight text-xs">
+      <div className="flex min-w-0 items-center gap-1 sm:gap-2 sm:col-span-2 lg:flex-1">
+        <div className="hidden lg:flex shrink-0 items-center gap-1.5 font-bold tracking-tight text-xs">
           <img
             src="/icon-192.png"
             alt="Papercraft Studio"
             className="w-5 h-5 rounded-md object-contain shadow-xs border border-zinc-200/50 dark:border-zinc-700/50"
           />
-          <span className="hidden sm:inline">{t('common.appTitle')}</span>
+          <span className="hidden xl:inline">{t('common.appTitle')}</span>
         </div>
 
-        <button onClick={onOpenModelLibrary} aria-haspopup="dialog" className={`flex items-center gap-2 px-2 py-1 rounded-md border text-xs font-medium ${isLight?'bg-zinc-100 hover:bg-zinc-200 border-zinc-200':'bg-zinc-800 hover:bg-zinc-700 border-zinc-700'}`} title={isZh?'打开模型库':'Open model library'}>
-          <span className="truncate max-w-[80px] sm:max-w-[180px]">{currentDisplayName}</span><ChevronDown className="w-3 h-3 opacity-60"/>
+        <button onClick={onOpenModelLibrary} aria-haspopup="dialog" className={`flex min-w-0 w-full lg:w-auto items-center gap-2 px-2 py-1 rounded-md border text-xs font-medium ${isLight?'bg-zinc-100 hover:bg-zinc-200 border-zinc-200':'bg-zinc-800 hover:bg-zinc-700 border-zinc-700'}`} title={isZh?'打开模型库':'Open model library'}>
+          <span className="min-w-0 flex-1 truncate text-left lg:max-w-[180px]">{currentDisplayName}</span><ChevronDown className="w-3 h-3 shrink-0 opacity-60"/>
         </button>
       </div>
 
       {/* 中间: 视口模式与快速换页 */}
-      <div className="flex min-w-0 items-center gap-1 sm:gap-2">
+      <div className="flex min-w-0 justify-center items-center gap-1 sm:gap-2">
         {/* 视口切换胶囊 */}
         <div
-          className={`flex items-center p-0.5 rounded-lg border text-xs ${
+          className={`flex w-full sm:w-auto items-center p-0.5 rounded-lg border text-xs ${
             isLight ? 'bg-zinc-100 border-zinc-200' : 'bg-zinc-800/80 border-zinc-700'
           }`}
         >
           <button
             onClick={() => onViewModeChange('3d')}
-            className={`px-2 py-0.5 rounded-md flex items-center gap-1 font-medium transition-all ${
+            className={`flex-1 sm:flex-none justify-center px-2 py-0.5 rounded-md flex items-center gap-1 font-medium transition-all ${
               viewMode === '3d'
                 ? isLight ? 'bg-white text-zinc-900 shadow-xs' : 'bg-zinc-700 text-white shadow-xs'
                 : 'opacity-60 hover:opacity-100'
@@ -107,7 +107,7 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
           <button
             onClick={() => onViewModeChange('split')}
-            className={`px-2 py-0.5 rounded-md flex items-center gap-1 font-medium transition-all ${
+            className={`flex-1 sm:flex-none justify-center px-2 py-0.5 rounded-md flex items-center gap-1 font-medium transition-all ${
               viewMode === 'split'
                 ? isLight ? 'bg-white text-zinc-900 shadow-xs' : 'bg-zinc-700 text-white shadow-xs'
                 : 'opacity-60 hover:opacity-100'
@@ -119,7 +119,7 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
           <button
             onClick={() => onViewModeChange('2d')}
-            className={`px-2 py-0.5 rounded-md flex items-center gap-1 font-medium transition-all ${
+            className={`flex-1 sm:flex-none justify-center px-2 py-0.5 rounded-md flex items-center gap-1 font-medium transition-all ${
               viewMode === '2d'
                 ? isLight ? 'bg-white text-zinc-900 shadow-xs' : 'bg-zinc-700 text-white shadow-xs'
                 : 'opacity-60 hover:opacity-100'
@@ -160,7 +160,7 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* 右侧: 语言切换、主题、组装指南与导出 PDF */}
-      <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
+      <div className="flex min-w-0 justify-between sm:justify-end shrink-0 items-center gap-1 sm:gap-1.5">
         {/* 语言切换按钮 (中/EN) */}
         <button
           onClick={toggleLanguage}
@@ -200,7 +200,7 @@ export const Header: React.FC<HeaderProps> = ({
           }`}
         >
           <HelpCircle className="w-3 h-3 opacity-70" />
-          <span className="hidden sm:inline">{t('common.guide')}</span>
+          <span className="hidden xl:inline">{t('common.guide')}</span>
         </button>
 
         {/* PDF 导出 */}
@@ -218,7 +218,7 @@ export const Header: React.FC<HeaderProps> = ({
           }`}
         >
           <Printer className={`w-3.5 h-3.5 ${isExporting ? 'animate-bounce' : ''}`} />
-          <span className="hidden sm:inline">{isExporting ? t('common.exporting') : t('common.export')}</span>
+          <span className="hidden xl:inline">{isExporting ? t('common.exporting') : t('common.export')}</span>
         </button>
 
         {/* 侧边栏折叠/展开 */}

@@ -375,8 +375,8 @@ export const NetViewer2D: React.FC<NetViewer2DProps> = ({
       </div>
 
       {/* 底部微型信息条 */}
-      <div className={`flex items-center justify-between px-3 py-1.5 border-t ${isLight ? 'bg-white/80 border-zinc-200 text-zinc-500' : 'bg-zinc-900/80 border-zinc-800 text-zinc-400'} text-[11px] shrink-0`}>
-        <div className="flex items-center gap-3">
+      <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-3 py-2 border-t ${isLight ? 'bg-white/80 border-zinc-200 text-zinc-500' : 'bg-zinc-900/80 border-zinc-800 text-zinc-400'} text-[11px] leading-5 shrink-0`}>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <span className="flex items-center gap-1">
             <Scissors className="w-3 h-3 text-emerald-500" />
             {t('viewer2D.statusCutAligned')}
@@ -385,12 +385,12 @@ export const NetViewer2D: React.FC<NetViewer2DProps> = ({
             <Compass className="w-3 h-3 text-blue-500" />
             {t('viewer2D.statusTabsChamfered')}
           </span>
-          <span className="flex items-center gap-1 opacity-60">
+          <span className="hidden md:flex items-center gap-1 opacity-60">
             <Move className="w-3 h-3" />
             {t('viewer2D.statusNavHint')}
           </span>
         </div>
-        <div className="font-mono text-[10px] opacity-70">A4 (210×297mm) · Page {currentPageIndex + 1}/{consistPages.length}</div>
+        <div className="font-mono text-[10px] opacity-70 whitespace-nowrap">A4 (210×297mm) · Page {currentPageIndex + 1}/{consistPages.length}</div>
       </div>
     </div>
   )

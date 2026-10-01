@@ -7,6 +7,9 @@ import { overlaps, signedArea } from '../src/core/paper/geometry'
 import { getPrintMarks } from '../src/core/paper/printMarks'
 import { trainConsistToPackage, packageToTrainConsist, buildPapercraftZipPackage, parsePapercraftZipPackage } from '../src/core/schema/papercraftFormat'
 import { compactCarConsist, pickupConsist } from '../src/core/schema/models/transport/roadVehicles'
+import { jetAirlinerConsist } from '../src/core/schema/models/transport/jetAirliner'
+import { helicopterConsist } from '../src/core/schema/models/transport/helicopter'
+import { floatplaneConsist } from '../src/core/schema/models/transport/floatplane'
 import { travelPlaneConsist } from '../src/core/schema/models/transport/travelPlane'
 import { bakeTransportLivery, jointLivery } from '../src/texture/transportLivery'
 import { PRESET_THEMES } from '../src/texture/presetThemes'
@@ -40,7 +43,7 @@ for(const degrees of [-ARTICULATED_TRIAL_ANGLE_DEG,0,ARTICULATED_TRIAL_ANGLE_DEG
   for(const x of [-16,16]){const end=turn(x,rz);assert.ok(Math.hypot(end.x-x,end.z-fz)<36,'Side pleats have extension reserve')}
   const end=turn(0,rz);assert.ok(Math.hypot(end.x,end.z-fz)<30,'Underside strap has extension reserve')
 }
-for(const c of [compactCarConsist,pickupConsist,travelPlaneConsist,bus]) {
+for(const c of [compactCarConsist,pickupConsist,travelPlaneConsist,jetAirlinerConsist,helicopterConsist,floatplaneConsist,bus]) {
   const schema=c.carDefinitions.head.schema,paper=buildTrainConsistCars(c)[0].modelData.paperModel!
   assert.ok(schema.assemblySteps?.every(s=>s.text&&s.textEn),'Both languages have assembly steps')
   assert.ok(!paper.diagnostics.some(d=>d.severity!=='info'),'No discarded faces or impractically small joining strips')
@@ -57,7 +60,7 @@ const pickup=buildTrainConsistCars(pickupConsist)[0].modelData.paperModel!
 assert.ok(pickup.surfaces.slice(0,2).every(s=>s.edges.every(e=>e.faces.length===2)),'Cab and chassis are closed')
 const bed=pickup.surfaces.find(s=>s.id==='pickup-bed')!
 assert.equal(bed.edges.filter(e=>e.faces.length===1).length,4,'The cargo bed is genuinely open on top')
-assert.ok(bed.edges.filter(e=>e.faces.length===1).every(e=>e.vertexIds.every(i=>bed.vertices[i].y===30)))
+assert.ok(bed.edges.filter(e=>e.faces.length===1).every(e=>e.vertexIds.every(i=>bed.vertices[i].y===42)))
 const plane=buildTrainConsistCars(travelPlaneConsist)[0].modelData.paperModel!
 assert.equal(buildTrainConsistCars(travelPlaneConsist,0,'en-US')[0].modelData.name,'Touring propeller plane')
 assert.equal(buildTrainConsistCars(travelPlaneConsist,0,'zh-CN')[0].modelData.name,'旅行螺旋桨飞机','Language switches must not mutate cached model names')
@@ -106,7 +109,7 @@ Object.defineProperty(globalThis,'document',{configurable:true,value:{createElem
   const c={width:0,height:0,getContext:()=>ctx} as unknown as HTMLCanvasElement;records.set(c,glyphs);return c
 }}})
 try {
-  for(const c of [compactCarConsist,pickupConsist,travelPlaneConsist,bus]) {
+  for(const c of [compactCarConsist,pickupConsist,travelPlaneConsist,jetAirlinerConsist,helicopterConsist,floatplaneConsist,bus]) {
     const theme=PRESET_THEMES.find(t=>t.id===c.defaultThemeId)!,slots=c===bus?jointLivery():bakeTransportLivery({consistId:c.id,theme,customText:{enabled:true,kidName:'PAPER TEST'}})!
     for(const part of buildTrainConsistCars(c)[0].modelData.paperModel!.parts)for(const f of part.faces) {
       const texture=slots.get(f.textureSlot);if(!texture||f.polygon2D.length!==3)continue
